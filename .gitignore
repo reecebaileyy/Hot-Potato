@@ -1,0 +1,18 @@
+# Node.js dependencies
+node_modules/
+
+# Hardhat cache
+cache-zk/
+
+# Hardhat artifacts
+artifacts-zk/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# Editor-specific settings
+.vscode/
+.idea/
