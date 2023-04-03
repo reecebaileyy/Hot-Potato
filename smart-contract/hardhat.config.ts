@@ -19,4 +19,10 @@ module.exports = {
   solidity: {
     version: "0.8.17",
   },
+  paths: {
+    sources: "./@contracts",
+    tests: "./test",
+    cache: "./cache-zk",
+    artifacts: "./artifacts-zk"
+  },
 };

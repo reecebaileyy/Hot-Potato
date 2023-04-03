@@ -58,6 +58,7 @@ contract zkPotato is
     event GamePaused();
     event GameRestarted();
     event PotatoExploded(uint256 tokenId);
+    event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo);
 
     constructor()
         payable
@@ -98,7 +99,7 @@ contract zkPotato is
             tokenTraits[potatoTokenId].hasPotato = false;
         }
         //TODO: Implement logic for assigning the potato trait to the desired token
-        potatoTokenId = activeTokens /* TODO: Replace with desired index*/[];
+        potatoTokenId = activeTokens [69];
         tokenTraits[potatoTokenId].hasPotato = true;
     }
 
@@ -126,7 +127,7 @@ contract zkPotato is
     function passPotato(uint256 tokenIdFrom, uint256 tokenIdTo) external {
         require(gameState == GameState.Playing, "Game not playing");
         require(msg.sender == ownerOf(tokenIdFrom), "Not owner or approved");
-        require(block.timestamp < explosionTime, "Potato exploded");
+        require(block.timestamp < EXPLOSION_TIME, "Potato exploded");
         require(tokenIdFrom != tokenIdTo, "Cannot pass potato to the same NFT");
         require(_exists(tokenIdTo), "Target NFT does not exist");
         require(msg.sender != ownerOf(tokenIdTo), "Cannot pass potato to self");
