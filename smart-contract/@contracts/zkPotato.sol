@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 
-contract zkPotato is
+contract TEST is
     Ownable,
     ERC721A,
     ERC721AQueryable,
@@ -63,7 +63,7 @@ contract zkPotato is
     constructor()
         payable
         PaymentSplitter(_payees, _shares)
-        ERC721A("zkPotato", "HPG")
+        ERC721A("TEST", "TEST")
     {
         _owner = msg.sender;
         _currentIndex = _startTokenId();
@@ -99,12 +99,11 @@ contract zkPotato is
             tokenTraits[potatoTokenId].hasPotato = false;
         }
         //TODO: Implement logic for assigning the potato trait to the desired token
-        potatoTokenId = activeTokens [69];
+        potatoTokenId = activeTokens[];
         tokenTraits[potatoTokenId].hasPotato = true;
     }
 
     // PUBLIC FUNCTIONS
-
     function mintHand(uint256 count) external payable nonReentrant {
         require(gameState == GameState.Minting, "Game not minting");
         require(block.timestamp < mintingEndTime, "Minting period ended");

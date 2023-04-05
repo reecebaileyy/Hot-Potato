@@ -19,7 +19,9 @@
   "homepage": "https://github.com/UNKNOWNtxn/zksync-tutorial#readme",
   "devDependencies": {
     "@matterlabs/hardhat-zksync-deploy": "^0.6.3",
-    "@matterlabs/hardhat-zksync-solc": "^0.3.14",
+    "@matterlabs/hardhat-zksync-solc": "^0.3.15",
+    "@matterlabs/hardhat-zksync-verify": "^0.1.4",
+    "@nomiclabs/hardhat-etherscan": "^3.1.2",
     "ethers": "^5.7.2",
     "hardhat": "^2.13.0",
     "ts-node": "^10.9.1",
@@ -27,6 +29,7 @@
     "zksync-web3": "^0.14.3"
   },
   "dependencies": {
+    "@chainlink/contracts": "^0.6.1",
     "@openzeppelin/contracts": "^4.8.2",
     "dotenv": "^16.0.3",
     "erc721a": "^4.2.3",
