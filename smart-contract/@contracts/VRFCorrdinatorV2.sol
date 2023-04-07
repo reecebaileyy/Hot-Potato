@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-// An example of a consumer contract that directly pays for each request.
+// An example of a consumer contract that relies on a subscription for funding.
 pragma solidity ^0.8.7;
 
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
-import "@chainlink/contracts/src/v0.8/VRFV2WrapperConsumerBase.sol";
 
 /**
  * Request testnet LINK and ETH here: https://faucets.chain.link/
@@ -16,31 +17,35 @@ import "@chainlink/contracts/src/v0.8/VRFV2WrapperConsumerBase.sol";
  * DO NOT USE THIS CODE IN PRODUCTION.
  */
 
-contract VRFv2DirectFundingConsumer is
-    VRFV2WrapperConsumerBase,
-    ConfirmedOwner
-{
+contract VRFv2Consumer is VRFConsumerBaseV2, ConfirmedOwner {
     event RequestSent(uint256 requestId, uint32 numWords);
-    event RequestFulfilled(
-        uint256 requestId,
-        uint256[] randomWords,
-        uint256 payment
-    );
+    event RequestFulfilled(uint256 requestId, uint256[] randomWords);
 
     struct RequestStatus {
-        uint256 paid; // amount paid in link
         bool fulfilled; // whether the request has been successfully fulfilled
+        bool exists; // whether a requestId exists
         uint256[] randomWords;
     }
     mapping(uint256 => RequestStatus)
         public s_requests; /* requestId --> requestStatus */
+    VRFCoordinatorV2Interface COORDINATOR;
+
+    // Your subscription ID.
+    uint64 s_subscriptionId;
 
     // past requests Id.
     uint256[] public requestIds;
     uint256 public lastRequestId;
 
+    // The gas lane to use, which specifies the maximum gas price to bump to.
+    // For a list of available gas lanes on each network,
+    // see https://docs.chain.link/docs/vrf/v2/subscription/supported-networks/#configurations
+    bytes32 keyHash =
+        0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
+
     // Depends on the number of requested values that you want sent to the
-    // fulfillRandomWords() function. Test and adjust
+    // fulfillRandomWords() function. Storing each word costs about 20,000 gas,
+    // so 100,000 is a safe default for this example contract. Test and adjust
     // this limit based on the network that you select, the size of the request,
     // and the processing of the callback request in the fulfillRandomWords()
     // function.
@@ -50,33 +55,42 @@ contract VRFv2DirectFundingConsumer is
     uint16 requestConfirmations = 3;
 
     // For this example, retrieve 2 random values in one request.
-    // Cannot exceed VRFV2Wrapper.getConfig().maxNumWords.
+    // Cannot exceed VRFCoordinatorV2.MAX_NUM_WORDS.
     uint32 numWords = 2;
 
-    // Address LINK - hardcoded for Sepolia
-    address linkAddress = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
-
-    // address WRAPPER - hardcoded for Sepolia
-    address wrapperAddress = 0xab18414CD93297B0d12ac29E63Ca20f515b3DB46;
-
-    constructor()
+    /**
+     * HARDCODED FOR SEPOLIA
+     * COORDINATOR: 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625
+     */
+    constructor(
+        uint64 subscriptionId
+    )
+        VRFConsumerBaseV2(0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625)
         ConfirmedOwner(msg.sender)
-        VRFV2WrapperConsumerBase(linkAddress, wrapperAddress)
-    {}
+    {
+        COORDINATOR = VRFCoordinatorV2Interface(
+            0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625
+        );
+        s_subscriptionId = subscriptionId;
+    }
 
+    // Assumes the subscription is funded sufficiently.
     function requestRandomWords()
         external
         onlyOwner
         returns (uint256 requestId)
     {
-        requestId = requestRandomness(
-            callbackGasLimit,
+        // Will revert if subscription is not set and funded.
+        requestId = COORDINATOR.requestRandomWords(
+            keyHash,
+            s_subscriptionId,
             requestConfirmations,
+            callbackGasLimit,
             numWords
         );
         s_requests[requestId] = RequestStatus({
-            paid: VRF_V2_WRAPPER.calculateRequestPrice(callbackGasLimit),
             randomWords: new uint256[](0),
+            exists: true,
             fulfilled: false
         });
         requestIds.push(requestId);
@@ -89,36 +103,17 @@ contract VRFv2DirectFundingConsumer is
         uint256 _requestId,
         uint256[] memory _randomWords
     ) internal override {
-        require(s_requests[_requestId].paid > 0, "request not found");
+        require(s_requests[_requestId].exists, "request not found");
         s_requests[_requestId].fulfilled = true;
         s_requests[_requestId].randomWords = _randomWords;
-        emit RequestFulfilled(
-            _requestId,
-            _randomWords,
-            s_requests[_requestId].paid
-        );
+        emit RequestFulfilled(_requestId, _randomWords);
     }
 
     function getRequestStatus(
         uint256 _requestId
-    )
-        external
-        view
-        returns (uint256 paid, bool fulfilled, uint256[] memory randomWords)
-    {
-        require(s_requests[_requestId].paid > 0, "request not found");
+    ) external view returns (bool fulfilled, uint256[] memory randomWords) {
+        require(s_requests[_requestId].exists, "request not found");
         RequestStatus memory request = s_requests[_requestId];
-        return (request.paid, request.fulfilled, request.randomWords);
-    }
-
-    /**
-     * Allow withdraw of Link tokens from the contract
-     */
-    function withdrawLink() public onlyOwner {
-        LinkTokenInterface link = LinkTokenInterface(linkAddress);
-        require(
-            link.transfer(msg.sender, link.balanceOf(address(this))),
-            "Unable to transfer"
-        );
+        return (request.fulfilled, request.randomWords);
     }
 }

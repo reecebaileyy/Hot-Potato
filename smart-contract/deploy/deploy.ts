@@ -13,17 +13,17 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   // Create deployer object and load the artifact of the contract you want to deploy.
   const deployer = new Deployer(hre, wallet);
-  const artifact = await deployer.loadArtifact("zkPotato");
+  const artifact = await deployer.loadArtifact("VRFv2Consumer");
 
   // Estimate contract deployment fee
-  const deploymentFee = await deployer.estimateDeployFee(artifact, []);
+  const deploymentFee = await deployer.estimateDeployFee(artifact, [11125]);
 
   // Deploy this contract. The returned object will be of a `Contract` type, similarly to ones in `ethers`.
   // `greeting` is an argument for contract constructor.
   const parsedFee = ethers.utils.formatEther(deploymentFee.toString());
   console.log(`The deployment is estimated to cost ${parsedFee} ETH`);
 
-  const smartContract = await deployer.deploy(artifact, []);
+  const smartContract = await deployer.deploy(artifact, [11125]);
 
   // Show the contract info.
   const contractAddress = smartContract.address;

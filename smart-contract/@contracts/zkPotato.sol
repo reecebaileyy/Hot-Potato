@@ -99,7 +99,7 @@ contract TEST is
             tokenTraits[potatoTokenId].hasPotato = false;
         }
         //TODO: Implement logic for assigning the potato trait to the desired token
-        potatoTokenId = activeTokens[];
+        potatoTokenId = activeTokens[0];
         tokenTraits[potatoTokenId].hasPotato = true;
     }
 

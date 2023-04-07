@@ -14,7 +14,7 @@ npm init -y
 2. Install the required dependencies:
 
 ```bash
-npm i -D typescript ts-node ethers@^5.7.2 zksync-web3 hardhat @matterlabs/hardhat-zksync-solc @matterlabs/hardhat-zksync-verify @matterlabs/hardhat-zksync-deploy
+npm i -D typescript ts-node ethers@^5.7.2 zksync-web3 hardhat @matterlabs/hardhat-zksync-solc @matterlabs/hardhat-zksync-verify @matterlabs/hardhat-zksync-verify @matterlabs/hardhat-zksync-deploy
 ```
 
 
