@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.17;
 
-import "erc721a/contracts/ERC721A.sol";
-import "erc721a/contracts/interfaces/IERC721ABurnable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "erc721a/contracts/extensions/ERC721AQueryable.sol";
+import "../node_modules/erc721a/contracts/ERC721A.sol";
+import "../node_modules/erc721a/contracts/interfaces/IERC721ABurnable.sol";
+import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
+import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "../node_modules/@openzeppelin/contracts/finance/PaymentSplitter.sol";
+import "../node_modules/@openzeppelin/contracts/utils/Strings.sol";
+import "../node_modules/erc721a/contracts/extensions/ERC721AQueryable.sol";
 
 contract TEST is
     Ownable,
