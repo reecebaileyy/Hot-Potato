@@ -9,7 +9,7 @@ import "../node_modules/@openzeppelin/contracts/finance/PaymentSplitter.sol";
 import "../node_modules/@openzeppelin/contracts/utils/Strings.sol";
 import "../node_modules/erc721a/contracts/extensions/ERC721AQueryable.sol";
 
-contract TEST is
+contract UNKNOWN is
     Ownable,
     ERC721A,
     ERC721AQueryable,
@@ -28,10 +28,13 @@ contract TEST is
     uint256 private _price = 0.01 ether;
     uint256 public _maxsupply = 10000;
     uint256 public _maxperwallet = 3;
-    address private _owner;
+    uint256 public mintingEndTime;
     uint256 private _currentIndex = 1;
+    address private _owner;
+
 
     enum GameState {
+        Queued,
         Minting,
         Playing,
         Paused,
@@ -47,8 +50,6 @@ contract TEST is
 
     GameState public gameState;
 
-    uint256 public mintingEndTime;
-    uint256 public explosionTime;
 
     mapping(uint256 => uint256) public successfulPasses;
     uint256[] public activeTokens;
@@ -63,17 +64,17 @@ contract TEST is
     constructor()
         payable
         PaymentSplitter(_payees, _shares)
-        ERC721A("TEST", "TEST")
+        ERC721A("UNKNOWN", "UNKNOWN")
     {
         _owner = msg.sender;
         _currentIndex = _startTokenId();
     }
 
-    // ONLY OWNER FUNCTIONS
+    {/* <------ OWNER ONLY FUNCTIONS -------> */}
 
     function startGame() external onlyOwner {
         require(
-            gameState == GameState.Ended || gameState == GameState.Paused,
+            gameState == GameState.Ended || gameState == GameState.Paused || gameState == GameState.Queued,
             "Game already started"
         );
         gameState = GameState.Minting;
@@ -82,28 +83,42 @@ contract TEST is
     }
 
     function pauseGame() external onlyOwner {
-        require(gameState == GameState.Playing, "Game not playing");
+        require(gameState == GameState.Playing || gameState == GameState.FinalRound || gameState == GameState.Minting, "Game not playing");
         gameState = GameState.Paused;
         emit GamePaused();
     }
 
-    function restartGame() external onlyOwner {
+    function resumeGame() external onlyOwner {
         require(gameState == GameState.Paused, "Game not paused");
         gameState = GameState.Playing;
+    }
+
+    function restartGame() external onlyOwner {
+        require(gameState == GameState.Paused || gameState == GameState.FinalRound || gameState == GameState., "Game not paused");
+        gameState = GameState.Queued;
+
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            require(_exists(tokenIds[i]), "Token does not exist");
+            _burn(tokenIds[i]);
+        }
+
         emit GameRestarted();
     }
 
     function assignPotato(uint256 tokenId) external onlyOwner {
-        // Remove the potato from the current holder, if any
-        if (potatoTokenId != 0) {
-            tokenTraits[potatoTokenId].hasPotato = false;
-        }
-        //TODO: Implement logic for assigning the potato trait to the desired token
-        potatoTokenId = activeTokens[0];
-        tokenTraits[potatoTokenId].hasPotato = true;
+    // Remove the potato from the current holder, if any
+    if (potatoTokenId != 0) {
+        tokenTraits[potatoTokenId].hasPotato = false;
+    }
+    // Assign the potato trait to the desired token
+    require(_exists(tokenId), "Token does not exist");
+    require(_isTokenActive(tokenId), "Token is not active");
+    potatoTokenId = tokenId;
+    tokenTraits[potatoTokenId].hasPotato = true;
     }
 
-    // PUBLIC FUNCTIONS
+
+    {/* <------ PUBLIC FUNCTIONS -------> */}
     function mintHand(uint256 count) external payable nonReentrant {
         require(gameState == GameState.Minting, "Game not minting");
         require(block.timestamp < mintingEndTime, "Minting period ended");
@@ -145,7 +160,16 @@ contract TEST is
         // TODO: Implement logic for passing the potato and updating explosion time
     }
 
-    // INTERNAL FUNCTIONS
+    {/* <------ INTERNAL FUNCTIONS -------> */}
+
+    function _isTokenActive(uint256 tokenId) internal view returns (bool) {
+    for (uint256 i = 0; i < activeTokens.length; i++) {
+        if (activeTokens[i] == tokenId) {
+            return true;
+        }
+    }
+    return false;
+    }
 
     function updateExplosionTimer() internal {
     // Calculate the current explosion duration based on the total number of passes
@@ -158,7 +182,7 @@ contract TEST is
     }
 
     EXPLOSION_TIME = block.timestamp + currentDuration;
-}
+    }
 
 
     function processExplosion() internal {
