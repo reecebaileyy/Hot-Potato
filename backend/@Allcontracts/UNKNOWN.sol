@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.17;
 
-import "../node_modules/erc721a/contracts/ERC721A.sol";
-import "../node_modules/erc721a/contracts/interfaces/IERC721ABurnable.sol";
-import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
-import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "../node_modules/@openzeppelin/contracts/finance/PaymentSplitter.sol";
-import "../node_modules/@openzeppelin/contracts/utils/Strings.sol";
-import "../node_modules/erc721a/contracts/extensions/ERC721AQueryable.sol";
+import "erc721a/contracts/ERC721A.sol";
+import "erc721a/contracts/interfaces/IERC721ABurnable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 
 contract UNKNOWN is
     Ownable,
@@ -18,7 +18,7 @@ contract UNKNOWN is
 {
     using Strings for uint256;
 
-    uint256 private MINT_DURATION = 10 minutes;
+    bool private explosionTimeInitialized = false;
     uint256 public constant INITIAL_POTATO_EXPLOSION_DURATION = 2 minutes;
     uint256 public constant DECREASE_INTERVAL = 10;
     uint256 public constant DECREASE_DURATION = 5 seconds;
@@ -28,7 +28,6 @@ contract UNKNOWN is
     uint256 private _price = 0.01 ether;
     uint256 public _maxsupply = 10000;
     uint256 public _maxperwallet = 3;
-    uint256 public mintingEndTime;
     uint256 private _currentIndex = 1;
     address private _owner;
 
@@ -66,11 +65,12 @@ contract UNKNOWN is
         PaymentSplitter(_payees, _shares)
         ERC721A("UNKNOWN", "UNKNOWN")
     {
+        gameState = GameState.Queued;
         _owner = msg.sender;
         _currentIndex = _startTokenId();
     }
 
-    {/* <------ OWNER ONLY FUNCTIONS -------> */}
+     /* <------ OWNER ONLY FUNCTIONS -------> */
 
     function startGame() external onlyOwner {
         require(
@@ -78,8 +78,13 @@ contract UNKNOWN is
             "Game already started"
         );
         gameState = GameState.Minting;
-        mintingEndTime = block.timestamp + MINT_DURATION;
         emit GameStarted();
+    }
+
+    function endMinting() external onlyOwner {
+        require(gameState == GameState.Minting, "Game not minting");
+        gameState = GameState.Playing;
+        updateExplosionTimer();
     }
 
     function pauseGame() external onlyOwner {
@@ -94,16 +99,26 @@ contract UNKNOWN is
     }
 
     function restartGame() external onlyOwner {
-        require(gameState == GameState.Paused || gameState == GameState.FinalRound || gameState == GameState., "Game not paused");
+        require(gameState == GameState.Paused || gameState == GameState.Ended, "Game not paused or ended");
         gameState = GameState.Queued;
 
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            require(_exists(tokenIds[i]), "Token does not exist");
-            _burn(tokenIds[i]);
+        for (uint256 i = 0; i < activeTokens.length; i++) {
+            uint256 tokenId = activeTokens[i];
+            require(_exists(tokenId), "Token does not exist");
+            _burn(tokenId);
+        }
+
+        delete activeTokens;
+        potatoTokenId = 0;
+        TOTAL_PASSES = 0;
+
+        for (uint256 i = 0; i < _currentIndex; i++) {
+            successfulPasses[i] = 0;
         }
 
         emit GameRestarted();
     }
+
 
     function assignPotato(uint256 tokenId) external onlyOwner {
     // Remove the potato from the current holder, if any
@@ -118,10 +133,10 @@ contract UNKNOWN is
     }
 
 
-    {/* <------ PUBLIC FUNCTIONS -------> */}
+    /* <------ PUBLIC FUNCTIONS -------> */
+
     function mintHand(uint256 count) external payable nonReentrant {
         require(gameState == GameState.Minting, "Game not minting");
-        require(block.timestamp < mintingEndTime, "Minting period ended");
         require(msg.value >= count * _price, "Must send at least 0.01 ETH");
         require(
             balanceOf(msg.sender) < _maxperwallet,
@@ -160,7 +175,7 @@ contract UNKNOWN is
         // TODO: Implement logic for passing the potato and updating explosion time
     }
 
-    {/* <------ INTERNAL FUNCTIONS -------> */}
+    /* <------ INTERNAL FUNCTIONS -------> */
 
     function _isTokenActive(uint256 tokenId) internal view returns (bool) {
     for (uint256 i = 0; i < activeTokens.length; i++) {
@@ -172,17 +187,25 @@ contract UNKNOWN is
     }
 
     function updateExplosionTimer() internal {
-    // Calculate the current explosion duration based on the total number of passes
-    uint256 currentDuration = INITIAL_POTATO_EXPLOSION_DURATION - (TOTAL_PASSES / DECREASE_INTERVAL) * DECREASE_DURATION;
+        // Calculate the current explosion duration based on the total number of passes
+        uint256 currentDuration = INITIAL_POTATO_EXPLOSION_DURATION - (TOTAL_PASSES / DECREASE_INTERVAL) * DECREASE_DURATION;
 
-    // Ensure that the duration does not go below 15 seconds
-    uint256 minimumDuration = 15 seconds;
-    if (currentDuration < minimumDuration) {
-        currentDuration = minimumDuration;
+        // Ensure that the duration does not go below 15 seconds
+        uint256 minimumDuration = 15 seconds;
+        if (currentDuration < minimumDuration) {
+            currentDuration = minimumDuration;
+        }
+
+        // Initialize the EXPLOSION_TIME if it's not initialized yet
+        if (!explosionTimeInitialized) {
+            EXPLOSION_TIME = block.timestamp + currentDuration;
+            explosionTimeInitialized = true;
+        } else {
+            // Update the EXPLOSION_TIME
+            EXPLOSION_TIME = block.timestamp + currentDuration;
+        }
     }
 
-    EXPLOSION_TIME = block.timestamp + currentDuration;
-    }
 
 
     function processExplosion() internal {
@@ -197,11 +220,9 @@ contract UNKNOWN is
     }
 
     // TODO: Implement logic for determining the winners and distributing rewards
-    uint256[] private _shares = [60, 25, 10];
+    uint256[] private _shares = [100];
     address[] private _payees = [
-        0x5B38Da6a701c568545dCfcB03FcB875f56beddC4,
-        0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2,
-        0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db
+        0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F
     ];
 
     function _startTokenId() internal view virtual override returns (uint256) {

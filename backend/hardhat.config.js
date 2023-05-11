@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require('dotenv').config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -7,12 +8,12 @@ module.exports = {
     hardhat: {
     },
     sepolia: {
-      url: "https://sepolia.infura.io/v3/<key>",
-      // accounts: [privateKey1, privateKey2, ...]
+      url: process.env.INFURA_URL,
+      accounts: [process.env.PRIVATE_KEY]
     }
   },
   solidity: {
-    version: "0.5.15",
+    version: "0.8.17",
     settings: {
       optimizer: {
         enabled: true,
@@ -21,12 +22,17 @@ module.exports = {
     }
   },
   paths: {
-    sources: "./contracts",
+    sources: "./@Allcontracts",
     tests: "./test",
     cache: "./cache",
     artifacts: "./artifacts"
   },
   mocha: {
     timeout: 40000
+  },
+  etherscan: {
+    apiKey: {
+      sepolia: process.env.API_KEY
+    }
   }
 }
