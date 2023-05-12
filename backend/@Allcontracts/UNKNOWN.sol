@@ -1,15 +1,19 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.17;
 
+import "hardhat/console.sol";
 import "erc721a/contracts/ERC721A.sol";
+import "erc721a/contracts/interfaces/IERC721A.sol";
 import "erc721a/contracts/interfaces/IERC721ABurnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 
 contract UNKNOWN is
+    IERC721Receiver,
     Ownable,
     ERC721A,
     ERC721AQueryable,
@@ -25,12 +29,12 @@ contract UNKNOWN is
     uint256 private FINAL_POTATO_EXPLOSION_DURATION = 10 minutes;
     uint256 public EXPLOSION_TIME;
     uint256 public TOTAL_PASSES;
-    uint256 private _price = 0.01 ether;
+    bool private _isExplosionInProgress = false;
+    uint256 private _price = 0 ether;
     uint256 public _maxsupply = 10000;
     uint256 public _maxperwallet = 3;
     uint256 private _currentIndex = 1;
     address private _owner;
-
 
     enum GameState {
         Queued,
@@ -47,11 +51,14 @@ contract UNKNOWN is
     }
     mapping(uint256 => TokenTraits) public tokenTraits;
 
-    GameState public gameState;
-
+    GameState internal gameState;
+    GameState internal previousGameState;
 
     mapping(uint256 => uint256) public successfulPasses;
+    mapping(GameState => string) private gameStateStrings;
+
     uint256[] public activeTokens;
+    uint256[] public inactiveTokens;
     uint256 public potatoTokenId;
 
     event GameStarted();
@@ -65,73 +72,25 @@ contract UNKNOWN is
         PaymentSplitter(_payees, _shares)
         ERC721A("UNKNOWN", "UNKNOWN")
     {
+        gameStateStrings[GameState.Queued] = "Queued";
+        gameStateStrings[GameState.Minting] = "Minting";
+        gameStateStrings[GameState.Playing] = "Playing";
+        gameStateStrings[GameState.Paused] = "Paused";
+        gameStateStrings[GameState.FinalRound] = "Final Round";
+        gameStateStrings[GameState.Ended] = "Ended";
         gameState = GameState.Queued;
         _owner = msg.sender;
         _currentIndex = _startTokenId();
     }
 
-     /* <------ OWNER ONLY FUNCTIONS -------> */
-
-    function startGame() external onlyOwner {
-        require(
-            gameState == GameState.Ended || gameState == GameState.Paused || gameState == GameState.Queued,
-            "Game already started"
-        );
-        gameState = GameState.Minting;
-        emit GameStarted();
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external virtual override returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
-
-    function endMinting() external onlyOwner {
-        require(gameState == GameState.Minting, "Game not minting");
-        gameState = GameState.Playing;
-        updateExplosionTimer();
-    }
-
-    function pauseGame() external onlyOwner {
-        require(gameState == GameState.Playing || gameState == GameState.FinalRound || gameState == GameState.Minting, "Game not playing");
-        gameState = GameState.Paused;
-        emit GamePaused();
-    }
-
-    function resumeGame() external onlyOwner {
-        require(gameState == GameState.Paused, "Game not paused");
-        gameState = GameState.Playing;
-    }
-
-    function restartGame() external onlyOwner {
-        require(gameState == GameState.Paused || gameState == GameState.Ended, "Game not paused or ended");
-        gameState = GameState.Queued;
-
-        for (uint256 i = 0; i < activeTokens.length; i++) {
-            uint256 tokenId = activeTokens[i];
-            require(_exists(tokenId), "Token does not exist");
-            _burn(tokenId);
-        }
-
-        delete activeTokens;
-        potatoTokenId = 0;
-        TOTAL_PASSES = 0;
-
-        for (uint256 i = 0; i < _currentIndex; i++) {
-            successfulPasses[i] = 0;
-        }
-
-        emit GameRestarted();
-    }
-
-
-    function assignPotato(uint256 tokenId) external onlyOwner {
-    // Remove the potato from the current holder, if any
-    if (potatoTokenId != 0) {
-        tokenTraits[potatoTokenId].hasPotato = false;
-    }
-    // Assign the potato trait to the desired token
-    require(_exists(tokenId), "Token does not exist");
-    require(_isTokenActive(tokenId), "Token is not active");
-    potatoTokenId = tokenId;
-    tokenTraits[potatoTokenId].hasPotato = true;
-    }
-
 
     /* <------ PUBLIC FUNCTIONS -------> */
 
@@ -148,7 +107,7 @@ contract UNKNOWN is
         // LOOP THROUGH THE COUNT AND MINT THE TOKENS WHILE ASSIGNING THE POTATO AS FALSE
         for (uint256 i = 0; i < count; i++) {
             _safeMint(msg.sender, 1);
-            activeTokens.push(_nextTokenId());
+            activeTokens.push(_currentIndex);
             tokenTraits[_nextTokenId()] = TokenTraits({hasPotato: false});
         }
     }
@@ -170,25 +129,119 @@ contract UNKNOWN is
         successfulPasses[tokenIdFrom] += 1;
 
         updateExplosionTimer();
+        checkAndProcessExplosion();
         emit PotatoPassed(tokenIdFrom, tokenIdTo);
 
         // TODO: Implement logic for passing the potato and updating explosion time
     }
 
+    function getGameState() public view returns (string memory) {
+        return gameStateStrings[gameState];
+    }
+
+    /* <------ OWNER ONLY FUNCTIONS -------> */
+
+    function startGame() external onlyOwner {
+        require(
+            gameState == GameState.Ended ||
+                gameState == GameState.Paused ||
+                gameState == GameState.Queued,
+            "Game already started"
+        );
+        gameState = GameState.Minting;
+        emit GameStarted();
+        _currentIndex = 1;
+    }
+
+    function endMinting() external onlyOwner {
+        require(gameState == GameState.Minting, "Game not minting");
+        gameState = GameState.Playing;
+        updateExplosionTimer();
+        assignPotato(1);
+    }
+
+    function pauseGame() external onlyOwner {
+        require(
+            gameState == GameState.Playing ||
+                gameState == GameState.FinalRound ||
+                gameState == GameState.Minting,
+            "Game not playing"
+        );
+        previousGameState = gameState;
+        gameState = GameState.Paused;
+        emit GamePaused();
+    }
+
+    function resumeGame() external onlyOwner {
+        require(gameState == GameState.Paused, "Game not paused");
+        gameState = previousGameState;
+    }
+
+    function restartGame() external onlyOwner {
+        require(
+            gameState == GameState.Paused || gameState == GameState.Ended,
+            "Game not paused or ended"
+        );
+
+        // Transfer ownership of active tokens to the smart contract
+        for (uint256 i = 0; i < activeTokens.length; i++) {
+            uint256 tokenId = activeTokens[i];
+            require(_exists(tokenId), "Token does not exist");
+            delete tokenTraits[tokenId];
+            transferFrom(ownerOf(tokenId), address(this), tokenId);
+        }
+        delete activeTokens;
+
+        // Reset game state and variables
+        gameState = GameState.Queued;
+        potatoTokenId = 0;
+        TOTAL_PASSES = 0;
+
+        // Reset successful passes for all tokens
+        for (uint256 i = 1; i <= _currentIndex; i++) {
+            successfulPasses[i] = 0;
+        }
+
+        // Reset the current index to 1
+        _currentIndex = 1;
+
+        emit GameRestarted();
+    }
+
     /* <------ INTERNAL FUNCTIONS -------> */
 
-    function _isTokenActive(uint256 tokenId) internal view returns (bool) {
-    for (uint256 i = 0; i < activeTokens.length; i++) {
-        if (activeTokens[i] == tokenId) {
-            return true;
+    function assignPotato(uint256 tokenId) internal {
+        // Remove the potato from the current holder, if any
+        if (potatoTokenId != 0) {
+            tokenTraits[potatoTokenId].hasPotato = false;
         }
+        // Assign the potato trait to the desired token
+        require(_exists(tokenId), "Token does not exist");
+        require(_isTokenActive(tokenId), "Token is not active");
+        potatoTokenId = tokenId;
+        tokenTraits[potatoTokenId].hasPotato = true;
     }
-    return false;
+
+    function _isTokenActive(uint256 tokenId) internal view returns (bool) {
+        for (uint256 i = 0; i < activeTokens.length; i++) {
+            if (activeTokens[i] == tokenId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function checkAndProcessExplosion() internal {
+        if (_isExplosionInProgress && block.timestamp >= EXPLOSION_TIME) {
+            processExplosion();
+        }
     }
 
     function updateExplosionTimer() internal {
         // Calculate the current explosion duration based on the total number of passes
-        uint256 currentDuration = INITIAL_POTATO_EXPLOSION_DURATION - (TOTAL_PASSES / DECREASE_INTERVAL) * DECREASE_DURATION;
+        uint256 currentDuration = INITIAL_POTATO_EXPLOSION_DURATION -
+            (TOTAL_PASSES / DECREASE_INTERVAL) *
+            DECREASE_DURATION;
 
         // Ensure that the duration does not go below 15 seconds
         uint256 minimumDuration = 15 seconds;
@@ -204,12 +257,57 @@ contract UNKNOWN is
             // Update the EXPLOSION_TIME
             EXPLOSION_TIME = block.timestamp + currentDuration;
         }
+
+        _isExplosionInProgress = true;
     }
 
-
-
     function processExplosion() internal {
-        // TODO: Implement logic for processing an explosion and removing the NFT from the game
+        require(gameState == GameState.Playing, "Game not playing");
+
+        // 1. Remove the potato from the exploded NFT
+        tokenTraits[potatoTokenId].hasPotato = false;
+
+        // 2. Remove the exploded NFT from the activeTokens array
+        uint256 indexToRemove = _indexOfTokenInActiveTokens(potatoTokenId);
+        _removeTokenFromActiveTokensByIndex(indexToRemove);
+        safeTransferFrom(msg.sender, address(this), potatoTokenId);
+
+        // 3. Emit an event to notify that the potato exploded
+        emit PotatoExploded(potatoTokenId);
+
+        // 4. Check if the game should move to the final round or end
+        if (activeTokens.length == 1) {
+            gameState = GameState.FinalRound;
+            // Assign the potato to the last remaining NFT
+            assignPotato(activeTokens[0]);
+        } else if (activeTokens.length == 0) {
+            gameState = GameState.Ended;
+            // No more NFTs, game over
+        } else {
+            // 5. Update the explosion timer if the game is still in the playing state
+            updateExplosionTimer();
+        }
+
+        _isExplosionInProgress = false;
+    }
+
+    function _indexOfTokenInActiveTokens(uint256 tokenId)
+        internal
+        view
+        returns (uint256)
+    {
+        for (uint256 i = 0; i < activeTokens.length; i++) {
+            if (activeTokens[i] == tokenId) {
+                return i;
+            }
+        }
+        revert("Token not found in activeTokens");
+    }
+
+    function _removeTokenFromActiveTokensByIndex(uint256 index) internal {
+        require(index < activeTokens.length, "Invalid index");
+        activeTokens[index] = activeTokens[activeTokens.length - 1];
+        activeTokens.pop();
     }
 
     function checkExplosion() external {
@@ -221,9 +319,7 @@ contract UNKNOWN is
 
     // TODO: Implement logic for determining the winners and distributing rewards
     uint256[] private _shares = [100];
-    address[] private _payees = [
-        0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F
-    ];
+    address[] private _payees = [0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F];
 
     function _startTokenId() internal view virtual override returns (uint256) {
         return 1;
