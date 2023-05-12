@@ -1,15 +1,11 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.17;
 
-import "hardhat/console.sol";
 import "erc721a/contracts/ERC721A.sol";
-import "erc721a/contracts/interfaces/IERC721A.sol";
-import "erc721a/contracts/interfaces/IERC721ABurnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 
 contract UNKNOWN is
@@ -49,6 +45,7 @@ contract UNKNOWN is
     }
 
     mapping(uint256 => TokenTraits) public tokenTraits;
+    mapping(address => uint256) public tokensMintedPerRound;
     mapping(uint256 => uint256) public successfulPasses;
 
     GameState public gameState;
@@ -113,24 +110,19 @@ contract UNKNOWN is
         );
         gameState = GameState.Queued;
 
-        // Transfer all active tokens to the zero address
+        // Reset tokens minted by each user in the round
         for (uint256 i = 0; i < activeTokens.length; i++) {
-            uint256 tokenId = activeTokens[i];
-            require(_exists(tokenId), "Token does not exist");
-            transferFrom(ownerOf(tokenId), address(0), tokenId);
+            address tokenOwner = ownerOf(activeTokens[i]);
+            tokensMintedPerRound[tokenOwner] = 0;
         }
 
-        activeTokens = new uint256[](0);
-
+        delete activeTokens;
         potatoTokenId = 0;
         TOTAL_PASSES = 0;
 
         for (uint256 i = 0; i < _currentIndex; i++) {
             successfulPasses[i] = 0;
         }
-
-        // Reset _currentIndex to start minting from the beginning
-        _currentIndex = _startTokenId();
 
         emit GameRestarted();
     }
@@ -152,8 +144,8 @@ contract UNKNOWN is
         require(gameState == GameState.Minting, "Game not minting");
         require(msg.value >= count * _price, "Must send at least 0.01 ETH");
         require(
-            balanceOf(msg.sender) < _maxperwallet,
-            "Max NFTs per wallet reached"
+            tokensMintedPerRound[msg.sender] + count <= _maxperwallet,
+            "Exceeded maximum tokens per round"
         );
         require(totalSupply() < _maxsupply, "Max NFTs minted");
         require(count > 0, "Must mint at least one NFT");
@@ -165,6 +157,8 @@ contract UNKNOWN is
             _safeMint(msg.sender, 1);
             tokenTraits[tokenId] = TokenTraits({hasPotato: false});
         }
+
+        tokensMintedPerRound[msg.sender] += count;
     }
 
     function passPotato(uint256 tokenIdFrom, uint256 tokenIdTo) external {
@@ -232,6 +226,3 @@ contract UNKNOWN is
         return _currentIndex;
     }
 }
-
-
-//if (to == address(0)) revert TransferToZeroAddress(); get rid of this line in ERC721A.sol to transfer to zero address
