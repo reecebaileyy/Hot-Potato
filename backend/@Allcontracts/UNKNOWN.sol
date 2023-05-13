@@ -24,7 +24,7 @@ contract UNKNOWN is
     bool private explosionTimeInitialized = false;
     bool private _isExplosionInProgress = false;
     uint16 requestConfirmations = 3;
-    uint32 numWords = 2;
+    uint32 numWords = 1;
     uint32 callbackGasLimit = 100000;
     uint64 s_subscriptionId;
     uint256 public constant INITIAL_POTATO_EXPLOSION_DURATION = 2 minutes;
@@ -54,9 +54,9 @@ contract UNKNOWN is
     }
 
     struct RequestStatus {
-        uint256[] randomWords;
+        uint256[] randomWord;
         bool fulfilled;
-        bool exists;
+        // bool exists;
     }
 
     struct TokenTraits {
@@ -68,7 +68,7 @@ contract UNKNOWN is
     mapping(address => uint256) public tokensMintedPerRound;
     mapping(uint256 => uint256) public successfulPasses;
     mapping(GameState => string) private gameStateStrings;
-    mapping(uint256 => RequestStatus) public s_requests;
+    mapping(uint256 => RequestStatus) public statuses;
 
     VRFCoordinatorV2Interface COORDINATOR;
 
@@ -83,7 +83,7 @@ contract UNKNOWN is
     event GameRestarted();
     event PotatoExploded(uint256 tokenId);
     event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo);
-    event RequestSent(uint256 requestId, uint32 numWords);
+    event RequestSent(uint256 requestId);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
 
     constructor(uint64 subscriptionId)
@@ -113,10 +113,10 @@ contract UNKNOWN is
     function mintHand(uint256 count) external payable nonReentrant {
         require(gameState == GameState.Minting, "Game not minting");
         require(msg.value >= count * _price, "Must send at least 0.01 ETH");
-        require(
-            tokensMintedPerRound[msg.sender] + count <= _maxperwallet,
-            "Exceeded maximum tokens per round"
-        );
+        // require(
+        //     tokensMintedPerRound[msg.sender] + count <= _maxperwallet,
+        //     "Exceeded maximum tokens per round"
+        // );
         require(totalSupply() < _maxsupply, "Max NFTs minted");
         require(count > 0, "Must mint at least one NFT");
 
@@ -171,7 +171,7 @@ contract UNKNOWN is
     function endMinting() external onlyOwner {
         require(gameState == GameState.Minting, "Game not minting");
         gameState = GameState.Playing;
-        requestRandomWords();
+        randomize();
         updateExplosionTimer();
     }
 
@@ -218,59 +218,34 @@ contract UNKNOWN is
         emit GameRestarted();
     }
 
-    /* <------------------------------------------------ CHAINLINK_VRF_V2 FUNCTIONS ------------------------------------------------> */
-
-    // Assumes the subscription is funded sufficiently.
-    function requestRandomWords()
-        internal
-        onlyOwner
-        returns (uint256 requestId)
-    {
-        // Will revert if subscription is not set and funded.
-        requestId = COORDINATOR.requestRandomWords(
+    function randomize() public returns (uint256) {
+        uint256 requestId = COORDINATOR.requestRandomWords(
             keyHash,
             s_subscriptionId,
             requestConfirmations,
             callbackGasLimit,
             numWords
         );
-        s_requests[requestId] = RequestStatus({
-            randomWords: new uint256[](0),
-            exists: true,
+
+        statuses[requestId] = RequestStatus({
+            randomWord: new uint256[](0),
             fulfilled: false
         });
         requestIds.push(requestId);
         lastRequestId = requestId;
-        emit RequestSent(requestId, numWords);
-        console.log("Request is complete");
+        emit RequestSent(requestId);
         return requestId;
     }
 
-    function fulfillRandomWords(
-        uint256 _requestId,
-        uint256[] memory _randomWords
-    ) internal override {
-        console.log("Fufillment has begun");
-        require(s_requests[_requestId].exists, "request not found");
-        s_requests[_requestId].fulfilled = true;
-        s_requests[_requestId].randomWords = _randomWords;
-
-        console.log("Random Words have been set!");
-        // Call assignRandomPotato() when the random words are fulfilled
-        assignRandomPotato(_randomWords);
-        console.log("Assigned Random Potato");
-        emit RequestFulfilled(_requestId, _randomWords);
-        console.log("Complete");
-    }
-
-    function getRequestStatus(uint256 _requestId)
-        external
-        view
-        returns (bool fulfilled, uint256[] memory randomWords)
+    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords)
+        internal
+        override
     {
-        require(s_requests[_requestId].exists, "request not found");
-        RequestStatus memory request = s_requests[_requestId];
-        return (request.fulfilled, request.randomWords);
+        statuses[requestId].fulfilled = true;
+        statuses[requestId].randomWord = randomWords;
+
+        potatoTokenId = randomWords[0] % 6969;
+        emit RequestFulfilled(requestId, randomWords);
     }
 
     /* <------ INTERNAL FUNCTIONS -------> */
@@ -288,12 +263,9 @@ contract UNKNOWN is
     }
 
     function assignRandomPotato(uint256[] memory randomWords) internal {
-        console.log("Begin to assign random Potato");
         require(randomWords.length > 0, "No random words provided");
         uint256 randomIndex = randomWords[0] % activeTokens.length;
-        console.log("Set random index");
         assignPotato(activeTokens[randomIndex]);
-        console.log("Successfully assigned potato");
     }
 
     function _findFirstActiveToken() internal view returns (uint256) {
