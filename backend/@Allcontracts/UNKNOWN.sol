@@ -7,29 +7,42 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 
 contract UNKNOWN is
-    Ownable,
     ERC721A,
     ERC721AQueryable,
     PaymentSplitter,
-    ReentrancyGuard
+    ReentrancyGuard,
+    VRFConsumerBaseV2,
+    ConfirmedOwner
 {
     using Strings for uint256;
 
     bool private explosionTimeInitialized = false;
+    bool private _isExplosionInProgress = false;
+    uint16 requestConfirmations = 3;
+    uint32 numWords = 2;
+    uint32 callbackGasLimit = 100000;
+    uint64 s_subscriptionId;
     uint256 public constant INITIAL_POTATO_EXPLOSION_DURATION = 2 minutes;
     uint256 public constant DECREASE_INTERVAL = 10;
     uint256 public constant DECREASE_DURATION = 5 seconds;
     uint256 private FINAL_POTATO_EXPLOSION_DURATION = 10 minutes;
     uint256 public EXPLOSION_TIME;
     uint256 public TOTAL_PASSES;
-    bool private _isExplosionInProgress = false;
+    uint256 public potatoTokenId;
+    uint256 public lastRequestId;
     uint256 private _price = 0 ether;
     uint256 public _maxsupply = 10000;
     uint256 public _maxperwallet = 3;
     uint256 private _currentIndex = 1;
     address private _owner;
+
+    bytes32 keyHash =
+        0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
 
     enum GameState {
         Queued,
@@ -40,32 +53,45 @@ contract UNKNOWN is
         Ended
     }
 
+    struct RequestStatus {
+        uint256[] randomWords;
+        bool fulfilled;
+        bool exists;
+    }
+
     struct TokenTraits {
         bool hasPotato;
-        // Add any other traits you want to track here
+        // TODO: ADD MORE TRAITS FOR HANDS
     }
 
     mapping(uint256 => TokenTraits) public tokenTraits;
     mapping(address => uint256) public tokensMintedPerRound;
     mapping(uint256 => uint256) public successfulPasses;
     mapping(GameState => string) private gameStateStrings;
+    mapping(uint256 => RequestStatus) public s_requests;
+
+    VRFCoordinatorV2Interface COORDINATOR;
 
     GameState internal gameState;
     GameState internal previousGameState;
 
     uint256[] public activeTokens;
-    uint256 public potatoTokenId;
+    uint256[] public requestIds;
 
     event GameStarted();
     event GamePaused();
     event GameRestarted();
     event PotatoExploded(uint256 tokenId);
     event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo);
+    event RequestSent(uint256 requestId, uint32 numWords);
+    event RequestFulfilled(uint256 requestId, uint256[] randomWords);
 
-    constructor()
+    constructor(uint64 subscriptionId)
         payable
         PaymentSplitter(_payees, _shares)
         ERC721A("UNKNOWN", "UNKNOWN")
+        VRFConsumerBaseV2(0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625)
+        ConfirmedOwner(msg.sender)
     {
         gameStateStrings[GameState.Queued] = "Queued";
         gameStateStrings[GameState.Minting] = "Minting";
@@ -76,9 +102,13 @@ contract UNKNOWN is
         gameState = GameState.Queued;
         _owner = msg.sender;
         _currentIndex = _startTokenId();
+        COORDINATOR = VRFCoordinatorV2Interface(
+            0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625
+        );
+        s_subscriptionId = subscriptionId;
     }
 
-    /* <------ PUBLIC FUNCTIONS -------> */
+    /* <------------------------------------------------ PUBLIC FUNCTIONS ------------------------------------------------> */
 
     function mintHand(uint256 count) external payable nonReentrant {
         require(gameState == GameState.Minting, "Game not minting");
@@ -92,7 +122,7 @@ contract UNKNOWN is
 
         // LOOP THROUGH THE COUNT AND MINT THE TOKENS WHILE ASSIGNING THE POTATO AS FALSE
         for (uint256 i = 0; i < count; i++) {
-            uint256 tokenId = _nextTokenId();
+            uint256 tokenId = _nextTokenId() - 1;
             activeTokens.push(tokenId);
             _safeMint(msg.sender, 1);
             tokenTraits[tokenId] = TokenTraits({hasPotato: false});
@@ -125,7 +155,7 @@ contract UNKNOWN is
         return gameStateStrings[gameState];
     }
 
-    /* <------ OWNER ONLY FUNCTIONS -------> */
+    /* <------------------------------------------------ OWNER ONLY FUNCTIONS ------------------------------------------------> */
 
     function startGame() external onlyOwner {
         require(
@@ -141,12 +171,8 @@ contract UNKNOWN is
     function endMinting() external onlyOwner {
         require(gameState == GameState.Minting, "Game not minting");
         gameState = GameState.Playing;
-        updateExplosionTimer(); // Add this line to initialize the explosion timer
-
-        // Find the first active token and assign it as the potato
-        uint256 tokenId = _findFirstActiveToken();
-        require(tokenId != 0, "No active tokens found");
-        assignPotato(tokenId);
+        requestRandomWords();
+        updateExplosionTimer();
     }
 
     function pauseGame() external onlyOwner {
@@ -192,6 +218,61 @@ contract UNKNOWN is
         emit GameRestarted();
     }
 
+    /* <------------------------------------------------ CHAINLINK_VRF_V2 FUNCTIONS ------------------------------------------------> */
+
+    // Assumes the subscription is funded sufficiently.
+    function requestRandomWords()
+        internal
+        onlyOwner
+        returns (uint256 requestId)
+    {
+        // Will revert if subscription is not set and funded.
+        requestId = COORDINATOR.requestRandomWords(
+            keyHash,
+            s_subscriptionId,
+            requestConfirmations,
+            callbackGasLimit,
+            numWords
+        );
+        s_requests[requestId] = RequestStatus({
+            randomWords: new uint256[](0),
+            exists: true,
+            fulfilled: false
+        });
+        requestIds.push(requestId);
+        lastRequestId = requestId;
+        emit RequestSent(requestId, numWords);
+        console.log("Request is complete");
+        return requestId;
+    }
+
+    function fulfillRandomWords(
+        uint256 _requestId,
+        uint256[] memory _randomWords
+    ) internal override {
+        console.log("Fufillment has begun");
+        require(s_requests[_requestId].exists, "request not found");
+        s_requests[_requestId].fulfilled = true;
+        s_requests[_requestId].randomWords = _randomWords;
+
+        console.log("Random Words have been set!");
+        // Call assignRandomPotato() when the random words are fulfilled
+        assignRandomPotato(_randomWords);
+        console.log("Assigned Random Potato");
+        emit RequestFulfilled(_requestId, _randomWords);
+        console.log("Complete");
+    }
+
+    function getRequestStatus(uint256 _requestId)
+        external
+        view
+        returns (bool fulfilled, uint256[] memory randomWords)
+    {
+        require(s_requests[_requestId].exists, "request not found");
+        RequestStatus memory request = s_requests[_requestId];
+        return (request.fulfilled, request.randomWords);
+    }
+
     /* <------ INTERNAL FUNCTIONS -------> */
 
     function assignPotato(uint256 tokenId) internal {
@@ -204,6 +285,15 @@ contract UNKNOWN is
         require(_isTokenActive(tokenId), "Token is not active");
         potatoTokenId = tokenId;
         tokenTraits[potatoTokenId].hasPotato = true;
+    }
+
+    function assignRandomPotato(uint256[] memory randomWords) internal {
+        console.log("Begin to assign random Potato");
+        require(randomWords.length > 0, "No random words provided");
+        uint256 randomIndex = randomWords[0] % activeTokens.length;
+        console.log("Set random index");
+        assignPotato(activeTokens[randomIndex]);
+        console.log("Successfully assigned potato");
     }
 
     function _findFirstActiveToken() internal view returns (uint256) {
