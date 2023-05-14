@@ -56,7 +56,7 @@ contract UNKNOWN is
     struct RequestStatus {
         uint256[] randomWord;
         bool fulfilled;
-        // bool exists;
+        bool exists;
     }
 
     struct TokenTraits {
@@ -83,7 +83,7 @@ contract UNKNOWN is
     event GameRestarted();
     event PotatoExploded(uint256 tokenId);
     event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo);
-    event RequestSent(uint256 requestId);
+    event RequestSent(uint256 requestId, uint32 numWords);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
 
     constructor(uint64 subscriptionId)
@@ -218,8 +218,10 @@ contract UNKNOWN is
         emit GameRestarted();
     }
 
-    function randomize() public returns (uint256) {
-        uint256 requestId = COORDINATOR.requestRandomWords(
+    /* <------------------------------------------------ CHAINLINK_VRF_V2 FUNCTIONS ------------------------------------------------> */
+
+    function randomize() public returns (uint256 requestId) {
+        requestId = COORDINATOR.requestRandomWords(
             keyHash,
             s_subscriptionId,
             requestConfirmations,
@@ -229,11 +231,12 @@ contract UNKNOWN is
 
         statuses[requestId] = RequestStatus({
             randomWord: new uint256[](0),
-            fulfilled: false
+            fulfilled: false,
+            exists: true
         });
         requestIds.push(requestId);
         lastRequestId = requestId;
-        emit RequestSent(requestId);
+        emit RequestSent(requestId, numWords);
         return requestId;
     }
 
@@ -241,8 +244,10 @@ contract UNKNOWN is
         internal
         override
     {
+        require(statuses[requestId].exists, "request not found");
         statuses[requestId].fulfilled = true;
         statuses[requestId].randomWord = randomWords;
+        statuses[requestId].exists = true;
 
         potatoTokenId = randomWords[0] % 6969;
         emit RequestFulfilled(requestId, randomWords);
