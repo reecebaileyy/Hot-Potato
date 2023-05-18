@@ -1,17 +1,37 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.17;
 
-import "./Base64.sol";
+import "Base64.sol";
 import "erc721a/contracts/ERC721A.sol";
+import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 
+enum GameState {
+    Queued,
+    Minting,
+    Playing,
+    Paused,
+    FinalRound,
+    Ended
+}
+
+struct RequestStatus {
+    uint256[] randomWord;
+    bool fulfilled;
+    bool exists;
+}
+
+struct TokenTraits {
+    bool hasPotato;
+    uint256 generation;
+    // TODO: ADD MORE TRAITS FOR HANDS
+}
 
 contract UNKNOWN is
     ERC721A,
@@ -23,50 +43,33 @@ contract UNKNOWN is
 {
     using Strings for uint256;
 
-    bool private explosionTimeInitialized = false;
-    bool private _isExplosionInProgress = false;
     uint16 requestConfirmations = 3;
     uint32 numWords = 1;
     uint32 callbackGasLimit = 2500000;
     uint64 s_subscriptionId;
+
+    bool private explosionTimeInitialized = false;
+    bool private _isExplosionInProgress = false;
+
     uint256 public constant INITIAL_POTATO_EXPLOSION_DURATION = 2 minutes;
     uint256 public constant DECREASE_INTERVAL = 10;
     uint256 public constant DECREASE_DURATION = 5 seconds;
-    uint256 private FINAL_POTATO_EXPLOSION_DURATION = 10 minutes;
-    uint256 public EXPLOSION_TIME;
     uint256 public TOTAL_PASSES;
     uint256 public potatoTokenId;
     uint256 public currentGeneration = 0;
     uint256 public lastRequestId;
-    uint256 private _price = 0 ether;
     uint256 public _maxsupply = 10000;
     uint256 public _maxperwallet = 3;
-    uint256 private _currentIndex = 1;
+
+    uint256 private FINAL_POTATO_EXPLOSION_DURATION = 10 minutes;
     address private _owner;
+    uint256 private remainingTime;
+    uint256 private _price = 0 ether;
+    uint256 private _currentIndex = 1;
 
-    bytes32 keyHash =
-        0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
+    uint256 internal EXPLOSION_TIME;
 
-    enum GameState {
-        Queued,
-        Minting,
-        Playing,
-        Paused,
-        FinalRound,
-        Ended
-    }
-
-    struct RequestStatus {
-        uint256[] randomWord;
-        bool fulfilled;
-        bool exists;
-    }
-
-    struct TokenTraits {
-        bool hasPotato;
-        uint256 generation;
-        // TODO: ADD MORE TRAITS FOR HANDS
-    }
+    bytes32 keyHash = 0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
 
     mapping(uint256 => TokenTraits) public tokenTraits;
     mapping(address => uint256) public tokensMintedPerRound;
@@ -170,15 +173,34 @@ contract UNKNOWN is
         }
 
         potatoTokenId = tokenIdTo;
+        tokenTraits[potatoTokenId] = TokenTraits({
+            hasPotato: true,
+            generation: currentGeneration
+        });
         TOTAL_PASSES += 1;
         successfulPasses[msg.sender] += 1;
 
-        checkAndProcessExplosion(); // Keep this line to check and process the explosion after passing the potato
+        checkAndProcessExplosion();
         emit PotatoPassed(tokenIdFrom, tokenIdTo);
     }
 
     function getGameState() public view returns (string memory) {
         return gameStateStrings[gameState];
+    }
+
+    function getExplosionTime() public view returns (uint256) {
+        if (block.timestamp >= EXPLOSION_TIME) {
+            return 0;
+        } else {
+            return EXPLOSION_TIME - block.timestamp;
+        }
+    }
+
+    function checkExplosion() public {
+        require(gameState == GameState.Playing, "Game not playing");
+        if (block.timestamp >= EXPLOSION_TIME) {
+            processExplosion();
+        }
     }
 
     function tokenURI(uint256 tokenId)
@@ -283,6 +305,9 @@ contract UNKNOWN is
                 gameState == GameState.Minting,
             "Game not playing"
         );
+        if (_isExplosionInProgress) {
+            remainingTime = EXPLOSION_TIME - block.timestamp;
+        }
         previousGameState = gameState;
         gameState = GameState.Paused;
         emit GamePaused();
@@ -290,6 +315,12 @@ contract UNKNOWN is
 
     function resumeGame() external onlyOwner {
         require(gameState == GameState.Paused, "Game not paused");
+        if (
+            previousGameState == GameState.Playing ||
+            previousGameState == GameState.FinalRound
+        ) {
+            EXPLOSION_TIME = block.timestamp + remainingTime;
+        }
         gameState = previousGameState;
     }
 
@@ -359,14 +390,13 @@ contract UNKNOWN is
 
         uint256 newPotatoTokenId = randomWords[0] % activeTokens.length;
 
-        if (newPotatoTokenId == 0 ) {
+        if (newPotatoTokenId == 0) {
             newPotatoTokenId = 1;
         }
 
         assignPotato(newPotatoTokenId);
         emit RequestFulfilled(requestId, randomWords);
     }
-
 
     function assignPotato(uint256 tokenId) internal {
         // Remove the potato from the current holder, if any
@@ -442,10 +472,10 @@ contract UNKNOWN is
         emit PotatoExploded(potatoTokenId);
 
         // 4. Check if the game should move to the final round or end
-        if (activeTokens.length == 1) {
+        if (activeTokens.length == 2) {
             gameState = GameState.FinalRound;
             assignPotato(activeTokens[_findFirstActiveToken()]);
-        } else if (activeTokens.length == 0) {
+        } else if (activeTokens.length == 1) {
             gameState = GameState.Ended;
         } else {
             updateExplosionTimer();
@@ -472,13 +502,6 @@ contract UNKNOWN is
         require(index <= activeTokens.length, "Invalid index");
         activeTokens[index] = activeTokens[activeTokens.length - 1];
         activeTokens.pop();
-    }
-
-    function checkExplosion() external {
-        require(gameState == GameState.Playing, "Game not playing");
-        if (block.timestamp >= EXPLOSION_TIME) {
-            processExplosion();
-        }
     }
 
     // TODO: Implement logic for determining the winners and distributing rewards
