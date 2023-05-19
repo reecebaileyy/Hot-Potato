@@ -25,7 +25,6 @@ export default function App({ Component, pageProps }) {
       </WagmiConfig>
 
       <Web3Modal
-        className='sm:hidden'
         projectId={projectId}
         ethereumClient={ethereumClient}
         themeVariables={{
