@@ -62,7 +62,7 @@ export default function Home() {
 
         <div className='flex flex-row sm:flex-col md:flex-col justify-between items-center gap-28 mx-12 mb-20'>
           <Image alt="Add alt Here" src={hot} width={400} height={400} />
-          <h1 className='text-2xl text-center text-white'>Feel the intense heat as you compete in thrilling, fast-paced, adrenaline-fueled rounds, passing the sizzling potato to your friends or opponents before the timer runs out. With our user-friendly interface and intuitive gameplay, OnChain Hot Potato offers an immersive experience that's incredibly easy to pick up and play, making it a game you won't be able to resist. Whether you're a seasoned gamer or a beginner looking for a captivating challenge, our button-based gameplay will keep you hooked for hours on end, ensuring endless excitement and intense competition.</h1>
+          <h1 className='text-2xl text-center text-white'>Feel the intense heat as you compete in thrilling, fast-paced, adrenaline-fueled rounds, passing the sizzling potato to your friends or opponents before the timer runs out. With our user-friendly interface and intuitive gameplay, OnChain Hot Potato offers an immersive experience that&apos;s incredibly easy to pick up and play, making it a game you won&apos;t be able to resist. Whether you&apos;re a seasoned gamer or a beginner looking for a captivating challenge, our button-based gameplay will keep you hooked for hours on end, ensuring endless excitement and intense competition.</h1>
         </div>
 
         <div className="w-full flex justify-center items-center relative">
@@ -75,11 +75,11 @@ export default function Home() {
 
         <div className='grid grid-cols-6 gap-4 sm:flex sm:flex-col sm:gap-3 md:flex md:flex-col md:gap-3 mt-10 mx-10'>
           <h1 className='col-span-6 text-4xl md:text-2xl sm:text-2xl text-white text-center'>Getting Started with OnChain Hot Potato</h1>
-          <h3 className='col-span-6 text-2xl md:text-base sm:text-base text-white text-center mb-10'>It&apos;s simple, fun, and rewarding! Here's how you can join in on the excitement...</h3>
+          <h3 className='col-span-6 text-2xl md:text-base sm:text-base text-white text-center mb-10'>It&apos;s simple, fun, and rewarding! Here&apos;s how you can join in on the excitement...</h3>
           <p className="col-start-1 col-end-3 text-center text-white">This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
           <Image alt="Add alt Here" src={potato} width={700} height={750} className='col-start-3 col-end-5' />
           <p className="col-end-7 col-span-2 text-center text-white">This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
-          <h1 className='text-4xl sm:text-2xl md:text-2xl col-start-1 col-end-7 text-center text-white'>That's all it takes to dive into the thrilling world of OnChain Hot Potato! Fun, quick, and rewarding - a game experience like no other.</h1>
+          <h1 className='text-4xl sm:text-2xl md:text-2xl col-start-1 col-end-7 text-center text-white'>That&apos;s all it takes to dive into the thrilling world of OnChain Hot Potato! Fun, quick, and rewarding - a game experience like no other.</h1>
         </div>
 
         <div className="flex items-center my-10 mx-10">
@@ -102,7 +102,7 @@ export default function Home() {
 
         <div className='grid grid-cols-6 gap-4 sm:flex sm:flex-col sm:gap-3 md:flex md:flex-col sm:items-center md:items-center md:gap-3 mt-10 mx-10'>
           <Image alt="Add alt Here" src={hot} width={200} className='col-start-1 col-end-3' />
-          <h1 className="col-start-3 col-end-5 text-center text-white text-3xl sm:text-2xl md:text-2xl">Don't miss out on the most exciting onchain game of the year.
+          <h1 className="col-start-3 col-end-5 text-center text-white text-3xl sm:text-2xl md:text-2xl">Don&apos;t miss out on the most exciting onchain game of the year.
             <span className='text-black'><Link href="/play"> Get started </Link></span>
             with OnChain Hot Potato now!</h1>
           <Image alt="Add alt Here" src={hot} width={200} className='col-end-7 col-span-1' />
@@ -113,7 +113,7 @@ export default function Home() {
             <div className="text-center">
               <h1 className="text-3xl sm:2xl md:2xl text-white font-semibold tracking-wide uppercase">Frequently Asked Questions</h1>
               <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-500 sm:text-4xl">
-                Got questions? We've got answers.
+                Got questions? We&apos;ve got answers.
               </p>
             </div>
 
@@ -161,10 +161,10 @@ export default function Home() {
                 </div>
                 <div>
                   <dt className="text-xl leading-6 font-medium text-white">
-                    My question isn't listed here. What do I do?
+                    My question isn&apos;t listed here. What do I do?
                   </dt>
                   <dd className="mt-2 text-lg text-gray-500">
-                   If you have a question that isn't listed here, please reach out to our team on our socials listed below. We'll get back to you as soon as possible!
+                   If you have a question that isn&apos;t listed here, please reach out to our team on our socials listed below. We&apos;ll get back to you as soon as possible!
                   </dd>
                 </div>
                 {/* Repeat the above div for each FAQ. Remember to replace the placeholder text */}
