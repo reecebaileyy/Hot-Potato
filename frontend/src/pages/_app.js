@@ -24,18 +24,19 @@ export default function App({ Component, pageProps }) {
       <Component {...pageProps} />
       </WagmiConfig>
 
-      <Web3Modal 
+      <Web3Modal
+        className='sm:hidden'
         projectId={projectId}
         ethereumClient={ethereumClient}
         themeVariables={{
-            '--w3m-font-family': 'darumadrop, cursive',
+            '--w3m-font-family': 'DarumadropOne, sans-serif', //LEFT OFF
             '--w3m-accent-color': '#FFFFFF',
             '--w3m-accent-fill-color': '#000000',
             '--w3m-background-color': '#000000',
-            '--w3m-text-big-bold-size': '15px',
-            '--w3m-text-small-regular-size': '.6rem',
-            '--w3m-text-xsmall-bold-size': '.4rem',
-            '--w3m-text-xsmall-regular-size': '.5rem',
+            '--w3m-text-big-bold-size': '25px',
+            '--w3m-text-small-regular-size': '1rem',
+            '--w3m-text-xsmall-bold-size': '.8rem',
+            '--w3m-text-xsmall-regular-size': '.8rem',
             '--w3m-font-weight': '400',
           }}
       />
