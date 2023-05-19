@@ -22,7 +22,7 @@ export default function Home() {
       </Head>
 
       <div className="bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop">
-        <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative">
+        <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
           <Link href="/" className='text-4xl sm:text-5xl md:text-6xl text-white hover:text-black'>LogoHere</Link>
           <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
@@ -57,7 +57,7 @@ export default function Home() {
         <header className="px-5 md:px-0 flex flex-col items-center justify-center text-center p-10 space-y-5">
           <h1 className='text-4xl sm:text-5xl md:text-6xl text-white'>Onchain Hot Potato</h1>
           <p className='text-lg sm:text-xl md:text-2xl text-white'>Hodl, Pass, Survive...</p>
-          <Link className='text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-black' href="/play">Play Now</Link>
+          <Link className='text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black' href="/play">Play Now</Link>
         </header>
 
         <div className='flex flex-row sm:flex-col md:flex-col justify-between items-center gap-28 mx-12 mb-20'>

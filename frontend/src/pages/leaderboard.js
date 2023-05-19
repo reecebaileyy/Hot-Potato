@@ -18,7 +18,7 @@ export default function Home() {
       </Head>
 
       <div className="bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 h-screen font-darumadrop">
-        <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative">
+        <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
           <Link href='/' className='text-4xl sm:text-5xl md:text-6xl text-white hover:text-black'>LogoHere</Link>
           <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
