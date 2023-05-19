@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.17;
 
-import "Base64.sol";
+import "./Base64.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -74,6 +74,8 @@ contract UNKNOWN is
     mapping(uint256 => TokenTraits) public tokenTraits;
     mapping(address => uint256) public tokensMintedPerRound;
     mapping(address => uint256) public successfulPasses;
+    mapping(address => uint256) public failedPasses;
+    mapping(address => uint256) public totalWins;
     mapping(GameState => string) private gameStateStrings;
     mapping(uint256 => RequestStatus) public statuses;
     mapping(address => uint256[]) public tokensOwnedByUser;
@@ -266,7 +268,7 @@ contract UNKNOWN is
         return string(abi.encodePacked("data:application/json;base64,", json));
     }
 
-    /* 
+/* 
   ______                                               ________                              __     __                            
  /      \                                             |        \                            |  \   |  \                           
 |  ▓▓▓▓▓▓\__   __   __ _______   ______   ______      | ▓▓▓▓▓▓▓▓__    __ _______   _______ _| ▓▓_   \▓▓ ______  _______   _______ 
@@ -281,7 +283,7 @@ contract UNKNOWN is
 
     function startGame() external onlyOwner {
         require(
-            gameState == GameState.Ended ||
+                gameState == GameState.Ended ||
                 gameState == GameState.Paused ||
                 gameState == GameState.Queued,
             "Game already started"
@@ -290,12 +292,12 @@ contract UNKNOWN is
         currentGeneration += 1;
         emit GameStarted();
     }
-
+ 
     function endMinting() external onlyOwner {
         require(gameState == GameState.Minting, "Game not minting");
-        gameState = GameState.Playing;
         randomize();
         updateExplosionTimer();
+        gameState = GameState.Playing;
     }
 
     function pauseGame() external onlyOwner {
@@ -319,6 +321,7 @@ contract UNKNOWN is
             previousGameState == GameState.Playing ||
             previousGameState == GameState.FinalRound
         ) {
+            // TODO: Check if there is a valid explosion timer ongoing
             EXPLOSION_TIME = block.timestamp + remainingTime;
         }
         gameState = previousGameState;
