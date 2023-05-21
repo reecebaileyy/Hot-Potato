@@ -31,6 +31,7 @@ module.exports = {
     },
     fontFamily: {
       darumadrop: ['"DarumadropOne"', 'sans-serif'],
+      modern: ['"Modern"', 'display'],
     },
   },
   plugins: [

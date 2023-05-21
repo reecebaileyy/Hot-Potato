@@ -54,8 +54,9 @@ export default function Home() {
           </div>
         </nav>
 
-        <header className="px-5 md:px-0 flex flex-col items-center justify-center text-center p-10 space-y-5">
+        <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center p-10 space-y-5">
           <h1 className='text-4xl sm:text-5xl md:text-6xl text-white'>Onchain Hot Potato</h1>
+          <h3 className='text-xl sm:text-2xl md:text-3xl text-white'>V1.0.0</h3>
           <p className='text-lg sm:text-xl md:text-2xl text-white'>Hodl, Pass, Survive...</p>
           <Link className='text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black' href="/play">Play Now</Link>
         </header>

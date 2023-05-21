@@ -5,7 +5,9 @@
 @font-face {
   font-family: 'DarumadropOne';
   src: url('/assets/fonts/DarumadropOne-Regular.ttf') format('truetype');
-  /* Add other font file formats if you have them */
+
+
+
 }
 
 .nav-transparent {

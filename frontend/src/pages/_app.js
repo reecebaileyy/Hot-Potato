@@ -6,18 +6,25 @@ import {polygon, polygonMumbai } from 'wagmi/chains'
 
 
 
-const chains = [polygon, polygonMumbai]
-const projectId = '2cfdc63c5f7f086289800e2f12c0bed8'
-
-const { publicClient } = configureChains(chains, [w3mProvider({ projectId })])
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors: w3mConnectors({ projectId, version: 1, chains }),
-  publicClient
-})
-const ethereumClient = new EthereumClient(wagmiConfig, chains)
-
 export default function App({ Component, pageProps }) {
+
+  const chains = [polygon, polygonMumbai]
+  const projectId = '2cfdc63c5f7f086289800e2f12c0bed8'
+  
+  const { publicClient } = configureChains(chains, [w3mProvider({ projectId })])
+  const wagmiConfig = createConfig({
+    autoConnect: true,
+    connectors: w3mConnectors({
+      appName:"Hot Potato",
+      projectId,
+      version: 1,
+      chains 
+    }),
+    publicClient
+  })
+  const ethereumClient = new EthereumClient(wagmiConfig, chains)
+  
+
   return (
     <>
       <WagmiConfig config={wagmiConfig}>

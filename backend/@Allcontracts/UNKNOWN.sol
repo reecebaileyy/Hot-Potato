@@ -58,27 +58,29 @@ contract UNKNOWN is
     uint256 public potatoTokenId;
     uint256 public currentGeneration = 0;
     uint256 public lastRequestId;
+    uint256 public _price = 0 ether;
     uint256 public _maxsupply = 10000;
     uint256 public _maxperwallet = 3;
+    uint256 public roundMints = 0;
 
     uint256 private FINAL_POTATO_EXPLOSION_DURATION = 10 minutes;
     address private _owner;
     uint256 private remainingTime;
-    uint256 private _price = 0 ether;
     uint256 private _currentIndex = 1;
 
     uint256 internal EXPLOSION_TIME;
 
-    bytes32 keyHash = 0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
+    bytes32 keyHash =
+        0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
 
     mapping(uint256 => TokenTraits) public tokenTraits;
     mapping(address => uint256) public tokensMintedPerRound;
     mapping(address => uint256) public successfulPasses;
     mapping(address => uint256) public failedPasses;
     mapping(address => uint256) public totalWins;
-    mapping(GameState => string) private gameStateStrings;
     mapping(uint256 => RequestStatus) public statuses;
     mapping(address => uint256[]) public tokensOwnedByUser;
+    mapping(GameState => string) private gameStateStrings;
 
     VRFCoordinatorV2Interface COORDINATOR;
 
@@ -138,7 +140,7 @@ contract UNKNOWN is
         //     tokensMintedPerRound[msg.sender] + count <= _maxperwallet,
         //     "Exceeded maximum tokens per round"
         // );
-        require(totalSupply() < _maxsupply, "Max NFTs minted");
+        require(roundMints < _maxsupply, "Max NFTs minted");
         require(count > 0, "Must mint at least one NFT");
 
         // LOOP THROUGH THE COUNT AND MINT THE TOKENS WHILE ASSIGNING THE POTATO AS FALSE
@@ -153,6 +155,7 @@ contract UNKNOWN is
             tokensOwnedByUser[msg.sender].push(tokenId);
         }
 
+        roundMints += count;
         tokensMintedPerRound[msg.sender] += count;
     }
 
@@ -203,6 +206,16 @@ contract UNKNOWN is
         if (block.timestamp >= EXPLOSION_TIME) {
             processExplosion();
         }
+    }
+
+    function userHasPotatoToken(address user) public view returns (bool) {
+        uint256[] memory ownedTokens = tokensOwnedByUser[user];
+        for (uint256 i = 0; i < ownedTokens.length; i++) {
+            if (tokenTraits[ownedTokens[i]].hasPotato) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function tokenURI(uint256 tokenId)
@@ -268,7 +281,11 @@ contract UNKNOWN is
         return string(abi.encodePacked("data:application/json;base64,", json));
     }
 
-/* 
+    function getRoundMints() public view returns (uint256) {
+        return roundMints;
+    }
+
+    /* 
   ______                                               ________                              __     __                            
  /      \                                             |        \                            |  \   |  \                           
 |  ▓▓▓▓▓▓\__   __   __ _______   ______   ______      | ▓▓▓▓▓▓▓▓__    __ _______   _______ _| ▓▓_   \▓▓ ______  _______   _______ 
@@ -283,7 +300,7 @@ contract UNKNOWN is
 
     function startGame() external onlyOwner {
         require(
-                gameState == GameState.Ended ||
+            gameState == GameState.Ended ||
                 gameState == GameState.Paused ||
                 gameState == GameState.Queued,
             "Game already started"
@@ -292,7 +309,7 @@ contract UNKNOWN is
         currentGeneration += 1;
         emit GameStarted();
     }
- 
+
     function endMinting() external onlyOwner {
         require(gameState == GameState.Minting, "Game not minting");
         randomize();
@@ -342,6 +359,7 @@ contract UNKNOWN is
 
         // Clear the activeTokens array and remove the potato token
         delete activeTokens;
+        roundMints = 0;
         delete tokenTraits[potatoTokenId];
         potatoTokenId = 0;
         TOTAL_PASSES = 0;
