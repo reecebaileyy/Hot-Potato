@@ -66,14 +66,14 @@ export default function Home() {
 
   // GETTING GAME STATE
   const { data: gameState } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'getGameState',
   })
   console.log(`gameState: ${gameState}`)
   // GETTING NUMBER OF PASSES
   const { data: successfulPasses } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'successfulPasses',
     args: [address],
@@ -81,7 +81,7 @@ export default function Home() {
   const passes = parseInt(successfulPasses, 10);
   // GETTING NUMBER OF FAILS
   const { data: failedPasses } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'failedPasses',
     args: [address],
@@ -89,7 +89,7 @@ export default function Home() {
   const failed = parseInt(failedPasses, 10);
   // GETTING NUMBER OF WINS
   const { data: totalWins } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'totalWins',
     args: [address],
@@ -97,21 +97,21 @@ export default function Home() {
   const wins = parseInt(totalWins, 10);
   // GET MINT PRICE
   const { data: _price } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: '_price',
   })
   const price = parseInt(_price, 10);
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getRoundMints } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'getRoundMints',
   })
   const _roundMints = parseInt(getRoundMints, 10);
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: '_maxsupply',
   })
@@ -119,7 +119,7 @@ export default function Home() {
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
@@ -127,7 +127,7 @@ export default function Home() {
 
   // GET POTATO TOKEN ID
   const { data: getExplosionTime } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'getExplosionTime',
   })
@@ -135,7 +135,7 @@ export default function Home() {
 
   // GET EXPLOSION TIME
   const { data: potatoTokenId } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
@@ -143,7 +143,7 @@ export default function Home() {
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
@@ -151,7 +151,7 @@ export default function Home() {
 
   // GET CURRENT GENERATION
   const { data: currentGeneration } = useContractRead({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'currentGeneration',
   })
@@ -159,7 +159,7 @@ export default function Home() {
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount],
@@ -182,7 +182,7 @@ export default function Home() {
 
   // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
@@ -204,7 +204,7 @@ export default function Home() {
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    address: '0x438f38d48edea5123fC3187D9053253a47634F79',
     abi: ABI,
     functionName: 'checkExplosion',
   })
