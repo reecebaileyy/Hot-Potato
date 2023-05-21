@@ -1,12 +1,13 @@
 import Head from 'next/head'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 import { Web3Button } from '@web3modal/react'
 import { ethers } from 'ethers'
 import ABI from '../abi/UNKNOWN.json'
 import { fetchBalance } from '@wagmi/core'
 import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite } from 'wagmi'
-
+import potato from 'public/assets/images/potato.png'
 
 
 export default function Home() {
@@ -26,7 +27,7 @@ export default function Home() {
     if (numericValue !== inputValue) {
       alert('Only numbers are allowed');
     }
-    else if(inputValue === "") {
+    else if (inputValue === "") {
       setTokenId("");
     }
     else if (inputValue !== "") {
@@ -42,7 +43,7 @@ export default function Home() {
     if (numericValue !== inputValue) {
       alert('Only numbers are allowed');
     }
-    else if(inputValue === "") {
+    else if (inputValue === "") {
       setMintAmount("");
       setTotalCost(0);
     }
@@ -53,7 +54,7 @@ export default function Home() {
     }
     setValue(numericValue);
   }
-  
+
 
 
   const menuRef = useRef()
@@ -65,14 +66,14 @@ export default function Home() {
 
   // GETTING GAME STATE
   const { data: gameState } = useContractRead({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: 'getGameState',
   })
   console.log(`gameState: ${gameState}`)
   // GETTING NUMBER OF PASSES
   const { data: successfulPasses } = useContractRead({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: 'successfulPasses',
     args: [address],
@@ -80,7 +81,7 @@ export default function Home() {
   const passes = parseInt(successfulPasses, 10);
   // GETTING NUMBER OF FAILS
   const { data: failedPasses } = useContractRead({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: 'failedPasses',
     args: [address],
@@ -88,7 +89,7 @@ export default function Home() {
   const failed = parseInt(failedPasses, 10);
   // GETTING NUMBER OF WINS
   const { data: totalWins } = useContractRead({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: 'totalWins',
     args: [address],
@@ -96,46 +97,69 @@ export default function Home() {
   const wins = parseInt(totalWins, 10);
   // GET MINT PRICE
   const { data: _price } = useContractRead({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: '_price',
   })
   const price = parseInt(_price, 10);
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getRoundMints } = useContractRead({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: 'getRoundMints',
   })
   const _roundMints = parseInt(getRoundMints, 10);
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply } = useContractRead({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: '_maxsupply',
   })
   const maxSupply = parseInt(_maxsupply, 10);
 
-   // GET TOKENS OWNED BY USER
-   const { data: userHasPotatoToken } = useContractRead({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+  // GET TOKENS OWNED BY USER
+  const { data: userHasPotatoToken } = useContractRead({
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
   })
 
   // GET POTATO TOKEN ID
+  const { data: getExplosionTime } = useContractRead({
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    abi: ABI,
+    functionName: 'getExplosionTime',
+  })
+  const explosionTime = parseInt(getExplosionTime, 10);
+
+  // GET EXPLOSION TIME
   const { data: potatoTokenId } = useContractRead({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
   const _potatoTokenId = parseInt(potatoTokenId, 10);
 
+  // GET ACTIVE TOKENS
+  const { data: getActiveTokens } = useContractRead({
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    abi: ABI,
+    functionName: 'getActiveTokens',
+  })
+  const activeTokens = parseInt(getActiveTokens, 10);
+
+  // GET CURRENT GENERATION
+  const { data: currentGeneration } = useContractRead({
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    abi: ABI,
+    functionName: 'currentGeneration',
+  })
+  const currentRound = parseInt(currentGeneration, 10);
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount],
@@ -146,11 +170,11 @@ export default function Home() {
     if (!address) {
       alert("please connect to join the heat!!!");
     } else if (balance < totalCost) {
-      alert("YOU NEED MORE FUNDS BOBO!!");
+      alert("Not enough funds in your wallet");
     } else if (mintAmount > (maxSupply - _roundMints)) {
-      alert("TOO SLOW BOBOS ALL SOLD OUT.. GO SWEEP FCKIN BOBO");
+      alert("This Game is Full, Please wait for the next round");
     } else if (mintAmount == 0) {
-      alert("COME ON SER.. AT LEAST GET 1 BOBO :/");
+      alert("You need at least 1 hand to play");
     } else {
       mint?.();
     }
@@ -158,7 +182,7 @@ export default function Home() {
 
   // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
-    address: '0x9C84a409cb10022d79ef997AB5a7411369391CA1',
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
@@ -175,7 +199,28 @@ export default function Home() {
     } else {
       pass?.();
     }
-     
+
+  };
+
+  // CHECK EXPLOSION
+  const { config: configCheck } = usePrepareContractWrite({
+    address: '0xab475F637D910379d9f2C302cccE3722C3eD620A',
+    abi: ABI,
+    functionName: 'checkExplosion',
+  })
+  const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
+
+  const handlecheck = () => {
+    if (!address) {
+      alert("please connect to join the heat!!!");
+    } else if (gameState !== "Playing" || gameState == "FinalRound") {
+      alert("The game has not started yet!");
+    } else if (!userHasPotatoToken) {
+      alert("You need to own the potato to make a pass!");
+    } else {
+      check?.();
+    }
+
   };
 
   return (
@@ -186,6 +231,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+
 
       <div className="bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop">
         <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
@@ -220,7 +266,7 @@ export default function Home() {
           </div>
         </nav>
 
-        <div className=" p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
+        <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
           <div className='w-full col-start-2 col-span-6 justify-start items-start md:w-2/3 lg:w-1/2 rounded-md'>
             <h1 className="text-3xl md:text-4xl lg:text-5xl text-left font-bold mb-4">v1.0.0</h1>
           </div>
@@ -237,40 +283,117 @@ export default function Home() {
             <p className="text-sm text-center mb-2">Total Wins: {wins}</p>
           </div>
           <div className="w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 bg-white shadow-lg rounded-md p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105">
-            <h1 className="text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Jump in the Heat</h1>
-            <p className="text-lg text-center mb-4 text-black">PRICE: {price} ETH</p>
-            <p className="text-lg text-center mb-4 text-black">MAX PER WALLET: XXX</p>
-            <input className="mt-4 w-3/4 bg-white hover:bg-gray-300 text-black px-4 py-2 rounded shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
-              type="text"
-              value={mintAmount}
-              inputMode="numeric"
-              pattern="[0-9]*"
-              onChange={handleInputChangeMint}
-              placeholder="Enter mint amount" />
-            <button className="mt-4 w-1/2 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-3 rounded shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110"
-              onClick={handleMint}
-            >MINT NOW!</button>
-            <p className="text-lg text-center mb-4 text-black">{_roundMints}/{maxSupply} MINTED</p>
-            <Link href="https://mumbai.polygonscan.com/" target='_blank'></Link>
-          </div>
-          <div className="w-full p-4 mb-8 col-end-9 col-span-2  md:w-2/3 lg:w-1/2 bg-white shadow rounded-md">
-            <h2 className="text-xl font-bold mb-2">Your active token(s): XXX</h2>
-            <p className="text-sm">You can pass the potato if you are currently holding it.</p>
-            <div className="grid grid-rows-2 place-items-center justify-center items center">
-              <input className="mt-4 w-1/2  bg-white hover:bg-gray-300 text-black px-4 py-2 rounded shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
-                type="text"
-                value={tokenId}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                onChange={handleInputChangeToken}
-                placeholder="tokenId" />
-              <button className="mt-4 w-5/6 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-2 rounded shadow"
-                onClick={handlePass}
-              >Pass Potato</button>
+            {gameState == "Playing" || gameState == "Final Round" ?
+              <>
+                <h1 className="text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Token #101293849392 has the potato</h1>
+                <h2 className="text-2xl text-center mb-4 text-black">TIME REMAINING: {explosionTime}</h2>
+                <Image src={potato} width={200} height={200} />
+                <button className="mt-4 w-1/2 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-3 rounded shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110"
+                  onClick={handlecheck}>
+                  CHECK EXPLOSION
+                </button>
+                <p className="text-xl text-center mb-4 text-black">{activeTokens} Active Tokens Remaing</p>
+                <Link href="https://mumbai.polygonscan.com/" target='_blank'>
+                  Smart Contract
+                </Link>
+              </>
+              : gameState == "Queued" ? (
+                <>
+                  <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Round starting soon</h1>
+                  <h3 className='text-xl text-center mb-4 text-black'>The game is currently Queued, Come back soon for some sizzlin fun!</h3>
+                  <Image src={potato} width={200} height={200} />
+                  <div className='grid grid-cols-3 justify-center gap-4'>
+                    <Link href="https://mumbai.polygonscan.com/" target='_blank' className='text-lg text-center underline text-black'>
+                      Discord
+                    </Link>
+                    <Link href="https://twitter.com" className='text-lg text-center underline text-black'>Smart Contract</Link>
+                    <Link className="text-lg text-center underline text-black" href="https://app.gitbook.com">Twitter</Link>
+                  </div>
+                </>
+              ) :
+                gameState == "Paused" ? (
+                  <>
+                    <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Game Paused</h1>
+                    <h3 className='text-2xl text-center mb-4 text-black'>The game is currently paused. Please wait for further updates.</h3>
+                    <Image src={potato} width={200} height={200} />
+                    {/* Add more components based on your design in paused state */}
+                  </>
+                ) :
+                  gameState == "Ended" ? (
+                    <>
+                      <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Game Ended</h1>
+                      <h3 className='text-2xl text-center mb-4 text-black'>Thank you for participating. See you in the next game!</h3>
+                      <Image src={potato} width={200} height={200} />
+                      <h2 className="text-xl text-center text-black">And congratulations to our Winner:</h2>
+                      <h1 className="text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">XXX</h1>
+                      {/* Add more components based on your design in ended state */}
+                    </>
+                  ) :
+                    gameState == "Minting" && (
+                      <>
+                        <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Jump in the Heat</h1>
+                        <h3 className='text-2xl text-center mb-4 text-black'>Round {currentRound}</h3>
+                        <div className='grid grid-cols-2'>
+                          <p className="text-lg text-center mb-4 text-black">PRICE: {price} ETH</p>
+                          <p className="text-lg text-center mb-4 text-black">MAX PER WALLET: XXX</p>
+                        </div>
+                        <input className="mt-4 w-3/4 bg-white hover:bg-gray-300 text-black px-4 py-2 rounded shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
+                          type="text"
+                          value={mintAmount}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          onChange={handleInputChangeMint}
+                          placeholder="Enter mint amount" /><button className="mt-4 w-1/2 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-3 rounded shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110"
+                            onClick={handleMint}
+                          >Join Round!</button>
+                        <p className="text-lg text-center mb-4 text-black">{_roundMints}/{maxSupply} MINTED</p>
+                        <Link href="https://mumbai.polygonscan.com/" target='_blank'>
+                          Smart Contract
+                        </Link>
+                      </>
+                    )
+            }
 
-            </div>
           </div>
-          <div className="w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 bg-white shadow rounded-md p-4">
+          <div className="w-full flex flex-col justify-center items-center p-4 mb-8 col-end-9 col-span-2  md:w-2/3 lg:w-1/2 bg-white shadow rounded-md">
+            {gameState == "Playing" || gameState == "Final Round" ?
+              <>
+                <h1 className='text-xl font-bold mb-2 underline'>Your Tokens:</h1>
+                <h2 className="text-base font-bold mb-2">Active Token(s): XXX</h2>
+                <h2 className='text-base font-bold mb-2'>Has Potato: XXX</h2>
+                <p className="text-sm text-center">You can pass the potato if you are currently holding it.</p>
+                <div className="grid grid-rows-2 place-items-center justify-center items center">
+                  <input className="mt-4 w-1/2  bg-white hover:bg-gray-300 text-black px-4 py-2 rounded shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
+                    type="text"
+                    value={tokenId}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    onChange={handleInputChangeToken}
+                    placeholder="tokenId" />
+                  <button className="mt-4 w-5/6 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-2 rounded shadow"
+                    onClick={handlePass}
+                  >Pass Potato</button>
+                </div>
+              </>
+              : gameState == "Queued" ?
+                <>
+                  <p className="text-sm">The game is currently Queued. You will be able to pass the potato once the game starts.</p>
+                  <Image src={potato} width={200} height={200} className='self-center' />
+                </>
+                : gameState == "Minting" ?
+                  <>
+                    <p className="text-sm">The game is currently in Minting phase. You will be able to pass the potato once the game starts.</p>
+                    <Image src={potato} width={200} height={200} />
+                  </>
+                  : gameState == "Ended" &&
+                  <>
+                    <p className="text-sm">The game has ended. Thank you for participating!</p>
+                    <Image src={potato} width={200} height={200} />
+                  </>
+            }
+          </div>
+
+          <div className="w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 bg-white shadow rounded-md">
             <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4">
               {events.map((event, index) => (
                 <span className="inline-block text-white" key={index}>{event}</span>
@@ -282,3 +405,23 @@ export default function Home() {
     </>
   )
 }
+
+{/* <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Jump in the Heat</h1>
+                <h3 className='text-2xl text-center mb-4 text-black'>Round {currentRound}</h3>
+                <div className='grid grid-cols-2'>
+                <p className="text-lg text-center mb-4 text-black">PRICE: {price} ETH</p>
+                <p className="text-lg text-center mb-4 text-black">MAX PER WALLET: XXX</p>
+                </div>
+                <input className="mt-4 w-3/4 bg-white hover:bg-gray-300 text-black px-4 py-2 rounded shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
+                  type="text"
+                  value={mintAmount}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  onChange={handleInputChangeMint}
+                  placeholder="Enter mint amount" /><button className="mt-4 w-1/2 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-3 rounded shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110"
+                    onClick={handleMint}
+                  >Join Round!</button>
+                <p className="text-lg text-center mb-4 text-black">{_roundMints}/{maxSupply} MINTED</p>
+                <Link href="https://mumbai.polygonscan.com/" target='_blank'>
+                  Smart Contract
+                </Link> */}

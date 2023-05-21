@@ -218,6 +218,10 @@ contract UNKNOWN is
         return false;
     }
 
+    function getActiveTokens() public view returns (uint256) {
+        return activeTokens.length;
+    }
+
     function tokenURI(uint256 tokenId)
         public
         view
@@ -449,7 +453,7 @@ contract UNKNOWN is
         return false;
     }
 
-    function checkAndProcessExplosion() internal {
+    function checkAndProcessExplosion() public {
         if (_isExplosionInProgress && block.timestamp >= EXPLOSION_TIME) {
             processExplosion();
         }
