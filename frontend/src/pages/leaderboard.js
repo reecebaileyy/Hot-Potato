@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useState, useRef } from 'react'
 import { Web3Button } from '@web3modal/react'
-import { leaderboardData } from './dummy' // import dummy data
+import { leaderboardData } from '../dummy/dummy' // import dummy data
 
 export default function Home() {
 
