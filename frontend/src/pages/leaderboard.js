@@ -18,7 +18,7 @@ export default function Home() {
       </Head>
 
       <div className="bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 h-screen font-darumadrop">
-        <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
+      <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
           <Link href='/' className='text-4xl sm:text-5xl md:text-6xl text-white hover:text-black'>LogoHere</Link>
           <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
@@ -26,7 +26,6 @@ export default function Home() {
             </button>
             <div className={`fixed inset-0 flex justify-center items-center  bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}
               onClick={(e) => {
-                // If the click target is not the menu and not inside the menu, close the menu
                 if (!menuRef.current.contains(e.target)) {
                   setIsOpen(false)
                 }
@@ -36,18 +35,18 @@ export default function Home() {
                 <li><Link className='text-black hover:text-gray-700' href="/leaderboard">Leaderboard</Link></li>
                 <li><Link className='text-black hover:text-gray-700' href="https://app.gitbook.com" target="_blank">Docs</Link></li>
                 <li><Link className='text-black hover:text-gray-700' href="https://opensea.io" target="_blank">Opensea</Link></li>
-                <Web3Button className='text-white bg-slate-800 p-2 rounded-lg'/>
+                <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
               </ul>
             </div>
           </div>
           <ul className='flex md:hidden sm:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
             <li><Link className='text-white hover:text-black' href="/play">Play</Link></li>
             <li><Link className='text-white hover:text-black' href="/leaderboard">Leaderboard</Link></li>
-            <li><Link className='text-white hover:text-black' href="https://app.gitbook.com">Docs</Link></li>
-            <li><Link className='text-white hover:text-black' href="https://opensea.io">Opensea</Link></li>
+            <li><Link className='text-white hover:text-black' href="https://app.gitbook.com" target="_blank">Docs</Link></li>
+            <li><Link className='text-white hover:text-black' href="https://opensea.io" target="_blank">Opensea</Link></li>
           </ul>
           <div className='sm:hidden md:hidden'>
-            <Web3Button className='text-white bg-slate-800 p-2 rounded-lg'/>
+            <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
           </div>
         </nav>
       </div>

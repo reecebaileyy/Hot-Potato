@@ -22,8 +22,8 @@ export default function Home() {
       </Head>
 
       <div className="bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop">
-        <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
-          <Link href="/" className='text-4xl sm:text-5xl md:text-6xl text-white hover:text-black'>LogoHere</Link>
+      <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
+          <Link href='/' className='text-4xl sm:text-5xl md:text-6xl text-white hover:text-black'>LogoHere</Link>
           <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
               <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
@@ -46,8 +46,8 @@ export default function Home() {
           <ul className='flex md:hidden sm:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
             <li><Link className='text-white hover:text-black' href="/play">Play</Link></li>
             <li><Link className='text-white hover:text-black' href="/leaderboard">Leaderboard</Link></li>
-            <li><Link className='text-white hover:text-black' href="https://app.gitbook.com">Docs</Link></li>
-            <li><Link className='text-white hover:text-black' href="https://opensea.io">Opensea</Link></li>
+            <li><Link className='text-white hover:text-black' href="https://app.gitbook.com" target="_blank">Docs</Link></li>
+            <li><Link className='text-white hover:text-black' href="https://opensea.io" target="_blank">Opensea</Link></li>
           </ul>
           <div className='sm:hidden md:hidden'>
             <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
@@ -196,9 +196,6 @@ export default function Home() {
             </div>
           </footer>
         </div>
-
-
-
       </div>
     </>
   )

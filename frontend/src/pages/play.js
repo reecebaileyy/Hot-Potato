@@ -6,12 +6,11 @@ import { Web3Button } from '@web3modal/react'
 import { ethers } from 'ethers'
 import ABI from '../abi/UNKNOWN.json'
 import { fetchBalance } from '@wagmi/core'
-import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite } from 'wagmi'
+import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent } from 'wagmi'
 import potato from 'public/assets/images/potato.png'
 
 
 export default function Home() {
-
 
   const [isOpen, setIsOpen] = useState(false)
   const [events, setEvents] = useState([]);
@@ -68,8 +67,6 @@ export default function Home() {
     abi: ABI,
     functionName: 'getGameState',
   })
-
-  console.log(`getGameState: ${getGameState}`)
   // GETTING NUMBER OF PASSES
   const { data: successfulPasses } = useContractRead({
     address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
@@ -222,6 +219,16 @@ export default function Home() {
 
   };
 
+  // EVENT LISTENERS
+  useContractEvent({
+    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    abi: ABI,
+    eventName: 'GameStarted',
+    listener(log) {
+     console.log(`Game Started: ${log}`);
+    },
+  });
+
   return (
     <>
       <Head>
@@ -248,8 +255,8 @@ export default function Home() {
               <ul ref={menuRef} className={`items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black`}>
                 <li><Link className='text-black hover:text-gray-700 justify-center' href="/play">Play</Link></li>
                 <li><Link className='text-black hover:text-gray-700' href="/leaderboard">Leaderboard</Link></li>
-                <li><Link className='text-black hover:text-gray-700' href="https://app.gitbook.com">Docs</Link></li>
-                <li><Link className='text-black hover:text-gray-700' href="https://opensea.io">Opensea</Link></li>
+                <li><Link className='text-black hover:text-gray-700' href="https://app.gitbook.com" target="_blank">Docs</Link></li>
+                <li><Link className='text-black hover:text-gray-700' href="https://opensea.io" target="_blank">Opensea</Link></li>
                 <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
               </ul>
             </div>
@@ -280,12 +287,29 @@ export default function Home() {
               <>
                 <Image alt='Image' src={potato} width={200} height={200} />
               </> :
-              <>
-                <h2 className="text-xl font-bold underline mb-2">Statistics:</h2>
-                <p className="text-sm text-center mb-2">Successful Passes: {passes}</p>
-                <p className="text-sm text-center mb-2">Failed Passes: {failed}</p>
-                <p className="text-sm text-center mb-2">Total Wins: {wins}</p>
-              </>
+              getGameState == "Playing" || getGameState == "Final Round" ?
+                <>
+                  <h2 className="text-xl font-bold underline mb-2">Statistics:</h2>
+                  <p className="text-sm text-center mb-2">Successful Passes: {passes}</p>
+                  <p className="text-sm text-center mb-2">Failed Passes: {failed}</p>
+                  <p className="text-sm text-center mb-2">Total Wins: {wins}</p>
+                </>
+                : getGameState == "Queued" ?
+                  <>
+                    <Image alt='Image' src={potato} width={200} height={200} className='self-center' />
+                  </>
+                  : getGameState == "Paused" ?
+                    <>
+                      <Image alt='Image' src={potato} width={200} height={200} />
+                    </>
+                    : getGameState == "Minting" ?
+                      <>
+                        <Image alt='Image' src={potato} width={200} height={200} />
+                      </>
+                      : getGameState == "Ended" &&
+                      <>
+                        <Image alt='Image' src={potato} width={200} height={200} />
+                      </>
             }
           </div>
           <div className="w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 bg-white shadow-lg rounded-md p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105">
@@ -392,27 +416,26 @@ export default function Home() {
                 </>
                 : getGameState == "Queued" ?
                   <>
-                    <p className="text-sm text-center">The game is currently Queued. You will be able to pass the potato once the game starts.</p>
                     <Image alt='Image' src={potato} width={200} height={200} className='self-center' />
                   </>
                   : getGameState == "Minting" ?
                     <>
-                      <p className="text-sm text-center">The game is currently in Minting phase. You will be able to pass the potato once the game starts.</p>
                       <Image alt='Image' src={potato} width={200} height={200} />
                     </>
-                    : getGameState == "Ended" &&
-                    <>
-                      <p className="text-sm text-center">The game has ended. Thank you for participating!</p>
-                      <Image alt='Image' src={potato} width={200} height={200} />
-                    </>
+                    : getGameState == "Paused" ?
+                      <>
+                        <Image alt='Image' src={potato} width={200} height={200} />
+                      </>
+                      : getGameState == "Ended" &&
+                      <>
+                        <Image alt='Image' src={potato} width={200} height={200} />
+                      </>
             }
           </div>
 
           <div className="w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 bg-white shadow rounded-md">
             <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4">
-              {events.map((event, index) => (
-                <span className="inline-block text-white" key={index}>{event}</span>
-              ))}
+              
             </div>
           </div>
         </div>
