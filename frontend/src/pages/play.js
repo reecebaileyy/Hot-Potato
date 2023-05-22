@@ -10,7 +10,7 @@ import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useCo
 import potato from 'public/assets/images/potato.png'
 
 
-export default function Home() {
+export default function Play() {
 
   const [isOpen, setIsOpen] = useState(false)
   const [events, setEvents] = useState([]);
