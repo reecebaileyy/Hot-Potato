@@ -105,6 +105,7 @@ contract UNKNOWN is
         VRFConsumerBaseV2(0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed)
         ConfirmedOwner(msg.sender)
     {
+        activeTokens.push(0);
         gameStateStrings[GameState.Queued] = "Queued";
         gameStateStrings[GameState.Minting] = "Minting";
         gameStateStrings[GameState.Playing] = "Playing";
@@ -165,28 +166,29 @@ contract UNKNOWN is
             "Game not playing"
         );
         require(block.timestamp < EXPLOSION_TIME, "Potato exploded");
-        require(_exists(tokenIdTo), "Target NFT does not exist");
+        require(_isTokenActive(tokenIdTo), "Target NFT does not exist");
         require(msg.sender != ownerOf(tokenIdTo), "Cannot pass potato to self");
 
-        uint256 tokenIdFrom;
-        uint256[] memory ownedTokens = tokensOwnedByUser[msg.sender];
-        for (uint256 i = 0; i < ownedTokens.length; i++) {
-            if (tokenTraits[ownedTokens[i]].hasPotato) {
-                tokenIdFrom = ownedTokens[i];
-                break;
+       
+            uint256 tokenIdFrom;
+            uint256[] memory ownedTokens = tokensOwnedByUser[msg.sender];
+            for (uint256 i = 0; i < ownedTokens.length; i++) {
+                if (tokenTraits[ownedTokens[i]].hasPotato) {
+                    tokenIdFrom = ownedTokens[i];
+                    break;
+                }
             }
-        }
 
-        potatoTokenId = tokenIdTo;
-        tokenTraits[potatoTokenId] = TokenTraits({
-            hasPotato: true,
-            generation: currentGeneration
-        });
-        TOTAL_PASSES += 1;
-        successfulPasses[msg.sender] += 1;
+            potatoTokenId = tokenIdTo;
+            tokenTraits[potatoTokenId] = TokenTraits({
+                hasPotato: true,
+                generation: currentGeneration
+            });
+            TOTAL_PASSES += 1;
+            successfulPasses[msg.sender] += 1;
 
-        checkAndProcessExplosion();
-        emit PotatoPassed(tokenIdFrom, tokenIdTo);
+            checkAndProcessExplosion();
+            emit PotatoPassed(tokenIdFrom, tokenIdTo);
     }
 
     function getGameState() public view returns (string memory) {
@@ -203,8 +205,13 @@ contract UNKNOWN is
 
     function checkExplosion() public {
         require(gameState == GameState.Playing, "Game not playing");
+        require(
+            getExplosionTime() == 0,
+            "Still got more time to pass the potato"
+        );
         if (block.timestamp >= EXPLOSION_TIME) {
             processExplosion();
+            updateExplosionTimer();
         }
     }
 
@@ -436,7 +443,7 @@ contract UNKNOWN is
     }
 
     function _findFirstActiveToken() internal view returns (uint256) {
-        for (uint256 i = 0; i < activeTokens.length; i++) {
+        for (uint256 i = 1; i < activeTokens.length; i++) {
             if (_isTokenActive(activeTokens[i])) {
                 return activeTokens[i];
             }
@@ -445,7 +452,7 @@ contract UNKNOWN is
     }
 
     function _isTokenActive(uint256 tokenId) internal view returns (bool) {
-        for (uint256 i = 0; i < activeTokens.length; i++) {
+        for (uint256 i = 1; i < activeTokens.length; i++) {
             if (activeTokens[i] == tokenId) {
                 return true;
             }
@@ -515,7 +522,8 @@ contract UNKNOWN is
         view
         returns (uint256)
     {
-        for (uint256 i = 0; i < activeTokens.length; i++) {
+        require(activeTokens.length > 1, "Not enough active tokens");
+        for (uint256 i = 1; i < activeTokens.length; i++) {
             if (activeTokens[i] == tokenId) {
                 return i;
             }
