@@ -51,7 +51,7 @@ contract UNKNOWN is
     bool private explosionTimeInitialized = false;
     bool private _isExplosionInProgress = false;
 
-    uint256 public constant INITIAL_POTATO_EXPLOSION_DURATION = 2 minutes;
+    uint256 public constant INITIAL_POTATO_EXPLOSION_DURATION = 3 minutes;
     uint256 public constant DECREASE_INTERVAL = 10;
     uint256 public constant DECREASE_DURATION = 5 seconds;
     uint256 public TOTAL_PASSES;
@@ -165,11 +165,13 @@ contract UNKNOWN is
             gameState == GameState.Playing || gameState == GameState.FinalRound,
             "Game not playing"
         );
-        require(block.timestamp < EXPLOSION_TIME, "Potato exploded");
         require(_isTokenActive(tokenIdTo), "Target NFT does not exist");
         require(msg.sender != ownerOf(tokenIdTo), "Cannot pass potato to self");
 
-       
+        if (block.timestamp >= EXPLOSION_TIME) {
+            // Call the function to process explosion
+            processExplosion();
+        } else {
             uint256 tokenIdFrom;
             uint256[] memory ownedTokens = tokensOwnedByUser[msg.sender];
             for (uint256 i = 0; i < ownedTokens.length; i++) {
@@ -189,6 +191,7 @@ contract UNKNOWN is
 
             checkAndProcessExplosion();
             emit PotatoPassed(tokenIdFrom, tokenIdTo);
+        }
     }
 
     function getGameState() public view returns (string memory) {
@@ -226,7 +229,7 @@ contract UNKNOWN is
     }
 
     function getActiveTokens() public view returns (uint256) {
-        return activeTokens.length;
+        return activeTokens.length - 1;
     }
 
     function tokenURI(uint256 tokenId)
@@ -514,6 +517,7 @@ contract UNKNOWN is
             assignPotato(activeTokens[_findFirstActiveToken()]);
         }
 
+        updateExplosionTimer();
         _isExplosionInProgress = false;
     }
 

@@ -60,16 +60,15 @@ export default function Play() {
   const { address } = useAccount()
   const { balance } = useBalance(address)
 
-
   // GETTING GAME STATE
   const { data: getGameState, isLoading: Loading } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'getGameState',
   })
   // GETTING NUMBER OF PASSES
   const { data: successfulPasses } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'successfulPasses',
     args: [address],
@@ -77,7 +76,7 @@ export default function Play() {
   const passes = parseInt(successfulPasses, 10);
   // GETTING NUMBER OF FAILS
   const { data: failedPasses } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'failedPasses',
     args: [address],
@@ -85,7 +84,7 @@ export default function Play() {
   const failed = parseInt(failedPasses, 10);
   // GETTING NUMBER OF WINS
   const { data: totalWins } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'totalWins',
     args: [address],
@@ -93,21 +92,21 @@ export default function Play() {
   const wins = parseInt(totalWins, 10);
   // GET MINT PRICE
   const { data: _price } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: '_price',
   })
   const price = parseInt(_price, 10);
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getRoundMints } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'getRoundMints',
   })
   const _roundMints = parseInt(getRoundMints, 10);
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: '_maxsupply',
   })
@@ -115,7 +114,7 @@ export default function Play() {
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
@@ -123,7 +122,7 @@ export default function Play() {
 
   // GET POTATO TOKEN ID
   const { data: getExplosionTime } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'getExplosionTime',
   })
@@ -131,7 +130,7 @@ export default function Play() {
 
   // GET EXPLOSION TIME
   const { data: potatoTokenId } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
@@ -139,7 +138,7 @@ export default function Play() {
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
@@ -147,15 +146,24 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: currentGeneration } = useContractRead({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'currentGeneration',
   })
   const currentRound = parseInt(currentGeneration, 10);
 
+  // GET CURRENT GENERATION
+  const { data: balanceOf } = useContractRead({
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    abi: ABI,
+    functionName: 'balanceOf',
+    args: [address],
+  })
+  const _balanceOf = parseInt(balanceOf, 10);
+
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount],
@@ -178,7 +186,7 @@ export default function Play() {
 
   // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
@@ -200,7 +208,7 @@ export default function Play() {
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     functionName: 'checkExplosion',
   })
@@ -221,11 +229,11 @@ export default function Play() {
 
   // EVENT LISTENERS
   useContractEvent({
-    address: '0x770B0f299214c55CfFa86c1EcD756cEe49996732',
+    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
     abi: ABI,
     eventName: 'GameStarted',
     listener(log) {
-     console.log(`Game Started: ${log}`);
+      console.log(`Game Started: ${log}`);
     },
   });
 
@@ -304,7 +312,15 @@ export default function Play() {
                     </>
                     : getGameState == "Minting" ?
                       <>
-                        <Image alt='Image' src={potato} width={200} height={200} />
+                        <h1 className="text-3xl font-bold mb-2">Welcome to the oven!</h1>
+                        <p className="text-sm text-center mb-2">Ready up because this is about to get heated...</p>
+                        <p className="text-sm text-center mb-2">mint now or cry later?</p>
+                        <p className="text-sm text-center mb-2">Got Heat?</p>
+                        <div className='flex'>
+                          <Image alt='Image' src={potato} width={100} height={200} />
+                          <Image alt='Image' src={potato} width={100} height={200} />
+                          <Image alt='Image' src={potato} width={100} height={200} />
+                        </div>
                       </>
                       : getGameState == "Ended" &&
                       <>
@@ -352,7 +368,11 @@ export default function Play() {
                       <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Game Paused</h1>
                       <h3 className='text-2xl text-center mb-4 text-black'>The game is currently paused. Please wait for further updates.</h3>
                       <Image alt='Image' src={potato} width={200} height={200} />
-                      {/* Add more components based on your design in paused state */}
+                      
+                      <p className="text-xl text-center mb-4 text-black">{activeTokens} Active Tokens Remaing</p>
+                      <Link href="https://mumbai.polygonscan.com/" target='_blank'>
+                        Smart Contract
+                      </Link>
                     </>
                   ) :
                     getGameState == "Ended" ? (
@@ -421,6 +441,13 @@ export default function Play() {
                   : getGameState == "Minting" ?
                     <>
                       <Image alt='Image' src={potato} width={200} height={200} />
+                      <h3 className="text-xl text-center">I have <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>{_balanceOf}</span> pair of hands</h3>
+                      <p className="text-sm text-center">Pass the heat to your friends and family!!</p>
+                      <div className="grid grid-rows-2 place-items-center justify-center items center">
+                        <button className="mt-4 w-full bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-2 rounded shadow"
+                          onClick={handlePass}
+                        >Tweet it!</button>
+                      </div>
                     </>
                     : getGameState == "Paused" ?
                       <>
@@ -435,7 +462,7 @@ export default function Play() {
 
           <div className="w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 bg-white shadow rounded-md">
             <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4">
-              
+
             </div>
           </div>
         </div>
