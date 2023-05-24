@@ -69,6 +69,7 @@ contract UNKNOWN is
     uint256 private _currentIndex = 1;
 
     uint256 internal EXPLOSION_TIME;
+    uint256 internal currentRandomWord;
 
     bytes32 keyHash =
         0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
@@ -167,6 +168,10 @@ contract UNKNOWN is
         );
         require(_isTokenActive(tokenIdTo), "Target NFT does not exist");
         require(msg.sender != ownerOf(tokenIdTo), "Cannot pass potato to self");
+        require(
+            msg.sender == ownerOf(potatoTokenId),
+            "You don't have the potato yet"
+        );
 
         if (block.timestamp >= EXPLOSION_TIME) {
             // Call the function to process explosion
@@ -181,11 +186,11 @@ contract UNKNOWN is
                 }
             }
 
-            potatoTokenId = tokenIdTo;
-            tokenTraits[potatoTokenId] = TokenTraits({
-                hasPotato: true,
-                generation: currentGeneration
-            });
+            uint256 newPotatoTokenId = tokenIdTo;
+
+            potatoTokenId = newPotatoTokenId;
+            tokenTraits[potatoTokenId].hasPotato = true;
+
             TOTAL_PASSES += 1;
             successfulPasses[msg.sender] += 1;
 
@@ -196,6 +201,16 @@ contract UNKNOWN is
 
     function getGameState() public view returns (string memory) {
         return gameStateStrings[gameState];
+    }
+
+    function getActiveTokenCount(address user) external view returns (uint256) {
+        uint256 count = 0;
+        for (uint256 i = 1; i < activeTokens.length; i++) {
+            if (ownerOf(activeTokens[i]) == user) {
+                count++;
+            }
+        }
+        return count;
     }
 
     function getExplosionTime() public view returns (uint256) {
@@ -212,9 +227,9 @@ contract UNKNOWN is
             getExplosionTime() == 0,
             "Still got more time to pass the potato"
         );
+
         if (block.timestamp >= EXPLOSION_TIME) {
             processExplosion();
-            updateExplosionTimer();
         }
     }
 
@@ -366,7 +381,7 @@ contract UNKNOWN is
         gameState = GameState.Queued;
 
         // Reset tokens minted by each user in the round
-        for (uint256 i = 0; i < activeTokens.length; i++) {
+        for (uint256 i = 1; i < activeTokens.length; i++) {
             address tokenOwner = ownerOf(activeTokens[i]);
             tokensMintedPerRound[tokenOwner] = 0;
         }
@@ -377,6 +392,8 @@ contract UNKNOWN is
         delete tokenTraits[potatoTokenId];
         potatoTokenId = 0;
         TOTAL_PASSES = 0;
+
+        activeTokens.push(0);
 
         emit GameRestarted();
     }
@@ -423,11 +440,15 @@ contract UNKNOWN is
         statuses[requestId].randomWord = randomWords;
         statuses[requestId].exists = true;
 
-        uint256 newPotatoTokenId = randomWords[0] % activeTokens.length;
+        currentRandomWord = randomWords[0];
 
-        if (newPotatoTokenId == 0) {
-            newPotatoTokenId = 1;
+        uint256 num = currentRandomWord % activeTokens.length;
+
+        if (num == 0) {
+            num = 1;
         }
+
+        uint256 newPotatoTokenId = activeTokens[num];
 
         assignPotato(newPotatoTokenId);
         emit RequestFulfilled(requestId, randomWords);
@@ -451,7 +472,7 @@ contract UNKNOWN is
                 return activeTokens[i];
             }
         }
-        return 0;
+        revert("No active tokens found");
     }
 
     function _isTokenActive(uint256 tokenId) internal view returns (bool) {
@@ -463,8 +484,8 @@ contract UNKNOWN is
         return false;
     }
 
-    function checkAndProcessExplosion() public {
-        if (_isExplosionInProgress && block.timestamp >= EXPLOSION_TIME) {
+    function checkAndProcessExplosion() internal {
+        if (block.timestamp >= EXPLOSION_TIME) {
             processExplosion();
         }
     }
@@ -494,27 +515,46 @@ contract UNKNOWN is
     }
 
     function processExplosion() internal {
-        require(gameState == GameState.Playing, "Game not playing");
+        require(
+            gameState == GameState.Playing || gameState == GameState.FinalRound,
+            "Game not playing"
+        );
 
-        // 1. Remove the potato from the exploded NFT
+        // 1. +1 for the address of the player who failed to pass the potato kek loser lol 
+        address failedPlayer = ownerOf(potatoTokenId);
+        failedPasses[failedPlayer] += 1;
+
+        // 2. Remove the potato from the exploded NFT
         tokenTraits[potatoTokenId].hasPotato = false;
 
-        // 2. Remove the exploded NFT from the activeTokens array
+        // 3. Remove the exploded NFT from the activeTokens array
         uint256 indexToRemove = _indexOfTokenInActiveTokens(potatoTokenId);
         _removeTokenFromActiveTokensByIndex(indexToRemove);
 
-        // 3. Emit an event to notify that the potato exploded
+        // 4. Emit an event to notify that the potato exploded and get ready to assign potato to a rand tokenId
         emit PotatoExploded(potatoTokenId);
+        uint256 indexToAssign = currentRandomWord % activeTokens.length; 
 
-        // 4. Check if the game should move to the final round or end
+        // 5. Check if the game should move to the final round or end
         if (activeTokens.length == 2) {
-            gameState = GameState.FinalRound;
-            assignPotato(activeTokens[_findFirstActiveToken()]);
+            address tokenOwner1 = ownerOf(activeTokens[0]); // Index starts from 0
+            address tokenOwner2 = ownerOf(activeTokens[1]);
+
+            if (tokenOwner1 != tokenOwner2) {
+                gameState = GameState.FinalRound;
+                assignPotato(activeTokens[indexToAssign]);
+            } else {
+                gameState = GameState.Ended;
+            }
         } else if (activeTokens.length == 1) {
             gameState = GameState.Ended;
         } else {
             updateExplosionTimer();
-            assignPotato(activeTokens[_findFirstActiveToken()]);
+            // calculate the index based on the current activeTokens.length
+            if (indexToAssign == 0 && activeTokens.length > 1) {
+                indexToAssign = 1;
+            }
+            assignPotato(activeTokens[indexToAssign]);
         }
 
         updateExplosionTimer();

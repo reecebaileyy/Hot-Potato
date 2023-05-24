@@ -62,51 +62,66 @@ export default function Play() {
 
   // GETTING GAME STATE
   const { data: getGameState, isLoading: Loading } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'getGameState',
   })
+  
   // GETTING NUMBER OF PASSES
   const { data: successfulPasses } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'successfulPasses',
     args: [address],
   })
   const passes = parseInt(successfulPasses, 10);
+
   // GETTING NUMBER OF FAILS
   const { data: failedPasses } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'failedPasses',
     args: [address],
   })
   const failed = parseInt(failedPasses, 10);
+
   // GETTING NUMBER OF WINS
   const { data: totalWins } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'totalWins',
     args: [address],
   })
   const wins = parseInt(totalWins, 10);
+
   // GET MINT PRICE
   const { data: _price } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: '_price',
   })
   const price = parseInt(_price, 10);
+
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getRoundMints } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'getRoundMints',
   })
   const _roundMints = parseInt(getRoundMints, 10);
+
+  // GET NUMBER OF MINTS DURING THE ROUND
+  const { data: getActiveTokenCount } = useContractRead({
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
+    abi: ABI,
+    functionName: 'getActiveTokenCount',
+    args: [address],
+  })
+  const activeTokensCount = parseInt(getActiveTokenCount, 10);
+
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: '_maxsupply',
   })
@@ -114,15 +129,16 @@ export default function Play() {
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
   })
+  const hasPotatoToken = userHasPotatoToken?.toString();
 
   // GET POTATO TOKEN ID
   const { data: getExplosionTime } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'getExplosionTime',
   })
@@ -130,7 +146,7 @@ export default function Play() {
 
   // GET EXPLOSION TIME
   const { data: potatoTokenId } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
@@ -138,7 +154,7 @@ export default function Play() {
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
@@ -146,7 +162,7 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: currentGeneration } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'currentGeneration',
   })
@@ -154,7 +170,7 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: balanceOf } = useContractRead({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'balanceOf',
     args: [address],
@@ -163,7 +179,7 @@ export default function Play() {
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount],
@@ -186,7 +202,7 @@ export default function Play() {
 
   // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
@@ -208,7 +224,7 @@ export default function Play() {
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     functionName: 'checkExplosion',
   })
@@ -219,8 +235,8 @@ export default function Play() {
       alert("please connect to join the heat!!!");
     } else if (getGameState !== "Playing" || getGameState == "FinalRound") {
       alert("The game has not started yet!");
-    } else if (!userHasPotatoToken) {
-      alert("You need to own the potato to make a pass!");
+    } else if (explosionTime !== 0) {
+      alert("The potato has not exploded yet!");
     } else {
       check?.();
     }
@@ -229,7 +245,7 @@ export default function Play() {
 
   // EVENT LISTENERS
   useContractEvent({
-    address: '0x7E9AD01DE881dF50447e6C532CF27F8b58343BE2',
+    address: '0x00fC6ea2c36b6fd8f9dA78bbdd65383F8557a9f1',
     abi: ABI,
     eventName: 'GameStarted',
     listener(log) {
@@ -418,8 +434,8 @@ export default function Play() {
               getGameState == "Playing" || getGameState == "Final Round" ?
                 <>
                   <h1 className='text-xl font-bold mb-2 underline'>Your Tokens:</h1>
-                  <h2 className="text-base font-bold mb-2">Active Token(s): XXX</h2>
-                  <h2 className='text-base font-bold mb-2'>Has Potato: XXX</h2>
+                  <h2 className="text-base font-bold mb-2">Active Token(s): {activeTokensCount}</h2>
+                  <h2 className='text-base font-bold mb-2'>Has Potato: {hasPotatoToken}</h2>
                   <p className="text-sm text-center">You can pass the potato if you are currently holding it.</p>
                   <div className="grid grid-rows-2 place-items-center justify-center items center">
                     <input className="mt-4 w-1/2  bg-white hover:bg-gray-300 text-black px-4 py-2 rounded shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
@@ -441,7 +457,7 @@ export default function Play() {
                   : getGameState == "Minting" ?
                     <>
                       <Image alt='Image' src={potato} width={200} height={200} />
-                      <h3 className="text-xl text-center">I have <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>{_balanceOf}</span> pair of hands</h3>
+                      <h3 className="text-xl text-center">I have <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>{activeTokensCount}</span> pairs hands to handle the heat this round</h3>
                       <p className="text-sm text-center">Pass the heat to your friends and family!!</p>
                       <div className="grid grid-rows-2 place-items-center justify-center items center">
                         <button className="mt-4 w-full bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-2 rounded shadow"
