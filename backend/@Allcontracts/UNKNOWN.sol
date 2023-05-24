@@ -91,9 +91,9 @@ contract UNKNOWN is
     uint256[] public activeTokens;
     uint256[] public requestIds;
 
-    event GameStarted();
-    event GamePaused();
-    event GameRestarted();
+    event GameStarted(string message);
+    event GamePaused(string message);
+    event GameRestarted(string message);
     event PotatoExploded(uint256 tokenId);
     event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo);
     event RequestSent(uint256 requestId, uint32 numWords);
@@ -336,14 +336,12 @@ contract UNKNOWN is
         );
         gameState = GameState.Minting;
         currentGeneration += 1;
-        emit GameStarted();
+        emit GameStarted("The game has started");
     }
 
     function endMinting() external onlyOwner {
         require(gameState == GameState.Minting, "Game not minting");
         randomize();
-        updateExplosionTimer();
-        gameState = GameState.Playing;
     }
 
     function pauseGame() external onlyOwner {
@@ -358,7 +356,7 @@ contract UNKNOWN is
         }
         previousGameState = gameState;
         gameState = GameState.Paused;
-        emit GamePaused();
+        emit GamePaused("The game has pasued");
     }
 
     function resumeGame() external onlyOwner {
@@ -395,7 +393,7 @@ contract UNKNOWN is
 
         activeTokens.push(0);
 
-        emit GameRestarted();
+        emit GameRestarted("The game has restarted");
     }
 
     /*
@@ -452,6 +450,9 @@ contract UNKNOWN is
 
         assignPotato(newPotatoTokenId);
         emit RequestFulfilled(requestId, randomWords);
+
+        gameState = GameState.Playing;
+        updateExplosionTimer();
     }
 
     function assignPotato(uint256 tokenId) internal {
@@ -520,7 +521,7 @@ contract UNKNOWN is
             "Game not playing"
         );
 
-        // 1. +1 for the address of the player who failed to pass the potato kek loser lol 
+        // 1. +1 for the address of the player who failed to pass the potato kek loser lol
         address failedPlayer = ownerOf(potatoTokenId);
         failedPasses[failedPlayer] += 1;
 
@@ -533,7 +534,7 @@ contract UNKNOWN is
 
         // 4. Emit an event to notify that the potato exploded and get ready to assign potato to a rand tokenId
         emit PotatoExploded(potatoTokenId);
-        uint256 indexToAssign = currentRandomWord % activeTokens.length; 
+        uint256 indexToAssign = currentRandomWord % activeTokens.length;
 
         // 5. Check if the game should move to the final round or end
         if (activeTokens.length == 2) {
