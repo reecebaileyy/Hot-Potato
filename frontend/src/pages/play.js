@@ -154,8 +154,6 @@ export default function Play() {
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
-  
-
 
   useContractEvent({
     address: '0x6adE0D747Ffa705594c99033f360967495A4FdDE',
@@ -392,7 +390,7 @@ export default function Play() {
       refetchBalanceOf();
       console.log(events);
       console.log("refreshed");
-    }, 1000);
+    }, 5000);
 
     return () => {
       clearInterval(intervalId);
@@ -583,11 +581,11 @@ export default function Play() {
                           </>
                           :
                           <>
-                          <h1 className="text-3xl text-center mb-4 text-black">{_roundMints}/{maxSupply} MINTED</h1>
-                          <p1 className="text-2xl md:text-xl lg:text-3xl text-center font-bold"
-                          >Connect first to join the fun!</p1>
+                            <h1 className="text-3xl text-center mb-4 text-black">{_roundMints}/{maxSupply} MINTED</h1>
+                            <p1 className="text-2xl md:text-xl lg:text-3xl text-center font-bold"
+                            >Connect first to join the fun!</p1>
                           </>
-                        }                        
+                        }
                         <Link href="https://mumbai.polygonscan.com/" target='_blank'>
                           Smart Contract
                         </Link>
