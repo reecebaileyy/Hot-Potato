@@ -6,7 +6,6 @@ import { configureChains, createConfig, WagmiConfig } from 'wagmi'
 import {polygon, polygonMumbai } from 'wagmi/chains'
 
 
-
 export default function App({ Component, pageProps }) {
 
   const chains = [polygon, polygonMumbai]

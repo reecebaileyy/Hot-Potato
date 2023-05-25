@@ -76,6 +76,7 @@ contract UNKNOWN is
 
     mapping(uint256 => TokenTraits) public tokenTraits;
     mapping(address => uint256) public tokensMintedPerRound;
+    mapping(address => bool) private isPlayer;
     mapping(address => uint256) public successfulPasses;
     mapping(address => uint256) public failedPasses;
     mapping(address => uint256) public totalWins;
@@ -90,6 +91,7 @@ contract UNKNOWN is
 
     uint256[] public activeTokens;
     uint256[] public requestIds;
+    address[] public players;
 
     event GameStarted(string message);
     event GamePaused(string message);
@@ -98,6 +100,9 @@ contract UNKNOWN is
     event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo);
     event RequestSent(uint256 requestId, uint32 numWords);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
+    event FailedPass(address indexed player);
+    event SuccessfulPass(address indexed player);
+    event PlayerWon(address indexed player);
 
     constructor(uint64 subscriptionId)
         payable
@@ -157,6 +162,11 @@ contract UNKNOWN is
             tokensOwnedByUser[msg.sender].push(tokenId);
         }
 
+        if (!isPlayer[msg.sender]) {
+            players.push(msg.sender);
+            isPlayer[msg.sender] = true;
+        }
+
         roundMints += count;
         tokensMintedPerRound[msg.sender] += count;
     }
@@ -176,6 +186,7 @@ contract UNKNOWN is
         if (block.timestamp >= EXPLOSION_TIME) {
             // Call the function to process explosion
             processExplosion();
+            emit FailedPass(msg.sender);
         } else {
             uint256 tokenIdFrom;
             uint256[] memory ownedTokens = tokensOwnedByUser[msg.sender];
@@ -187,12 +198,14 @@ contract UNKNOWN is
             }
 
             uint256 newPotatoTokenId = tokenIdTo;
-
+            tokenTraits[potatoTokenId].hasPotato = false;
             potatoTokenId = newPotatoTokenId;
+            
             tokenTraits[potatoTokenId].hasPotato = true;
 
             TOTAL_PASSES += 1;
             successfulPasses[msg.sender] += 1;
+            emit SuccessfulPass(msg.sender);
 
             checkAndProcessExplosion();
             emit PotatoPassed(tokenIdFrom, tokenIdTo);
@@ -222,7 +235,7 @@ contract UNKNOWN is
     }
 
     function checkExplosion() public {
-        require(gameState == GameState.Playing, "Game not playing");
+        require(gameState == GameState.Playing || gameState == GameState.FinalRound, "Game not playing");
         require(
             getExplosionTime() == 0,
             "Still got more time to pass the potato"
@@ -241,6 +254,22 @@ contract UNKNOWN is
             }
         }
         return false;
+    }
+
+    function getPlayerStats(address player)
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        return (
+            successfulPasses[player],
+            failedPasses[player],
+            totalWins[player]
+        );
     }
 
     function getActiveTokens() public view returns (uint256) {
@@ -409,7 +438,7 @@ contract UNKNOWN is
                                                                                                                                                  
 */
 
-    function randomize() public returns (uint256 requestId) {
+    function randomize() public onlyOwner returns (uint256 requestId) {
         requestId = COORDINATOR.requestRandomWords(
             keyHash,
             s_subscriptionId,
@@ -537,9 +566,9 @@ contract UNKNOWN is
         uint256 indexToAssign = currentRandomWord % activeTokens.length;
 
         // 5. Check if the game should move to the final round or end
-        if (activeTokens.length == 2) {
-            address tokenOwner1 = ownerOf(activeTokens[0]); // Index starts from 0
-            address tokenOwner2 = ownerOf(activeTokens[1]);
+        if (activeTokens.length == 3) {
+            address tokenOwner1 = ownerOf(activeTokens[1]); // Index starts from 1
+            address tokenOwner2 = ownerOf(activeTokens[2]);
 
             if (tokenOwner1 != tokenOwner2) {
                 gameState = GameState.FinalRound;
@@ -547,8 +576,9 @@ contract UNKNOWN is
             } else {
                 gameState = GameState.Ended;
             }
-        } else if (activeTokens.length == 1) {
+        } else if (activeTokens.length == 2) {
             gameState = GameState.Ended;
+            emit PlayerWon(ownerOf(activeTokens[0]));
         } else {
             updateExplosionTimer();
             // calculate the index based on the current activeTokens.length
