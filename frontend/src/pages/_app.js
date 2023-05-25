@@ -1,16 +1,20 @@
 import '@/styles/globals.css'
 import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
 import { Web3Modal } from '@web3modal/react'
-import { createPublicClient, http } from 'viem'
+import { createPublicClient, webSocket } from 'viem'
 import { configureChains, createConfig, WagmiConfig } from 'wagmi'
 import {polygon, polygonMumbai } from 'wagmi/chains'
+
 
 
 export default function App({ Component, pageProps }) {
 
   const chains = [polygon, polygonMumbai]
   const projectId = process.env.PROJECT_ID
-  const transport = http(process.env.ALCHEMY_URL);
+  console.log(process.env.test)
+  console.log(process.env.PROJECT_ID)
+  console.log(process.env.ALCHEMY_URL)
+  const transport = webSocket("wss://polygon-mumbai.g.alchemy.com/v2/noxviX1N3qoV1kqQ7frOiaPt0IqoQj--");
   
   const wagmiConfig = createConfig({
     autoConnect: true,
