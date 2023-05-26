@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.17;
-
+import "hardhat/console.sol";
 import "./Base64.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
@@ -43,6 +43,8 @@ contract UNKNOWN is
 {
     using Strings for uint256;
 
+    address public _owner;
+
     uint16 requestConfirmations = 3;
     uint32 numWords = 1;
     uint32 callbackGasLimit = 2500000;
@@ -64,7 +66,6 @@ contract UNKNOWN is
     uint256 public roundMints = 0;
 
     uint256 private FINAL_POTATO_EXPLOSION_DURATION = 10 minutes;
-    address private _owner;
     uint256 private remainingTime;
     uint256 private _currentIndex = 1;
 
@@ -83,6 +84,7 @@ contract UNKNOWN is
     mapping(uint256 => RequestStatus) public statuses;
     mapping(address => uint256[]) public tokensOwnedByUser;
     mapping(GameState => string) private gameStateStrings;
+    mapping(uint256 => address) public Winners;
 
     VRFCoordinatorV2Interface COORDINATOR;
 
@@ -549,6 +551,7 @@ contract UNKNOWN is
             gameState == GameState.Playing || gameState == GameState.FinalRound,
             "Game not playing"
         );
+        console.log("enter exp");
 
         // 1. +1 for the address of the player who failed to pass the potato kek loser lol
         address failedPlayer = ownerOf(potatoTokenId);
@@ -559,7 +562,9 @@ contract UNKNOWN is
 
         // 3. Remove the exploded NFT from the activeTokens array
         uint256 indexToRemove = _indexOfTokenInActiveTokens(potatoTokenId);
+        console.log("IR");
         _removeTokenFromActiveTokensByIndex(indexToRemove);
+        console.log("rTFATBI");
 
         // 4. Emit an event to notify that the potato exploded and get ready to assign potato to a rand tokenId
         emit PotatoExploded(potatoTokenId);
@@ -578,7 +583,9 @@ contract UNKNOWN is
             }
         } else if (activeTokens.length == 2) {
             gameState = GameState.Ended;
-            emit PlayerWon(ownerOf(activeTokens[0]));
+            console.log("Gamestate.Ended");
+            emit PlayerWon(ownerOf(activeTokens[1]));
+            Winners[currentGeneration] = ownerOf(activeTokens[1]);
         } else {
             updateExplosionTimer();
             // calculate the index based on the current activeTokens.length
