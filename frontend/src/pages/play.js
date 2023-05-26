@@ -6,6 +6,8 @@ import { Web3Button } from '@web3modal/react'
 import ABI from '../abi/UNKNOWN.json'
 import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent } from 'wagmi'
 import potato from 'public/assets/images/potato.png'
+import blacklogo from 'public/assets/images/blacklogo.png'
+
 
 
 export default function Play() {
@@ -543,7 +545,7 @@ export default function Play() {
 
       <div className="bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop">
         <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
-          <Link href='/' className='text-4xl sm:text-5xl md:text-6xl text-white hover:text-black'>LogoHere</Link>
+        <Link href='/' className='text-4xl sm:text-5xl md:text-6xl text-white hover:text-black'><Image src={blacklogo} width={150}/></Link>
           <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
               <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
@@ -576,7 +578,7 @@ export default function Play() {
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
           <div className='w-full col-start-2 col-span-6 justify-start items-start md:w-2/3 lg:w-1/2 rounded-md'>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl text-left font-bold mb-4">v1.0.0</h1>
+            <h1 className="text-3xl sm:text-center md:text-center md:text-4xl lg:text-5xl text-left font-bold mb-4">v1.0.0</h1>
           </div>
 
           <div className="w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-md">
@@ -610,11 +612,11 @@ export default function Play() {
                     </>
                     : getGameState == "Minting" ?
                       <>
-                        <h1 className="text-3xl font-bold mb-2">Welcome to the oven!</h1>
+                        <h1 className="text-3xl text-center font-bold mb-2">Welcome to the oven!</h1>
                         <p className="text-sm text-center mb-2">Ready up because this is about to get heated...</p>
                         <p className="text-sm text-center mb-2">mint now or cry later?</p>
                         <p className="text-sm text-center mb-2">Got Heat?</p>
-                        <div className='flex'>
+                        <div className='flex flex-row justify-center'>
                           <Image alt='Image' src={potato} width={100} height={200} />
                           <Image alt='Image' src={potato} width={100} height={200} />
                           <Image alt='Image' src={potato} width={100} height={200} />
@@ -746,28 +748,29 @@ export default function Play() {
                     <Image alt='Image' src={potato} width={200} height={200} className='self-center' />
                   </>
                   : getGameState == "Minting" ?
-                  <>
-                  <Image alt='Image' src={potato} width={200} height={200} />
-                  <h3 className="text-xl text-center">
-                    I have <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>
-                      {activeTokensCount}
-                    </span> {activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round
-                  </h3>
-                  <p className="text-sm text-center">Pass the heat to your friends and family!!</p>
-                  <div className="grid grid-rows-2 place-items-center justify-center items center">
-                    <button 
-                      className="mt-4 w-full bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-2 rounded shadow"
-                      onClick={() => {
-                        const imageUrl = 'https://your-website.com/your-image.jpg'; // Replace with your image URL
-                        const tweetText = `I have ${activeTokensCount} ${activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!! Add something at the end of this and sneak in a #OnChainHotPotato too. ${potato}`;
-                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
-                      }}
-                    >
-                      Tweet it!
-                    </button>
-                  </div>
-                </>
-                
+                    <>
+                      <Image alt='Image' src={potato} width={200} height={200} />
+                      <h3 className="text-xl text-center">
+                        I have <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>
+                          {activeTokensCount}
+                        </span> {activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round
+                      </h3>
+                      <p className="text-sm text-center">Pass the heat to your friends and family!!</p>
+                      <div className="grid grid-rows-2 place-items-center justify-center items center">
+                        <button
+                          className="mt-4 w-full bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-2 rounded shadow"
+                          onClick={() => {
+                            const imageUrl = 'https://your-website.com/your-image.jpg'; // Replace with your image URL
+                            const tweetText = `I have ${activeTokensCount} ${activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!! Are you ready to pass the heat? Check out @0xHotPotato_ for more information on the project! #OnChainHotPotato`;
+                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
+                          }}
+                        >
+                          Tweet it!
+                        </button>
+
+                      </div>
+                    </>
+
                     : getGameState == "Paused" ?
                       <>
                         <Image alt='Image' src={potato} width={200} height={200} />
@@ -778,7 +781,7 @@ export default function Play() {
                       </>
             }
           </div>
-          
+
           <div className="w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 bg-white shadow rounded-md overflow-x-auto">
             <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4">
               {events.map((event, index) => (
@@ -791,15 +794,15 @@ export default function Play() {
 
           {address == _owner &&
             <div className="w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 bg-white shadow rounded-md overflow-x-auto">
-              <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 grid grid-cols-1 md:grid-cols-3 sm:grid-cols-3 gap-4">
                 <button
-                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded px-4 py-3 md:col-span-3"
+                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded px-4 py-3 md:col-span-3 sm:col-span-3"
                   onClick={handleStartGame}
                 >
                   Start Game
                 </button>
                 <button
-                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded px-4 py-2 md:col-span-3"
+                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded px-4 py-2 md:col-span-3 sm:col-span-3"
                   onClick={handleEndMinting}
                 >
                   End Minting
