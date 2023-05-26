@@ -10,11 +10,8 @@ import {polygon, polygonMumbai } from 'wagmi/chains'
 export default function App({ Component, pageProps }) {
 
   const chains = [polygon, polygonMumbai]
-  const projectId = process.env.PROJECT_ID
-  console.log(process.env.test)
-  console.log(process.env.PROJECT_ID)
-  console.log(process.env.ALCHEMY_URL)
-  const transport = webSocket("wss://polygon-mumbai.g.alchemy.com/v2/noxviX1N3qoV1kqQ7frOiaPt0IqoQj--");
+  const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
+  const transport = webSocket(process.env.NEXT_PUBLIC_ALCHEMY_URL);
   
   const wagmiConfig = createConfig({
     autoConnect: true,

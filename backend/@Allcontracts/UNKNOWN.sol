@@ -98,7 +98,7 @@ contract UNKNOWN is
     event GameStarted(string message);
     event GamePaused(string message);
     event GameRestarted(string message);
-    event PotatoExploded(uint256 tokenId);
+    event PotatoExploded(address tokenId);
     event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo);
     event RequestSent(uint256 requestId, uint32 numWords);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
@@ -343,6 +343,10 @@ contract UNKNOWN is
 
     function getRoundMints() public view returns (uint256) {
         return roundMints;
+    }
+
+    function getPotatoOwner() public view returns (address) {
+        return ownerOf(potatoTokenId);
     }
 
     /* 
