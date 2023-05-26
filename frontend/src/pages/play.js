@@ -5,8 +5,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Web3Button } from '@web3modal/react'
 import ABI from '../abi/UNKNOWN.json'
 import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent } from 'wagmi'
-import potato from 'public/assets/images/potato.png'
-import blacklogo from 'public/assets/images/BlackLogo.png'
+import potato from './assets/images/potato.png'
+import blacklogo from './assets/images/BlackLogo.png'
 
 
 
