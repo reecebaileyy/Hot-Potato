@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useRef } from 'react'
 import { Web3Button } from '@web3modal/react'
-import blacklogo from 'public/assets/images/blacklogo.png'
+import blacklogo from '../../public/assets/images/BlackLogo.png'
 
 
 

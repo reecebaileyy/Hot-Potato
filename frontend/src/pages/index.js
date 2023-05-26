@@ -3,10 +3,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useRef } from 'react'
 import { Web3Button } from '@web3modal/react'
-import hot from './assets/images/hot.png'
-import landscape from './assets/images/landscape.jpg'
-import potato from './assets/images/potato.png'
-import blacklogo from './assets/images/BlackLogo.png'
+import hot from '../../public/assets/images/hot.png'
+import landscape from '../../public/assets/images/landscape.jpg'
+import potato from '../../public/assets/images/potato.png'
+import blacklogo from '../../public/assets/images/BlackLogo.png'
 
 export default function Home() {
 
