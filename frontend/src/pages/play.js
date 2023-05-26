@@ -357,7 +357,7 @@ export default function Play() {
   const handleStartGame = () => {
     if (!address) {
       alert("please connect to join the heat!!!")
-    } else if (getGameState !== "Queued" || getGameState == "Ended") {
+    } else if (getGameState !== "Queued" && getGameState == "Ended") {
       alert("The game has already started!");
     } else {
       _startGame?.();
@@ -377,7 +377,7 @@ export default function Play() {
   const handlePauseGame = () => {
     if (!address) {
       alert("please connect to join the heat!!!")
-    } else if (getGameState !== "Playing" && getGameState !== "Final Round") {
+    } else if (getGameState !== "Playing" && getGameState !== "Final Round" && getGameState !== "Minting") {
       alert("The game has not started yet!");
     } else {
       _pauseGame?.();

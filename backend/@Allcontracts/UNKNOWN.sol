@@ -360,9 +360,7 @@ contract UNKNOWN is
 
     function startGame() external onlyOwner {
         require(
-            gameState == GameState.Ended ||
-                gameState == GameState.Paused ||
-                gameState == GameState.Queued,
+            gameState == GameState.Ended || gameState == GameState.Queued,
             "Game already started"
         );
         gameState = GameState.Minting;
