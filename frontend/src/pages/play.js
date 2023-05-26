@@ -510,8 +510,7 @@ export default function Play() {
       refetchCurrentGeneration();
       refetchBalanceOf();
       refetchWinner();
-      console.log(getGameState)
-      console.log("refreshed");
+      console.log("AN UNKNOWN PRODUCTION");
     }, 5000);
 
     return () => {
