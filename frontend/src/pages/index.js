@@ -1,17 +1,36 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, useRef } from 'react'
+import { DarkModeSwitch } from 'react-toggle-dark-mode';
+import { useState, useRef, useEffect } from 'react'
 import { Web3Button } from '@web3modal/react'
 import hot from '../../public/assets/images/hot.png'
 import landscape from '../../public/assets/images/landscape.jpg'
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/BlackLogo.png'
+import redlogo from '../../public/assets/images/RedLogo.png'
 
 export default function Home() {
 
+  const [darkMode, setDarkMode] = useState(false);
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef()
+
+  useEffect(() => {
+    const localDarkMode = window.localStorage.getItem('darkMode');
+    if (localDarkMode) {
+      setDarkMode(JSON.parse(localDarkMode));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    window.localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
 
   return (
     <>
@@ -22,38 +41,50 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop">
-      <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
-          <Link href='/' className='text-4xl sm:text-5xl md:text-6xl text-white hover:text-black'><Image src={blacklogo} width={150}/></Link>
-          <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
-            <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
-              <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
-            </button>
-            <div className={`fixed inset-0 flex justify-center items-center  bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}
-              onClick={(e) => {
-                if (!menuRef.current.contains(e.target)) {
-                  setIsOpen(false)
-                }
-              }}>
-              <ul ref={menuRef} className={`items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black`}>
-                <li><Link className='text-black hover:text-gray-700 justify-center' href="/play">Play</Link></li>
-                <li><Link className='text-black hover:text-gray-700' href="/leaderboard">Leaderboard</Link></li>
-                <li><Link className='text-black hover:text-gray-700' href="https://app.gitbook.com" target="_blank">Docs</Link></li>
-                <li><Link className='text-black hover:text-gray-700' href="https://opensea.io" target="_blank">Opensea</Link></li>
-                <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
-              </ul>
-            </div>
+      <div className={`${darkMode ? 'bg-gradient-to-br from-black via-gray-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>      <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
+        <Link href='/'>{darkMode ?
+          <Image src={redlogo} width={150} alt="Logo" /> :
+          <Image src={blacklogo} width={150} alt="Logo" />
+        }</Link>
+        <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
+          <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
+            <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
+          </button>
+          <div className={`fixed inset-0 flex justify-center items-center  bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}
+            onClick={(e) => {
+              if (!menuRef.current.contains(e.target)) {
+                setIsOpen(false)
+              }
+            }}>
+            <ul ref={menuRef} className={`${darkMode ? 'bg-gradient-to-tl from-black via-red-900 to-black text-white items-center p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl' : 'items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black'}`}>
+              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/play">Play</Link></li>
+              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/leaderboard">Leaderboard</Link></li>
+              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://app.gitbook.com" target="_blank">Docs</Link></li>
+              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
+              <DarkModeSwitch
+                checked={darkMode}
+                onChange={() => setDarkMode(!darkMode)}
+                size={30}
+              />
+              <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
+            </ul>
           </div>
-          <ul className='flex md:hidden sm:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
-            <li><Link className='text-white hover:text-black' href="/play">Play</Link></li>
-            <li><Link className='text-white hover:text-black' href="/leaderboard">Leaderboard</Link></li>
-            <li><Link className='text-white hover:text-black' href="https://app.gitbook.com" target="_blank">Docs</Link></li>
-            <li><Link className='text-white hover:text-black' href="https://opensea.io" target="_blank">Opensea</Link></li>
-          </ul>
-          <div className='sm:hidden md:hidden'>
-            <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
-          </div>
-        </nav>
+        </div>
+        <ul className='flex md:hidden sm:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
+          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/play">Play</Link></li>
+          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/leaderboard">Leaderboard</Link></li>
+          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://app.gitbook.com" target="_blank">Docs</Link></li>
+          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
+        </ul>
+        <div className='flex gap-2 items-center sm:hidden md:hidden'>
+          <DarkModeSwitch
+            checked={darkMode}
+            onChange={() => setDarkMode(!darkMode)}
+            size={30}
+          />
+          <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
+        </div>
+      </nav>
 
         <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center p-10 space-y-5">
           <h1 className='text-4xl sm:text-5xl md:text-6xl text-white'>Onchain Hot Potato</h1>
@@ -139,26 +170,26 @@ export default function Home() {
                 </div>
                 <div>
                   <dt className="text-xl leading-6 font-medium text-white">
-                   Is it safe to play OnChain Hot Potato?
+                    Is it safe to play OnChain Hot Potato?
                   </dt>
                   <dd className="mt-2 text-lg text-gray-500">
-                  Safety is our top priority. OnChain Hot Potato operates on the Ethereum blockchain, which is secure by design. However, like all online activities involving value, we recommend taking precautions such as using secure and unique passwords for your wallet, keeping your private keys private, and being aware of potential phishing scams.
+                    Safety is our top priority. OnChain Hot Potato operates on the Ethereum blockchain, which is secure by design. However, like all online activities involving value, we recommend taking precautions such as using secure and unique passwords for your wallet, keeping your private keys private, and being aware of potential phishing scams.
                   </dd>
                 </div>
                 <div>
                   <dt className="text-xl leading-6 font-medium text-white">
-                  Can I play OnChain Hot Potato from anywhere?
+                    Can I play OnChain Hot Potato from anywhere?
                   </dt>
                   <dd className="mt-2 text-lg text-gray-500">
-                  Yes, as long as you have a device with internet access and a Web3 wallet, you can play OnChain Hot Potato from anywhere in the world.
+                    Yes, as long as you have a device with internet access and a Web3 wallet, you can play OnChain Hot Potato from anywhere in the world.
                   </dd>
                 </div>
                 <div>
                   <dt className="text-xl leading-6 font-medium text-white">
-                  Do I need to pay to play OnChain Hot Potato?
+                    Do I need to pay to play OnChain Hot Potato?
                   </dt>
                   <dd className="mt-2 text-lg text-gray-500">
-                  Yes, OnChain Hot Potato requires game tokens to play. These tokens can be purchased on our website using Ethereum or other supported cryptocurrencies.
+                    Yes, OnChain Hot Potato requires game tokens to play. These tokens can be purchased on our website using Ethereum or other supported cryptocurrencies.
                   </dd>
                 </div>
                 <div>
@@ -166,7 +197,7 @@ export default function Home() {
                     My question isn&apos;t listed here. What do I do?
                   </dt>
                   <dd className="mt-2 text-lg text-gray-500">
-                   If you have a question that isn&apos;t listed here, please reach out to our team on our socials listed below. We&apos;ll get back to you as soon as possible!
+                    If you have a question that isn&apos;t listed here, please reach out to our team on our socials listed below. We&apos;ll get back to you as soon as possible!
                   </dd>
                 </div>
                 {/* Repeat the above div for each FAQ. Remember to replace the placeholder text */}
@@ -177,9 +208,9 @@ export default function Home() {
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
               <nav className="flex flex-wrap justify-center">
                 <div className="mt-4 lg:mt-0 lg:ml-6">
-                  <Link href="#"className="text-gray-400 hover:text-gray-500">
-                      <span className="sr-only">Twitter</span>
-                      {/* Replace with your Twitter icon */}
+                  <Link href="#" className="text-gray-400 hover:text-gray-500">
+                    <span className="sr-only">Twitter</span>
+                    {/* Replace with your Twitter icon */}
                   </Link>
                 </div>
                 {/* Add more social media icons similar to the above div */}

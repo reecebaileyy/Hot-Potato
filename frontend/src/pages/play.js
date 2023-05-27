@@ -1,17 +1,17 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import Image from 'next/image'
+import { DarkModeSwitch } from 'react-toggle-dark-mode';
 import { useState, useRef, useEffect } from 'react'
 import { Web3Button } from '@web3modal/react'
 import ABI from '../abi/UNKNOWN.json'
 import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent } from 'wagmi'
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/BlackLogo.png'
+import redlogo from '../../public/assets/images/RedLogo.png'
 
 
 export default function Play() {
-
-
 
   /* 
     ______  ________  ______  ________ ________      __    __  ______   ______  __    __  ______  
@@ -25,6 +25,7 @@ export default function Play() {
     \▓▓▓▓▓▓    \▓▓   \▓▓   \▓▓   \▓▓   \▓▓▓▓▓▓▓▓     \▓▓   \▓▓ \▓▓▓▓▓▓  \▓▓▓▓▓▓ \▓▓   \▓▓ \▓▓▓▓▓▓ 
                                                                                    
   */
+  const [darkMode, setDarkMode] = useState(false);
   const [isOpen, setIsOpen] = useState(false)
   const [events, setEvents] = useState([]);
   const [tokenId, setTokenId] = useState("");
@@ -526,6 +527,11 @@ export default function Play() {
   */
   // EVENT LISTENERS
   useEffect(() => {
+    const localDarkMode = window.localStorage.getItem('darkMode');
+    if (localDarkMode) {
+      setDarkMode(JSON.parse(localDarkMode));
+    }
+
     const intervalId = setInterval(() => {
       refetchGameState();
       refetchSuccessfulPasses();
@@ -551,6 +557,16 @@ export default function Play() {
     };
   }, [events]);
 
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    window.localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
+
+
   /*
    __    __ ________ __       __ __             ______   ______   ______  
   |  \  |  \        \  \     /  \  \           /      \ /      \ /      \ 
@@ -574,9 +590,12 @@ export default function Play() {
       </Head>
 
 
-      <div className="bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop">
+      <div className={`${darkMode ? 'bg-gradient-to-br from-black via-gray-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>
         <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
-          <Link href='/' className='text-4xl sm:text-5xl md:text-6xl text-white hover:text-black'><Image src={blacklogo} width={150} /></Link>
+          <Link href='/'>{darkMode ?
+            <Image src={redlogo} width={150} alt="Logo" /> :
+            <Image src={blacklogo} width={150} alt="Logo" />
+          }</Link>
           <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
               <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
@@ -587,22 +606,32 @@ export default function Play() {
                   setIsOpen(false)
                 }
               }}>
-              <ul ref={menuRef} className={`items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black`}>
-                <li><Link className='text-black hover:text-gray-700 justify-center' href="/play">Play</Link></li>
-                <li><Link className='text-black hover:text-gray-700' href="/leaderboard">Leaderboard</Link></li>
-                <li><Link className='text-black hover:text-gray-700' href="https://app.gitbook.com" target="_blank">Docs</Link></li>
-                <li><Link className='text-black hover:text-gray-700' href="https://opensea.io" target="_blank">Opensea</Link></li>
+              <ul ref={menuRef} className={`${darkMode ? 'bg-gray-700 text-white items-center p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl' : 'items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black'}`}>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/play">Play</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/leaderboard">Leaderboard</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://app.gitbook.com" target="_blank">Docs</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
+                <DarkModeSwitch
+                  checked={darkMode}
+                  onChange={() => setDarkMode(!darkMode)}
+                  size={30}
+                />
                 <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
               </ul>
             </div>
           </div>
           <ul className='flex md:hidden sm:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
-            <li><Link className='text-white hover:text-black' href="/play">Play</Link></li>
-            <li><Link className='text-white hover:text-black' href="/leaderboard">Leaderboard</Link></li>
-            <li><Link className='text-white hover:text-black' href="https://app.gitbook.com" target="_blank">Docs</Link></li>
-            <li><Link className='text-white hover:text-black' href="https://opensea.io" target="_blank">Opensea</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/play">Play</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/leaderboard">Leaderboard</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://app.gitbook.com" target="_blank">Docs</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
           </ul>
-          <div className='sm:hidden md:hidden'>
+          <div className='flex gap-2 items-center sm:hidden md:hidden'>
+          <DarkModeSwitch
+              checked={darkMode}
+              onChange={() => setDarkMode(!darkMode)}
+              size={30}
+            />
             <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
           </div>
         </nav>
@@ -612,26 +641,26 @@ export default function Play() {
             <h1 className="text-3xl sm:text-center md:text-center md:text-4xl lg:text-5xl text-left font-bold mb-4">v1.0.0</h1>
           </div>
 
-          <div className="w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-md">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4">Hodl, Pass, Survive...</h1>
-            <h2 className="text-xl font-bold mb-2 text-center">Game State: {getGameState}</h2>
-            <p className="text-sm text-center">This is the current game state. It will be updated automatically.</p>
+          <div className={`${darkMode ? 'w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-gray-700 shadow rounded-md' : "w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-md"}`}>
+            <h1 className={`${darkMode ? 'text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4' : "text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4"}`}>Hodl, Pass, Survive...</h1>
+            <h2 className={`${darkMode ? 'text-xl font-bold mb-2 text-center' : "text-xl font-bold mb-2 text-center"}`}>Game State: {getGameState}</h2>
+            <p className={`${darkMode ? 'text-sm text-center' : "text-sm text-center"}`}>This is the current game state. It will be updated automatically.</p>
           </div>
-          <div className="w-full flex flex-col justify-center items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 bg-white shadow rounded-md p-4 mb-8">
+          <div className={`w-full flex flex-col justify-center items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-md p-4 mb-8 ${darkMode ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}>
             {!address ?
               <>
                 <>
-                  <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Connect First</h1>
-                  <h3 className='text-2xl text-center mb-4 text-black'>Connect your wallet to view this page! Hope you join the fun soon...</h3>
+                  <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500`}>Connect First</h1>
+                  <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Connect your wallet to view this page! Hope you join the fun soon...</h3>
                   <Image alt='Image' src={potato} width={200} height={200} />
                 </>
               </> :
               getGameState == "Playing" || getGameState == "Final Round" ?
                 <>
-                  <h2 className="text-xl font-bold underline mb-2">Statistics:</h2>
-                  <p className="text-sm text-center mb-2">Successful Passes: {passes}</p>
-                  <p className="text-sm text-center mb-2">Failed Passes: {failed}</p>
-                  <p className="text-sm text-center mb-2">Total Wins: {wins}</p>
+                  <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Statistics:</h2>
+                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Successful Passes: {passes}</p>
+                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Failed Passes: {failed}</p>
+                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Total Wins: {wins}</p>
                 </>
                 : getGameState == "Queued" ?
                   <>
@@ -643,10 +672,10 @@ export default function Play() {
                     </>
                     : getGameState == "Minting" ?
                       <>
-                        <h1 className="text-3xl text-center font-bold mb-2">Welcome to the oven!</h1>
-                        <p className="text-sm text-center mb-2">Ready up because this is about to get heated...</p>
-                        <p className="text-sm text-center mb-2">mint now or cry later?</p>
-                        <p className="text-sm text-center mb-2">Got Heat?</p>
+                        <h1 className={`text-3xl text-center font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Welcome to the oven!</h1>
+                        <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Ready up because this is about to get heated...</p>
+                        <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>mint now or cry later?</p>
+                        <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Got Heat?</p>
                         <div className='flex flex-row justify-center'>
                           <Image alt='Image' src={potato} width={100} height={200} />
                           <Image alt='Image' src={potato} width={100} height={200} />
@@ -659,18 +688,18 @@ export default function Play() {
                       </>
             }
           </div>
-          <div className="w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 bg-white shadow-lg rounded-md p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105">
+          <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-md p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 ${darkMode ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}>
             {getGameState == "Playing" || getGameState == "Final Round" ?
               <>
                 <h1 className="text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Token #{_potatoTokenId} has the potato</h1>
-                <p className='text-2xl text-center mb-4 text-black'><span><Link className='animate-pulse underline' href={`https://mumbai.polygonscan.com/address/${potatoOwner}`} target='_blank'>Potato Holder</Link></span></p>
-                <h2 className="text-2xl text-center mb-4 text-black">TIME REMAINING: {explosionTime}</h2>
+                <p className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}><span><Link className='animate-pulse underline' href={`https://mumbai.polygonscan.com/address/${potatoOwner}`} target='_blank'>Potato Holder</Link></span></p>
+                <h2 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>TIME REMAINING: {explosionTime}</h2>
                 <Image alt='Image' src={potato} width={200} height={200} />
                 <button className="mt-4 w-1/2 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-3 rounded shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110"
                   onClick={handlecheck}>
                   CHECK EXPLOSION
                 </button>
-                <p className="text-xl text-center mb-4 text-black">{activeTokens} Active Tokens Remaing</p>
+                <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokens} Active Tokens Remaing</p>
                 <Link href="https://mumbai.polygonscan.com/" target='_blank' className="underline">
                   Smart Contract
                 </Link>
@@ -678,24 +707,24 @@ export default function Play() {
               : getGameState == "Queued" ? (
                 <>
                   <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Round starting soon</h1>
-                  <h3 className='text-xl text-center mb-4 text-black'>The game is currently Queued, Come back soon for some sizzlin fun!</h3>
+                  <h3 className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>The game is currently Queued, Come back soon for some sizzlin fun!</h3>
                   <Image alt='Image' src={potato} width={200} height={200} />
                   <div className='grid grid-cols-3 justify-center gap-4'>
-                    <Link href="https://mumbai.polygonscan.com/" target='_blank' className='text-lg text-center underline text-black'>
+                    <Link href="https://mumbai.polygonscan.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
                       Discord
                     </Link>
-                    <Link href="https://twitter.com" className='text-lg text-center underline text-black'>Smart Contract</Link>
-                    <Link className="text-lg text-center underline text-black" href="https://app.gitbook.com">Twitter</Link>
+                    <Link href="https://twitter.com" className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                    <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} href="https://app.gitbook.com">Twitter</Link>
                   </div>
                 </>
               ) :
                 getGameState == "Paused" ? (
                   <>
                     <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Game Paused</h1>
-                    <h3 className='text-2xl text-center mb-4 text-black'>The game is currently paused. Please wait for further updates.</h3>
+                    <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>The game is currently paused. Please wait for further updates.</h3>
                     <Image alt='Image' src={potato} width={200} height={200} />
 
-                    <p className="text-xl text-center mb-4 text-black">{activeTokens} Active Tokens Remaing</p>
+                    <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokens} Active Tokens Remaing</p>
                     <Link href="https://mumbai.polygonscan.com/" target='_blank' className='underline'>
                       Smart Contract
                     </Link>
@@ -704,9 +733,9 @@ export default function Play() {
                   getGameState == "Ended" ? (
                     <>
                       <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Game Ended</h1>
-                      <h3 className='text-2xl text-center mb-4 text-black'>Thank you for participating. See you in the next game!</h3>
+                      <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Thank you for participating. See you in the next game!</h3>
                       <Image alt='Image' src={potato} width={200} height={200} />
-                      <h2 className="text-xl text-center text-black">And congratulations to our Winner:</h2>
+                      <h2 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>And congratulations to our Winner:</h2>
                       <Link href={`https://mumbai.polygonscan.com/address/${winner}`} target='_blank' className="text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 animate-pulse">{winner}</Link>
                       {/* Add more components based on your design in ended state */}
                     </>
@@ -714,10 +743,10 @@ export default function Play() {
                     getGameState == "Minting" && (
                       <>
                         <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Jump in the Heat</h1>
-                        <h3 className='text-2xl text-center mb-4 text-black'>Round {currentRound}</h3>
+                        <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Round {currentRound}</h3>
                         <div className='grid grid-cols-2'>
-                          <p className="text-lg text-center mb-4 text-black">PRICE: {price} ETH</p>
-                          <p className="text-lg text-center mb-4 text-black">MAX PER WALLET: XXX</p>
+                          <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: {price} ETH</p>
+                          <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>MAX PER WALLET: XXX</p>
                         </div>
 
                         {address ?
@@ -732,12 +761,12 @@ export default function Play() {
                             <button className="mt-4 w-1/2 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-3 rounded shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110"
                               onClick={handleMint}
                             >Join Round!</button>
-                            <p className="text-lg text-center mb-4 text-black">{_roundMints}/{maxSupply} MINTED</p>
+                            <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{maxSupply} MINTED</p>
                           </>
                           :
                           <>
-                            <h1 className="text-3xl text-center mb-4 text-black">{_roundMints}/{maxSupply} MINTED</h1>
-                            <p1 className="text-2xl md:text-xl lg:text-3xl text-center font-bold"
+                            <h1 className={`text-3xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{maxSupply} MINTED</h1>
+                            <p1 className={`text-2xl md:text-xl lg:text-3xl text-center font-bold ${darkMode ? 'text-white' : 'text-black'}`}
                             >Connect first to join the fun!</p1>
                           </>
                         }
@@ -749,19 +778,20 @@ export default function Play() {
                     )}
             {/* Content when address does not exist */}
           </div>
-          <div className="w-full flex flex-col justify-center items-center p-4 mb-8 col-end-9 col-span-2  md:w-2/3 lg:w-1/2 bg-white shadow rounded-md">
+
+          <div className={`w-full flex flex-col justify-center items-center p-4 mb-8 col-end-9 col-span-2  md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md`}>
             {!address ?
               <>
                 <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Connect First</h1>
-                <h3 className='text-2xl text-center mb-4 text-black'>You must connect your wallet to view this page! Hope you join the fun soon...</h3>
+                <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>You must connect your wallet to view this page! Hope you join the fun soon...</h3>
                 <Image alt='Image' src={potato} width={200} height={200} />
               </> :
               getGameState == "Playing" || getGameState == "Final Round" ?
                 <>
-                  <h1 className='text-xl font-bold mb-2 underline'>Your Tokens:</h1>
-                  <h2 className="text-base font-bold mb-2">Active Token(s): {activeTokensCount}</h2>
-                  <h2 className='text-base font-bold mb-2'>Has Potato: {hasPotatoToken}</h2>
-                  <p className="text-sm text-center">You can pass the potato if you are currently holding it.</p>
+                  <h1 className={`text-xl font-bold mb-2 underline ${darkMode ? 'text-white' : 'text-black'}`}>Your Tokens:</h1>
+                  <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Active Token(s): {activeTokensCount}</h2>
+                  <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Has Potato: {hasPotatoToken}</h2>
+                  <p className={`text-sm text-center ${darkMode ? 'text-white' : 'text-black'}`}>You can pass the potato if you are currently holding it.</p>
                   <div className="grid grid-rows-2 place-items-center justify-center items center">
                     <input className="mt-4 w-1/2  bg-white hover:bg-gray-300 text-black px-4 py-2 rounded shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
                       type="text"
@@ -782,12 +812,12 @@ export default function Play() {
                   : getGameState == "Minting" ?
                     <>
                       <Image alt='Image' src={potato} width={200} height={200} />
-                      <h3 className="text-xl text-center">
+                      <h3 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>
                         I have <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>
                           {activeTokensCount}
                         </span> {activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round
                       </h3>
-                      <p className="text-sm text-center">Pass the heat to your friends and family!!</p>
+                      <p className={`text-sm text-center ${darkMode ? 'text-white' : 'text-black'}`}>Pass the heat to your friends and family!!</p>
                       <div className="grid grid-rows-2 place-items-center justify-center items center">
                         <button
                           className="mt-4 w-full bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-2 rounded shadow"
@@ -799,10 +829,8 @@ export default function Play() {
                         >
                           Tweet it!
                         </button>
-
                       </div>
                     </>
-
                     : getGameState == "Paused" ?
                       <>
                         <Image alt='Image' src={potato} width={200} height={200} />
@@ -814,10 +842,11 @@ export default function Play() {
             }
           </div>
 
-          <div className="w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 bg-white shadow rounded-md overflow-x-auto">
+
+          <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
             <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4">
               {events.map((event, index) => (
-                <div key={index}>
+                <div key={index} className={darkMode ? 'text-white' : 'text-black'}>
                   {event}
                 </div>
               ))}
@@ -825,7 +854,7 @@ export default function Play() {
           </div>
 
           {address == _owner &&
-            <div className="w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 bg-white shadow rounded-md overflow-x-auto">
+            <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
               <div className="p-4 grid grid-cols-1 md:grid-cols-3 sm:grid-cols-3 gap-4">
                 <button
                   className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded px-4 py-3 md:col-span-3 sm:col-span-3"
@@ -859,8 +888,8 @@ export default function Play() {
                 </button>
               </div>
             </div>
-
           }
+
 
 
         </div>
