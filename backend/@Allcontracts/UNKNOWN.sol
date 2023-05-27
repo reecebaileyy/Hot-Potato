@@ -98,7 +98,7 @@ contract UNKNOWN is
     event GameStarted(string message);
     event GamePaused(string message);
     event GameRestarted(string message);
-    event PotatoExploded(address tokenId);
+    event PotatoExploded(uint256 tokenId);
     event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo);
     event RequestSent(uint256 requestId, uint32 numWords);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
@@ -494,7 +494,6 @@ contract UNKNOWN is
             tokenTraits[potatoTokenId].hasPotato = false;
         }
         // Assign the potato trait to the desired token
-        require(_exists(tokenId), "Token does not exist");
         require(_isTokenActive(tokenId), "Token is not active");
         potatoTokenId = tokenId;
         tokenTraits[potatoTokenId].hasPotato = true;

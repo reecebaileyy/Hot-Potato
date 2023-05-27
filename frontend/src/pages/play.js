@@ -89,19 +89,19 @@ export default function Play() {
     eventName: 'PotatoExploded',
     listener(log) {
       try {
-        console.log(`Potato Exploded: ${log}`)
-        const tokenId_ = log?.args?.tokenId?.toString();
-        if (tokenId_ !== undefined) {
+        if (typeof log[0]?.args?.tokenId === 'bigint') {
+          const tokenId_ = log[0].args.tokenId.toString();
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
         } else {
-          console.error('TokenId not found in log args', log);
+          console.error('TokenId is not a BigInt or is not found in log args', log);
         }
       } catch (error) {
         console.log(error)
       }
     },
   });
-  
+
+
 
   useContractEvent({
     address: '0x293Ba58aCD4Dd9695fcfaE4f2498f0487C58F23D',
@@ -109,19 +109,20 @@ export default function Play() {
     eventName: 'PotatoPassed',
     listener(log) {
       try {
-        console.log(`Potato Passed: ${log}`)
-        const tokenIdFrom = log?.args?.tokenIdFrom?.toString();
-        const tokenIdTo = log?.args?.tokenIdTo?.toString();
-        if (tokenIdFrom !== undefined || tokenIdTo !== undefined) {
-        setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo}`]);
+        if (typeof log[0]?.args?.tokenIdFrom === 'bigint' && typeof log[0]?.args?.tokenIdTo === 'bigint') {
+          const tokenIdFrom = log[0]?.args?.tokenIdFrom?.toString();
+          const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
+          setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo}`]);
         } else {
-          console.error('TokenId not found in log args', log);
+          console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
         }
       } catch (error) {
         console.log(error)
       }
     },
-  })
+  });
+
+
 
 
   /*
