@@ -2,7 +2,6 @@ const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 const MONGODB_URI = process.env.MONGODB_URI;
-const MONGODB_DB = process.env.MONGODB_DB;
 
 let cached = global.mongo;
 
@@ -24,7 +23,7 @@ async function connectToDatabase() {
     cached.promise = MongoClient.connect(MONGODB_URI, opts).then((client) => {
       return {
         client,
-        db: client.db(MONGODB_DB),
+        db: client.db("HotPotato"),
       };
     });
   }
