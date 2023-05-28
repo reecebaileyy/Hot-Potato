@@ -182,7 +182,7 @@ export default function Play() {
   const failed = parseInt(failedPasses, 10);
 
   // GETTING NUMBER OF WINS
-  const { data: totalWins, isLoading: loadingWinds, refetch: refetchTotalWins } = useContractRead({
+  const { data: totalWins, isLoading: loadingWins, refetch: refetchTotalWins } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'totalWins',
