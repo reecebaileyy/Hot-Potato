@@ -464,7 +464,6 @@ export default function Play() {
     let activeIds = [];
     for (let i = 1; i < 1000; i++) {
       if (getActiveTokenIds[i] === undefined) { break; }
-      console.log(`TokenId: ${getActiveTokenIds[i]}`);
       activeIds.push(getActiveTokenIds[i]?.toString());
     }
     return activeIds;
@@ -585,7 +584,6 @@ export default function Play() {
       allActivetokenIds();
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
-      console.log(`ActiveTokenIds: ${activeIds}`);
       console.log("A BLAZE PRODUCTION");
     }, 5000);
 
