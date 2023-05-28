@@ -349,6 +349,13 @@ contract UNKNOWN is
         return ownerOf(potatoTokenId);
     }
 
+    function getActiveTokenIds() public view returns (uint256, uint256) {
+        require(activeTokens.length > 0, "No active tokens.");
+        uint256 firstTokenId = activeTokens[1];
+        uint256 lastTokenId = activeTokens[activeTokens.length - 1];
+        return (firstTokenId, lastTokenId);
+    }
+
     /* 
   ______                                               ________                              __     __                            
  /      \                                             |        \                            |  \   |  \                           
