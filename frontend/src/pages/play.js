@@ -9,6 +9,7 @@ import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useCo
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/BlackLogo.png'
 import redlogo from '../../public/assets/images/RedLogo.png'
+import { black } from 'tailwindcss/colors';
 
 
 export default function Play() {
@@ -156,14 +157,14 @@ export default function Play() {
   */
 
   // GETTING GAME STATE
-  const { data: getGameState, isLoading: Loading, refetch: refetchGameState } = useContractRead({
+  const { data: getGameState, isLoading: loadingGameState, refetch: refetchGameState } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'getGameState',
   })
 
   // GETTING NUMBER OF PASSES
-  const { data: successfulPasses, refetch: refetchSuccessfulPasses } = useContractRead({
+  const { data: successfulPasses, isLoading: loadingPasses, refetch: refetchSuccessfulPasses } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'successfulPasses',
@@ -172,7 +173,7 @@ export default function Play() {
   const passes = parseInt(successfulPasses, 10);
 
   // GETTING NUMBER OF FAILS
-  const { data: failedPasses, refetch: refetchFailedPasses } = useContractRead({
+  const { data: failedPasses, isLoading: loadingFailedPasses, refetch: refetchFailedPasses } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'failedPasses',
@@ -181,7 +182,7 @@ export default function Play() {
   const failed = parseInt(failedPasses, 10);
 
   // GETTING NUMBER OF WINS
-  const { data: totalWins, refetch: refetchTotalWins } = useContractRead({
+  const { data: totalWins, isLoading: loadingWinds, refetch: refetchTotalWins } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'totalWins',
@@ -190,7 +191,7 @@ export default function Play() {
   const wins = parseInt(totalWins, 10);
 
   // GET MINT PRICE
-  const { data: _price, refetch: refetchPrice } = useContractRead({
+  const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: '_price',
@@ -198,7 +199,7 @@ export default function Play() {
   const price = parseInt(_price, 10);
 
   // GET NUMBER OF MINTS DURING THE ROUND
-  const { data: getRoundMints, refetch: refetchGetRoundMints } = useContractRead({
+  const { data: getRoundMints, isLoading: loadingMints, refetch: refetchGetRoundMints } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'getRoundMints',
@@ -206,7 +207,7 @@ export default function Play() {
   const _roundMints = parseInt(getRoundMints, 10);
 
   // GET NUMBER OF MINTS DURING THE ROUND
-  const { data: getActiveTokenCount, refetch: refetchGetActiveTokenCount } = useContractRead({
+  const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'getActiveTokenCount',
@@ -215,7 +216,7 @@ export default function Play() {
   const activeTokensCount = parseInt(getActiveTokenCount, 10);
 
   // GET NUMBER OF MAX MINTS DURING THE ROUND
-  const { data: _maxsupply, refetch: refetchMaxSupply } = useContractRead({
+  const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: '_maxsupply',
@@ -223,7 +224,7 @@ export default function Play() {
   const maxSupply = parseInt(_maxsupply, 10);
 
   // GET TOKENS OWNED BY USER
-  const { data: userHasPotatoToken, refetch: refetchUserHasPotatoToken } = useContractRead({
+  const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'userHasPotatoToken',
@@ -232,7 +233,7 @@ export default function Play() {
   const hasPotatoToken = userHasPotatoToken?.toString();
 
   // GET POTATO HOLDER
-  const { data: getPotatoOwner, refetch: refetchGetPotatoOwner } = useContractRead({
+  const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'getPotatoOwner',
@@ -240,7 +241,7 @@ export default function Play() {
   const potatoOwner = getPotatoOwner?.toString();
 
   // GET POTATO TOKEN ID
-  const { data: getExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
+  const { data: getExplosionTime, isLoading: loadingExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'getExplosionTime',
@@ -248,7 +249,7 @@ export default function Play() {
   const explosionTime = parseInt(getExplosionTime, 10);
 
   // GET EXPLOSION TIME
-  const { data: potatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
+  const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'potatoTokenId',
@@ -256,7 +257,7 @@ export default function Play() {
   const _potatoTokenId = parseInt(potatoTokenId, 10);
 
   // GET ACTIVE TOKENS
-  const { data: getActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
+  const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'getActiveTokens',
@@ -264,7 +265,7 @@ export default function Play() {
   const activeTokens = parseInt(getActiveTokens, 10);
 
   // GET CURRENT GENERATION
-  const { data: currentGeneration, refetch: refetchCurrentGeneration } = useContractRead({
+  const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'currentGeneration',
@@ -272,7 +273,7 @@ export default function Play() {
   const currentRound = parseInt(currentGeneration, 10);
 
   // GET CURRENT GENERATION
-  const { data: Winners, refetch: refetchWinner } = useContractRead({
+  const { data: Winners, isLoadging: loadingWinners, refetch: refetchWinner } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'Winners',
@@ -280,7 +281,7 @@ export default function Play() {
   })
   const winner = Winners?.toString();
 
-  const { data: balanceOf, refetch: refetchBalanceOf } = useContractRead({
+  const { data: balanceOf, isLoading: loadingBalance, refetch: refetchBalanceOf } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'balanceOf',
@@ -288,13 +289,13 @@ export default function Play() {
   })
   const _balanceOf = parseInt(balanceOf, 10);
 
-  const { data: _owner, refetch: refetchowner } = useContractRead({
+  const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: '_owner',
   })
 
-  const { data: getActiveTokenIds = [], refetch: refetchGetActiveTokenIds } = useContractRead({
+  const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
     address: '0xF92417D6bF0323C27B47b4BfFb7788001906442c',
     abi: ABI,
     functionName: 'getActiveTokenIds',
@@ -626,12 +627,11 @@ export default function Play() {
       </Head>
 
 
-      <div className={`${darkMode ? 'bg-gradient-to-br from-black via-gray-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>
+      <div className={`${darkMode ? 'bg-gradient-to-br from-amber-800 via-red-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>
         <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
-          <Link href='/'>{darkMode ?
-            <Image src={redlogo} width={150} alt="Logo" /> :
+          <Link href='/'>
             <Image src={blacklogo} width={150} alt="Logo" />
-          }</Link>
+          </Link>
           <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
               <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
@@ -674,12 +674,14 @@ export default function Play() {
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
 
-          <div className={`${darkMode ? 'w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-gray-700 shadow rounded-md' : "w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-md"}`}>
+          <div className={`${darkMode ? 'w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}>
             <h1 className={`${darkMode ? 'text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4' : "text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4"}`}>Hodl, Pass, Survive...</h1>
-            <h2 className={`${darkMode ? 'text-xl font-bold mb-2 text-center' : "text-xl font-bold mb-2 text-center"}`}>Game State: {getGameState}</h2>
+            <h2 className={`${darkMode ? 'text-xl font-bold mb-2 text-center' : "text-xl font-bold mb-2 text-center"}`}>
+              Game State: {loadingGameState ? 'Loading...' : getGameState}
+            </h2>
             <p className={`${darkMode ? 'text-sm text-center' : "text-sm text-center"}`}>This is the current game state. It will be updated automatically.</p>
           </div>
-          <div className={`w-full flex flex-col justify-center items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-md p-4 mb-8 ${darkMode ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}>
+          <div className={`w-full flex flex-col justify-center items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {!address ?
               <>
                 <>
@@ -691,9 +693,16 @@ export default function Play() {
               getGameState == "Playing" || getGameState == "Final Round" ?
                 <>
                   <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Statistics:</h2>
-                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Successful Passes: {passes}</p>
-                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Failed Passes: {failed}</p>
-                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Total Wins: {wins}</p>
+                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
+                    Successful Passes: {loadingPasses ? "Loading..." : passes}
+                  </p>
+                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
+                    Failed Passes: {loadingFailedPasses ? "Loading..." : failed}
+                  </p>
+                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
+                    Total Wins: {loadingWins ? "Loading..." : wins}
+                  </p>
+
                 </>
                 : getGameState == "Queued" ?
                   <>
@@ -721,25 +730,42 @@ export default function Play() {
                       </>
             }
           </div>
-          <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-md p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 ${darkMode ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}>
+          <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {getGameState == "Playing" || getGameState == "Final Round" ?
               <>
-                <h1 className="text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Token #{_potatoTokenId} has the potato</h1>
-                <p className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}><span><Link className='animate-pulse underline' href={`https://mumbai.polygonscan.com/address/${potatoOwner}`} target='_blank'>Potato Holder</Link></span></p>
-                <h2 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>TIME REMAINING: {explosionTime}</h2>
+                <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>
+                  {loadingPotatoTokenId ? "Loading..." : `Token #${_potatoTokenId} has the potato`}
+                </h1>
+                <p className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
+                  <span>
+                    {loadingPotatoOwner ? "Loading..." :
+                      <Link className='animate-pulse underline' href={`https://mumbai.polygonscan.com/address/${potatoOwner}`} target='_blank'>
+                        Potato Holder
+                      </Link>
+                    }
+                  </span>
+                </p>
+
+                <h2 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
+                  {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${explosionTime}`}
+                </h2>
                 <Image alt='Image' src={potato} width={200} height={200} />
-                <button className="mt-4 w-1/2 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-3 rounded shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110"
+                <button className="mt-4 w-1/2 bg-gray-800 hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110"
                   onClick={handlecheck}>
                   CHECK EXPLOSION
                 </button>
-                <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokens} Active Tokens Remaing</p>
+                {loadingActiveTokens ? (
+                  <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
+                ) : (
+                  <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokens} </p>)
+                }
                 <Link href="https://mumbai.polygonscan.com/" target='_blank' className="underline">
                   Smart Contract
                 </Link>
               </>
               : getGameState == "Queued" ? (
                 <>
-                  <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Round starting soon</h1>
+                  <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Round starting soon</h1>
                   <h3 className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>The game is currently Queued, Come back soon for some sizzlin fun!</h3>
                   <Image alt='Image' src={potato} width={200} height={200} />
                   <div className='grid grid-cols-3 justify-center gap-4'>
@@ -753,10 +779,14 @@ export default function Play() {
               ) :
                 getGameState == "Paused" ? (
                   <>
-                    <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Game Paused</h1>
+                    <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Game Paused</h1>
                     <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>The game is currently paused. Please wait for further updates.</h3>
                     <Image alt='Image' src={potato} width={200} height={200} />
-
+                    {loadingActiveTokens ? (
+                      <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
+                    ) : (
+                      <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokens} </p>)
+                    }
                     <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokens} Active Tokens Remaing</p>
                     <Link href="https://mumbai.polygonscan.com/" target='_blank' className='underline'>
                       Smart Contract
@@ -765,42 +795,77 @@ export default function Play() {
                 ) :
                   getGameState == "Ended" ? (
                     <>
-                      <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Game Ended</h1>
+                      <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Game Ended</h1>
                       <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Thank you for participating. See you in the next game!</h3>
                       <Image alt='Image' src={potato} width={200} height={200} />
                       <h2 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>And congratulations to our Winner:</h2>
-                      <Link href={`https://mumbai.polygonscan.com/address/${winner}`} target='_blank' className="text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 animate-pulse">{winner}</Link>
-                      {/* Add more components based on your design in ended state */}
+                      {loadingWinners ? (
+                        <h1
+                          className={`text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text animate-pulse ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}
+                        >
+                          Loading...
+                        </h1>) : (
+                        <Link
+                          href={`https://mumbai.polygonscan.com/address/${winner}`}
+                          target='_blank'
+                          className={`text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text animate-pulse ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}
+                        >
+                          {winner}
+                        </Link>
+                      )
+                      }
                     </>
                   ) :
                     getGameState == "Minting" && (
                       <>
-                        <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Jump in the Heat</h1>
-                        <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Round {currentRound}</h3>
+                        <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Jump in the Heat</h1>
+                        {loadingCurrentGeneration ? (
+                          <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</h3>
+                        ) : (
+                          <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Round {currentRound}</h3>
+                        )}
                         <div className='grid grid-cols-2'>
-                          <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: {price} ETH</p>
+                          {loadingPrice ? (
+                            <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: Loading...</p>
+                          ) : (
+                            <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: {price} ETH</p>
+                          )}
                           <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>MAX PER WALLET: XXX</p>
                         </div>
 
+
                         {address ?
                           <>
-                            <input className="mt-4 w-3/4 bg-white hover:bg-gray-300 text-black px-4 py-2 rounded shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
+                            <input className="mt-4 w-3/4 bg-white hover:bg-gray-300 text-black px-4 py-2 rounded-lg shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
                               type="text"
                               value={mintAmount}
                               inputMode="numeric"
                               pattern="[0-9]*"
                               onChange={handleInputChangeMint}
                               placeholder="Enter mint amount" />
-                            <button className="mt-4 w-1/2 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-3 rounded shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110"
+                            <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                               onClick={handleMint}
                             >Join Round!</button>
-                            <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{maxSupply} MINTED</p>
+                            <p>
+                              {loadingMints ? (
+                                <p className="text-lg text-center mb-4">Loading Mints...</p>
+                              ) : (
+                                <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
+                              )}
+                            </p>
                           </>
                           :
                           <>
-                            <h1 className={`text-3xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{maxSupply} MINTED</h1>
-                            <p1 className={`text-2xl md:text-xl lg:text-3xl text-center font-bold ${darkMode ? 'text-white' : 'text-black'}`}
-                            >Connect first to join the fun!</p1>
+                            <p>
+                              {loadingMints ? (
+                                <p className="text-3xl text-center mb-4">Loading Mints...</p>
+                              ) : (
+                                <p className={`text-3xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
+                              )}
+                            </p>
+                            <p1 className={`text-2xl md:text-xl lg:text-3xl text-center font-bold ${darkMode ? 'text-white' : 'text-black'}`}>
+                              Connect first to join the fun!
+                            </p1>
                           </>
                         }
                         <Link href="https://mumbai.polygonscan.com/" target='_blank' className='underline'>
@@ -812,7 +877,7 @@ export default function Play() {
             {/* Content when address does not exist */}
           </div>
 
-          <div className={`w-full flex flex-col justify-center items-center p-4 mb-8 col-end-9 col-span-2  md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md`}>
+          <div className={`w-full flex flex-col justify-center items-center p-4 mb-8 col-end-9 col-span-2  md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-xl`}>
             {!address ?
               <>
                 <h1 className="text-4xl font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Connect First</h1>
@@ -822,18 +887,26 @@ export default function Play() {
               getGameState == "Playing" || getGameState == "Final Round" ?
                 <>
                   <h1 className={`text-xl font-bold mb-2 underline ${darkMode ? 'text-white' : 'text-black'}`}>Your Tokens:</h1>
-                  <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Active Token(s): {activeTokensCount}</h2>
-                  <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Has Potato: {hasPotatoToken}</h2>
+                  {loadingActiveTokenCount ? (
+                    <h2 className="text-center font-bold mb-2">Loading Active Token(s)...</h2>
+                  ) : (
+                    <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Active Token(s): {activeTokensCount}</h2>
+                  )}
+                  {loadingHasPotato ? (
+                    <h2 className="text-center font-bold mb-2">Loading Has Potato...</h2>
+                  ) : (
+                    <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Has Potato: {hasPotatoToken}</h2>
+                  )}
                   <p className={`text-sm text-center ${darkMode ? 'text-white' : 'text-black'}`}>You can pass the potato if you are currently holding it.</p>
                   <div className="grid grid-rows-2 place-items-center justify-center items center">
-                    <input className="mt-4 w-1/2  bg-white hover:bg-gray-300 text-black px-4 py-2 rounded shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
+                    <input className="mt-4 w-1/2  bg-white hover:bg-gray-300 text-black px-4 py-2 rounded-lg shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
                       type="text"
                       value={tokenId}
                       inputMode="numeric"
                       pattern="[0-9]*"
                       onChange={handleInputChangeToken}
                       placeholder="tokenId" />
-                    <button className="mt-4 w-5/6 bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-2 rounded shadow"
+                    <button className="mt-4 w-5/6 bg-gray-800 hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-2 rounded-lg shadow"
                       onClick={handlePass}
                     >Pass Potato</button>
                   </div>
@@ -846,14 +919,16 @@ export default function Play() {
                     <>
                       <Image alt='Image' src={potato} width={200} height={200} />
                       <h3 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>
-                        I have <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>
-                          {activeTokensCount}
-                        </span> {activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round
+                        I have
+                        <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>
+                          {loadingActiveTokenCount ? 'Loading...' : ` ${activeTokensCount} `}
+                        </span>
+                        {loadingActiveTokenCount ? '' : activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round
                       </h3>
                       <p className={`text-sm text-center ${darkMode ? 'text-white' : 'text-black'}`}>Pass the heat to your friends and family!!</p>
                       <div className="grid grid-rows-2 place-items-center justify-center items center">
                         <button
-                          className="mt-4 w-full bg-black hover:bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white px-4 py-2 rounded shadow"
+                          className={`mt-4 w-full ${darkMode ? 'bg-gray-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-2 rounded-lg shadow`}
                           onClick={() => {
                             const imageUrl = 'https://your-website.com/your-image.jpg'; // Replace with your image URL
                             const tweetText = `I have ${activeTokensCount} ${activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!! Are you ready to pass the heat? Check out @0xHotPotato_ for more information on the project! #OnChainHotPotato`;
@@ -876,7 +951,7 @@ export default function Play() {
           </div>
 
 
-          <div ref={divRef} className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
+          <div ref={divRef} className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
             <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4">
               {events.map((event, index) => (
                 <div key={index} className={darkMode ? 'text-white' : 'text-black'}>
@@ -886,50 +961,57 @@ export default function Play() {
             </div>
           </div>
 
-          {getGameState === 'Playing' || getGameState === 'Final Round' ? (
-            <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md`}>
-              <h1 className="text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Active Tokens:</h1>
-              <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
-                {activeIds.map((tokenId, index) => (
-                  <div key={index} className="border rounded-lg p-2 text-center">
-                    <Image src={blacklogo} width={150} alt="Logo" />
-                    {tokenId}
-                  </div>
-                ))}
-              </div>
+          {loadingActiveTokenIds ? (
+            <div className="text-center">
+              <h1>Loading...</h1>
             </div>
-          ) : null}
+          ) : (
+            getGameState === 'Playing' || getGameState === 'Final Round' || getGameState === 'Paused' ? (
+              <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md`}>
+                <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Active Tokens:</h1>
+                <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
+                  {activeIds.map((tokenId, index) => (
+                    <div key={index} className="border rounded-lg p-2 text-center">
+                      <Image src={darkMode ? redlogo : blacklogo} width={150} alt="Logo" />
+                      {tokenId}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null
+          )}
+
 
 
           {address == _owner &&
-            <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
+            <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-xl overflow-x-auto`}>
               <div className="p-4 grid grid-cols-1 md:grid-cols-3 sm:grid-cols-3 gap-4">
                 <button
-                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded px-4 py-3 md:col-span-3 sm:col-span-3"
+                  className={`bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded-lg px-4 py-3 md:col-span-3 sm:col-span-3`}
                   onClick={handleStartGame}
                 >
                   Start Game
                 </button>
                 <button
-                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded px-4 py-2 md:col-span-3 sm:col-span-3"
+                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded-lg px-4 py-2 md:col-span-3 sm:col-span-3"
                   onClick={handleEndMinting}
                 >
                   End Minting
                 </button>
                 <button
-                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded px-4 py-2"
+                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded-lg px-4 py-2"
                   onClick={handlePauseGame}
                 >
                   Pause Game
                 </button>
                 <button
-                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded px-4 py-2"
+                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded-lg px-4 py-2"
                   onClick={handleResumeGame}
                 >
                   Resume Game
                 </button>
                 <button
-                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded px-4 py-2"
+                  className="bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white rounded-lg px-4 py-2"
                   onClick={handleRestartGame}
                 >
                   Restart Game

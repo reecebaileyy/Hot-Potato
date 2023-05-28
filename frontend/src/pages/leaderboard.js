@@ -66,12 +66,11 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className={`${darkMode ? 'bg-gradient-to-br from-black via-gray-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>
+      <div className={`${darkMode ? 'bg-gradient-to-br from-amber-800 via-red-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>
         <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
-          <Link href='/'>{darkMode ?
-            <Image src={redlogo} width={150} alt="Logo" /> :
+          <Link href='/'>
             <Image src={blacklogo} width={150} alt="Logo" />
-          }</Link>
+          </Link>
           <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
               <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
@@ -113,7 +112,7 @@ export default function Home() {
         </nav>
 
         <div className={`mt-5 sm:mt-10 flex justify-center items-center p-4 sm:p-0 sm:py-5 md:py-5 min-w-screen`}>
-          <div className={`${darkMode ? 'bg-gray-700' : 'bg-white'} rounded shadow-lg p-5 sm:p-0 mx-2 sm:mx-0`}>
+          <div className={`${darkMode ? 'bg-black' : 'bg-white'} rounded-xl shadow-lg p-5 sm:p-0 mx-2 sm:mx-0`}>
             <div className='grid lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 sm:grid-rows-2 items-center sm:justify-items-center md:justify-items-center content-center'>
               <h2 className={`text-xl sm:text-3xl mb-5 ${darkMode ? 'text-white' : 'text-black'}`}>Leaderboard</h2>
               <input type="text" value={searchAddress} onChange={handleSearch} placeholder="Search by Address" className={`w-full sm:w-auto p-2 mt-2 sm:mt-0 rounded-lg ${darkMode ? 'text-white bg-gray-700' : 'text-black bg-white'}`} />

@@ -41,11 +41,11 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className={`${darkMode ? 'bg-gradient-to-br from-black via-gray-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>      <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
-        <Link href='/'>{darkMode ?
-          <Image src={redlogo} width={150} alt="Logo" /> :
-          <Image src={blacklogo} width={150} alt="Logo" />
-        }</Link>
+      <div className={`${darkMode ? 'bg-gradient-to-br from-amber-800 via-red-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>
+      <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
+      <Link href='/'>
+            <Image src={blacklogo} width={150} alt="Logo" />
+          </Link>
         <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
           <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
             <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
