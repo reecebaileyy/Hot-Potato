@@ -36,11 +36,8 @@ export default function Play() {
 
 
   const menuRef = useRef()
-  const endOfMessagesRef = useRef(null);
-  const scrollToBottom = () => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  const divRef = useRef(null);
+  
   // STORING USERS ADDRESS
   const { address } = useAccount()
   const { balance } = useBalance(address)
@@ -553,7 +550,8 @@ export default function Play() {
       refetchBalanceOf();
       refetchWinner();
       refetchGetPotatoOwner();
-      scrollToBottom();
+      const divElement = divRef.current;
+      divElement.scrollLeft = divElement.scrollWidth;
       console.log("AN UNKNOWN PRODUCTION");
     }, 5000);
 
@@ -848,14 +846,13 @@ export default function Play() {
           </div>
 
 
-          <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
+          <div ref={divRef} className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
             <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4">
               {events.map((event, index) => (
                 <div key={index} className={darkMode ? 'text-white' : 'text-black'}>
                   {event}
                 </div>
               ))}
-              <div ref={endOfMessagesRef}/>
             </div>
           </div>
 
