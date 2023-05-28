@@ -527,8 +527,16 @@ contract UNKNOWN is
             break;
         }
     }
-    return currentIndex + 1;
+
+    // Start search from the next index
+    for (uint256 i = currentIndex + 1; i < activeTokens.length; i++) {
+        if (_isTokenActive(activeTokens[i])) {
+            return activeTokens[i];
+        }
+    }
+    revert("No active tokens found");
 }
+
 
 
     function _isTokenActive(uint256 tokenId) internal view returns (bool) {
