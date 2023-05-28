@@ -294,6 +294,12 @@ export default function Play() {
     functionName: '_owner',
   })
 
+  const { data: getActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
+    address: '0x6d4d13B0E24c76F41a8ae434F42702101b7405C4',
+    abi: ABI,
+    functionName: 'getActiveTokenIds',
+  })
+
 
   /*
    __       __ _______  ______ ________ ________      __    __  ______   ______  __    __  ______  
@@ -564,10 +570,12 @@ export default function Play() {
       refetchCurrentGeneration();
       refetchBalanceOf();
       refetchWinner();
+      refetchGetActiveTokenIds();
       refetchGetPotatoOwner();
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
-      console.log("AN UNKNOWN PRODUCTION");
+      console.log(`GetActiveTokenIds: ${getActiveTokenIds}`)
+      console.log("A BLAZE PRODUCTION");
     }, 5000);
 
     return () => {
@@ -655,9 +663,6 @@ export default function Play() {
         </nav>
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
-          <div className='w-full col-start-2 col-span-6 justify-start items-start md:w-2/3 lg:w-1/2 rounded-md'>
-            <h1 className="text-3xl sm:text-center md:text-center md:text-4xl lg:text-5xl text-left font-bold mb-4">v1.0.0</h1>
-          </div>
 
           <div className={`${darkMode ? 'w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-gray-700 shadow rounded-md' : "w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-md"}`}>
             <h1 className={`${darkMode ? 'text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4' : "text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4"}`}>Hodl, Pass, Survive...</h1>
