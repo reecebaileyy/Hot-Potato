@@ -55,6 +55,21 @@ export default function Play() {
                                                                                            
   */
 
+   useContractEvent({
+    address: '0x6d4d13B0E24c76F41a8ae434F42702101b7405C4',
+    abi: ABI,
+    eventName: 'SuccessfulPass',
+    listener(log) {
+      try {
+          const player = log[0].args.player.toString();
+          setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
+          console.error('TokenId is not a BigInt or is not found in log args', log);
+      } catch (error) {
+        console.log(error)
+      }
+    },
+  })
+
   useContractEvent({
     address: '0x6d4d13B0E24c76F41a8ae434F42702101b7405C4',
     abi: ABI,
