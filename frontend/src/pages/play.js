@@ -885,18 +885,21 @@ export default function Play() {
               ))}
             </div>
           </div>
-          <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md`}>
-          <h1 className="text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Active Tokens:</h1>
-          <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
-            {activeIds.map((tokenId, index) => (
-              <div key={index} className="border rounded-lg p-2 text-center">
-              <Image src={blacklogo} width={150} alt="Logo" />
-                {tokenId}
+
+          {getGameState === 'Playing' || getGameState === 'Final Round' ? (
+            <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md`}>
+              <h1 className="text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500">Active Tokens:</h1>
+              <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
+                {activeIds.map((tokenId, index) => (
+                  <div key={index} className="border rounded-lg p-2 text-center">
+                    <Image src={blacklogo} width={150} alt="Logo" />
+                    {tokenId}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          </div>
-          
+            </div>
+          ) : null}
+
 
           {address == _owner &&
             <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
