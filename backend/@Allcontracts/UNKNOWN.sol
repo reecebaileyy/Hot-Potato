@@ -202,7 +202,7 @@ contract UNKNOWN is
             uint256 newPotatoTokenId = tokenIdTo;
             tokenTraits[potatoTokenId].hasPotato = false;
             potatoTokenId = newPotatoTokenId;
-            
+
             tokenTraits[potatoTokenId].hasPotato = true;
 
             TOTAL_PASSES += 1;
@@ -237,7 +237,10 @@ contract UNKNOWN is
     }
 
     function checkExplosion() public {
-        require(gameState == GameState.Playing || gameState == GameState.FinalRound, "Game not playing");
+        require(
+            gameState == GameState.Playing || gameState == GameState.FinalRound,
+            "Game not playing"
+        );
         require(
             getExplosionTime() == 0,
             "Still got more time to pass the potato"
@@ -515,6 +518,19 @@ contract UNKNOWN is
         revert("No active tokens found");
     }
 
+    function _findNextActiveToken() internal view returns (uint256) {
+    // Get the index of the current potatoTokenId
+    uint256 currentIndex;
+    for (uint256 i = 0; i < activeTokens.length; i++) {
+        if (activeTokens[i] == potatoTokenId) {
+            currentIndex = i;
+            break;
+        }
+    }
+    return currentIndex + 1;
+}
+
+
     function _isTokenActive(uint256 tokenId) internal view returns (bool) {
         for (uint256 i = 1; i < activeTokens.length; i++) {
             if (activeTokens[i] == tokenId) {
@@ -585,7 +601,7 @@ contract UNKNOWN is
 
             if (tokenOwner1 != tokenOwner2) {
                 gameState = GameState.FinalRound;
-                assignPotato(activeTokens[indexToAssign]);
+                assignPotato(_findNextActiveToken());
             } else {
                 gameState = GameState.Ended;
             }
@@ -600,7 +616,7 @@ contract UNKNOWN is
             if (indexToAssign == 0 && activeTokens.length > 1) {
                 indexToAssign = 1;
             }
-            assignPotato(activeTokens[indexToAssign]);
+            assignPotato(_findNextActiveToken());
         }
 
         updateExplosionTimer();
