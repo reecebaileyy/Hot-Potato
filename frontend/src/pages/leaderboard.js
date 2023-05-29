@@ -24,10 +24,10 @@ export default function Home() {
   const [leaderboard, setLeaderboard] = useState([]);
 
   useEffect(() => {
-      fetch('/api/get-leaderboard')
-          .then(response => response.json())
-          .then(data => setLeaderboard(data.leaderboard))
-          .catch(console.error);
+    fetch('/api/get-leaderboard')
+      .then(response => response.json())
+      .then(data => setLeaderboard(data.leaderboard))
+      .catch(console.error);
   }, []);
 
 
@@ -136,6 +136,7 @@ export default function Home() {
               <table className="table-auto w-full min-w-full">
                 <thead>
                   <tr>
+                    <th className={`px-4 py-2 sm:px-0 md:px-0 text-left sm:text-center md:text-center sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Rank</th>
                     <th className={`px-4 py-2 sm:px-0 md:px-0 text-left sm:text-center md:text-center sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Player Address</th>
                     <th className={`px-4 py-2 sm:px-0 md:px-0 text-left sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Passes</th>
                     <th className={`px-4 py-2 sm:px-0 md:px-0 text-left sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Wins</th>
@@ -146,6 +147,7 @@ export default function Home() {
                     .filter((player) => searchAddress ? player.address.includes(searchAddress) : true)
                     .map((player, index) => (
                       <tr key={index} className={index % 2 === 0 ? (darkMode ? 'bg-gray-700' : 'bg-gray-200') : ''}>
+                        <td className={`px-4 py-2 sm:px-0 border sm:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>{index + 1}</td>
                         <td className={`px-4 py-2 sm:px-0 border sm:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>{player.address}</td>
                         <td className={`px-4 py-2 sm:px-0 border sm:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>{player.passes}</td>
                         <td className={`px-4 py-2 sm:px-0 border sm:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>{player.wins}</td>
