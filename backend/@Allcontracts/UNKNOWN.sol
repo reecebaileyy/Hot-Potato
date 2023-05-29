@@ -64,6 +64,7 @@ contract UNKNOWN is
     uint256 public _maxsupply = 10000;
     uint256 public _maxperwallet = 3;
     uint256 public roundMints = 0;
+    uint256 public activeAddresses = 0;
 
     uint256 private FINAL_POTATO_EXPLOSION_DURATION = 10 minutes;
     uint256 private remainingTime;
@@ -86,6 +87,7 @@ contract UNKNOWN is
     mapping(GameState => string) private gameStateStrings;
     mapping(uint256 => address) public Winners;
     mapping(address => uint256) public addressActiveTokenCount;
+    mapping(address => bool) private counted;
 
     VRFCoordinatorV2Interface COORDINATOR;
 
@@ -158,7 +160,13 @@ contract UNKNOWN is
             uint256 tokenId = _nextTokenId();
             activeTokens.push(tokenId);
             _safeMint(msg.sender, 1);
-            addressActiveTokenCount[ownerOf(tokenId)] += 1;
+
+            // Increment the addressActiveTokenCount and activeAddresses if necessary
+            if (addressActiveTokenCount[msg.sender] == 0) {
+                activeAddresses += 1;
+            }
+            addressActiveTokenCount[msg.sender] += 1;
+
             tokenTraits[tokenId] = TokenTraits({
                 hasPotato: false,
                 generation: currentGeneration
@@ -438,6 +446,7 @@ contract UNKNOWN is
         delete tokenTraits[potatoTokenId];
         potatoTokenId = 0;
         TOTAL_PASSES = 0;
+        activeAddresses = 0;
 
         activeTokens.push(0);
 
@@ -606,22 +615,22 @@ contract UNKNOWN is
         emit PotatoExploded(potatoTokenId);
         uint256 indexToAssign = currentRandomWord % activeTokens.length;
 
-        // Get the unique addresses from activeTokens
-        uint256 uniqueAddresses = 0;
-        for (uint256 i = 0; i < activeTokens.length; i++) {
-            if (addressActiveTokenCount[ownerOf(activeTokens[i])] > 0) {
-                uniqueAddresses += 1;
-            }
+        // Decrease the count of active tokens for the failed player
+        addressActiveTokenCount[failedPlayer] -= 1;
+
+        // If this player has no more active tokens, decrease the count of active addresses
+        if (addressActiveTokenCount[failedPlayer] == 0) {
+            activeAddresses -= 1;
         }
 
         // 5. Check if the game should move to the final round or end
-        if (uniqueAddresses == 2) {
+        if (activeAddresses == 2) {
             gameState = GameState.FinalRound;
             assignPotato(_findNextActiveToken());
-        } else if (uniqueAddresses == 1) {
+        } else if (activeAddresses < 2) {
             gameState = GameState.Ended;
             emit PlayerWon(ownerOf(activeTokens[1]));
-            Winners[currentGeneration] = ownerOf(activeTokens[0]);
+            Winners[currentGeneration] = ownerOf(activeTokens[1]);
         } else {
             updateExplosionTimer();
             // calculate the index based on the current activeTokens.length

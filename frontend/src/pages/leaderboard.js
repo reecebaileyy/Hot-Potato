@@ -14,21 +14,32 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef();
-  const [leaderboardData, setLeaderboardData] = useState([]);
   const [sortKey, setSortKey] = useState('successfulPasses');
   const [sortAsc, setSortAsc] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchAddress, setSearchAddress] = useState("");
-  const itemsPerPage = 20; 
-
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const itemsPerPage = 20;
 
   useEffect(() => {
     fetch('/api/get-leaderboard')
       .then(response => response.json())
-      .then(data => setLeaderboard(data.leaderboard))
+      .then(data => {
+        console.log('Data from API:', data);
+        setLeaderboardData(data.leaderboard);
+      })
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    const sortedData = [...leaderboardData].sort((a, b) => {
+      if (a[sortKey] < b[sortKey]) return sortAsc ? -1 : 1;
+      if (a[sortKey] > b[sortKey]) return sortAsc ? 1 : -1;
+      return 0;
+    });
+    console.log('Sorted data:', sortedData);
+    setLeaderboardData(sortedData);
+  }, [sortKey, sortAsc, leaderboardData]);
 
 
   const sortedLeaderboardData = [...leaderboardData].sort((a, b) => {
@@ -37,9 +48,10 @@ export default function Home() {
     return 0;
   });
 
+  console.log('Sorted data:', sortedLeaderboardData);
+
   const totalPages = Math.ceil(sortedLeaderboardData.length / itemsPerPage);
-  const paginatedData = sortedLeaderboardData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  const searchedData = sortedLeaderboardData.filter(player => player.address.includes(searchAddress));
+  const paginatedData = leaderboardData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleClickPage = (page) => {
     setCurrentPage(page);
@@ -128,9 +140,9 @@ export default function Home() {
               <input type="text" value={searchAddress} onChange={handleSearch} placeholder="Search by Address" className={`w-full sm:w-auto p-2 mt-2 sm:mt-0 rounded-lg ${darkMode ? 'text-white bg-gray-700' : 'text-black bg-white'}`} />
             </div>
             <div className="flex 3xl:justify-end 2xl:justify-end xl:justify-end lg:justify-end md:justify-center sm:justify-center mb-4 sm:justify-items-center sm:items-center">
-              <button onClick={() => setSortKey('successfulPasses')} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>Sort by Passes</button>
-              <button onClick={() => setSortKey('totalWins')} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>Sort by Wins</button>
-              <button onClick={() => setSortAsc(!sortAsc)} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>Sort {sortAsc ? 'Descending' : 'Ascending'}</button>
+              <button onClick={() => { setSortKey('passes'); console.log('Sorting by passes...') }} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>Sort by Passes</button>
+              <button onClick={() => { setSortKey('wins'); console.log('Sorting by wins...') }} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>Sort by Wins</button>
+              <button onClick={() => { setSortAsc(!sortAsc); console.log('Toggling sort direction...') }} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>Sort {sortAsc ? 'Descending' : 'Ascending'}</button>
             </div>
             <div className='overflow-auto'>
               <table className="table-auto w-full min-w-full">
@@ -143,7 +155,7 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody>
-                  {leaderboard
+                  {paginatedData
                     .filter((player) => searchAddress ? player.address.includes(searchAddress) : true)
                     .map((player, index) => (
                       <tr key={index} className={index % 2 === 0 ? (darkMode ? 'bg-gray-700' : 'bg-gray-200') : ''}>
