@@ -42,49 +42,49 @@ export default function Home() {
       </Head>
 
       <div className={`${darkMode ? 'bg-gradient-to-br from-amber-800 via-red-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>
-      <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
-      <Link href='/'>
+        <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
+          <Link href='/'>
             <Image src={blacklogo} width={150} alt="Logo" />
           </Link>
-        <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
-          <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
-            <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
-          </button>
-          <div className={`fixed inset-0 flex justify-center items-center  bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}
-            onClick={(e) => {
-              if (!menuRef.current.contains(e.target)) {
-                setIsOpen(false)
-              }
-            }}>
-            <ul ref={menuRef} className={`${darkMode ? 'bg-gray-700 to-black text-white items-center p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl' : 'items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black'}`}>
-              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/play">Play</Link></li>
-              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/leaderboard">Leaderboard</Link></li>
-              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://app.gitbook.com" target="_blank">Docs</Link></li>
-              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
-              <DarkModeSwitch
-                checked={darkMode}
-                onChange={() => setDarkMode(!darkMode)}
-                size={30}
-              />
-              <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
-            </ul>
+          <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
+            <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
+              <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
+            </button>
+            <div className={`fixed inset-0 flex justify-center items-center  bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}
+              onClick={(e) => {
+                if (!menuRef.current.contains(e.target)) {
+                  setIsOpen(false)
+                }
+              }}>
+              <ul ref={menuRef} className={`${darkMode ? 'bg-gray-700 to-black text-white items-center p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl' : 'items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black'}`}>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/play">Play</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/leaderboard">Leaderboard</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://app.gitbook.com" target="_blank">Docs</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
+                <DarkModeSwitch
+                  checked={darkMode}
+                  onChange={() => setDarkMode(!darkMode)}
+                  size={30}
+                />
+                <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
+              </ul>
+            </div>
           </div>
-        </div>
-        <ul className='flex md:hidden sm:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
-          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/play">Play</Link></li>
-          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/leaderboard">Leaderboard</Link></li>
-          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://app.gitbook.com" target="_blank">Docs</Link></li>
-          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
-        </ul>
-        <div className='flex gap-2 items-center sm:hidden md:hidden'>
-          <DarkModeSwitch
-            checked={darkMode}
-            onChange={() => setDarkMode(!darkMode)}
-            size={30}
-          />
-          <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
-        </div>
-      </nav>
+          <ul className='flex md:hidden sm:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/play">Play</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/leaderboard">Leaderboard</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://app.gitbook.com" target="_blank">Docs</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
+          </ul>
+          <div className='flex gap-2 items-center sm:hidden md:hidden'>
+            <DarkModeSwitch
+              checked={darkMode}
+              onChange={() => setDarkMode(!darkMode)}
+              size={30}
+            />
+            <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
+          </div>
+        </nav>
 
         <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center p-10 space-y-5">
           <h1 className='text-4xl sm:text-5xl md:text-6xl text-white'>Onchain Hot Potato</h1>

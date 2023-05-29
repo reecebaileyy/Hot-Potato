@@ -352,11 +352,14 @@ contract UNKNOWN is
         return ownerOf(potatoTokenId);
     }
 
-    function getActiveTokenIds() public view returns (uint256, uint256) {
+    function getActiveTokenIds() public view returns (uint256[] memory) {
         require(activeTokens.length > 0, "No active tokens.");
-        uint256 firstTokenId = activeTokens[1];
-        uint256 lastTokenId = activeTokens[activeTokens.length - 1];
-        return (firstTokenId, lastTokenId);
+
+        uint256[] memory allTokenIds = new uint256[](activeTokens.length);
+        for (uint256 i = 0; i < activeTokens.length; i++) {
+            allTokenIds[i] = activeTokens[i];
+        }
+        return (allTokenIds);
     }
 
     /* 
@@ -519,24 +522,23 @@ contract UNKNOWN is
     }
 
     function _findNextActiveToken() internal view returns (uint256) {
-    // Get the index of the current potatoTokenId
-    uint256 currentIndex;
-    for (uint256 i = 0; i < activeTokens.length; i++) {
-        if (activeTokens[i] == potatoTokenId) {
-            currentIndex = i;
-            break;
+    // Generate a pseudo-random index based on the currentRandomWord
+    uint256 randomIndex = currentRandomWord % activeTokens.length;
+
+    // Find the next active token starting from the random index
+    uint256 loopCount = 0;
+    while (loopCount < activeTokens.length) {
+        uint256 tokenIndex = (randomIndex + loopCount) % activeTokens.length;
+        uint256 tokenId = activeTokens[tokenIndex];
+        if (tokenId != potatoTokenId && _isTokenActive(tokenId)) {
+            return tokenId;
         }
+        loopCount++;
     }
 
-    // Start search from the next index
-    for (uint256 i = currentIndex + 1; i < activeTokens.length; i++) {
-        if (_isTokenActive(activeTokens[i])) {
-            return activeTokens[i];
-        }
-    }
-    revert("No active tokens found");
+    // If no active token (excluding potatoTokenId) is found, return 0 or handle the case as desired
+    return 0;
 }
-
 
 
     function _isTokenActive(uint256 tokenId) internal view returns (bool) {
