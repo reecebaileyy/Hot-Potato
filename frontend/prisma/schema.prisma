@@ -10,6 +10,6 @@ datasource db {
 model leaderboard {
   id               String @id @default(auto()) @map("_id") @db.ObjectId
   address          String
-  successfulPasses Int
-  totalWins        Int
+  passes           Int
+  wins             Int
 }
