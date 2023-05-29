@@ -111,35 +111,6 @@ export default function Play() {
     },
   });
   
-  useContractEvent({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
-    abi: ABI,
-    eventName: 'FailedPass',
-    async listener(log) {
-      console.log(`Failed Pass log: ${log}`)
-      try {
-        const player = log[0].args.player.toString();
-        setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
-  
-        // Send a POST request to the API route to update the database
-        const response = await fetch('/api/update-fails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ address: player }),
-        });
-        console.log(`Failed Pass response: ${response}`)
-        const data = await response.json();
-        console.log(data.message);
-  
-      } catch (error) {
-        console.error('Error updating wins', error);
-      }
-    },
-  });
-  
-  
 
 
   useContractEvent({
