@@ -15,7 +15,7 @@ export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef();
   const [leaderboardData, setLeaderboardData] = useState([]);
-  const [sortKey, setSortKey] = useState('successfulPasses'); // or 'totalWins'
+  const [sortKey, setSortKey] = useState('successfulPasses');
   const [sortAsc, setSortAsc] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchAddress, setSearchAddress] = useState("");
