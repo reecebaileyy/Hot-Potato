@@ -9,7 +9,6 @@ import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useCo
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/BlackLogo.png'
 import redlogo from '../../public/assets/images/RedLogo.png'
-import { black } from 'tailwindcss/colors';
 
 
 export default function Play() {
@@ -39,6 +38,7 @@ export default function Play() {
   const menuRef = useRef()
   const divRef = useRef(null);
 
+
   // STORING USERS ADDRESS
   const { address } = useAccount()
   const { balance } = useBalance(address)
@@ -56,30 +56,91 @@ export default function Play() {
                                                                                            
   */
 
-  useContractEvent({
+
+   useContractEvent({
     address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
     abi: ABI,
     eventName: 'SuccessfulPass',
-    listener(log) {
+    async listener(log) {
       try {
         const player = log[0].args.player.toString();
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
-        console.error('TokenId is not a BigInt or is not found in log args', log);
+  
+        // Send a POST request to the API route to update the database
+        const response = await fetch('/api/update-passes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address: player }),
+        });
+  
+        const data = await response.json();
+        console.log(data.message);
+  
       } catch (error) {
-        console.log(error)
+        console.error('Error updating successful passes', error);
       }
     },
-  })
+  });
 
   useContractEvent({
     address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
     abi: ABI,
-    eventName: 'GameStarted',
-    listener(log) {
-      const message = "Game Started";
-      setEvents(prevEvents => [...prevEvents, message]);
+    eventName: 'PlayerWon',
+    async listener(log) {
+      try {
+        const player = log[0].args.player.toString();
+        setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
+  
+        // Send a POST request to the API route to update the database
+        const response = await fetch('/api/update-wins', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address: player }),
+        });
+  
+        const data = await response.json();
+        console.log(data.message);
+  
+      } catch (error) {
+        console.error('Error updating wins', error);
+      }
     },
-  })
+  });
+  
+  useContractEvent({
+    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    abi: ABI,
+    eventName: 'FailedPass',
+    async listener(log) {
+      console.log(`Failed Pass log: ${log}`)
+      try {
+        const player = log[0].args.player.toString();
+        setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
+  
+        // Send a POST request to the API route to update the database
+        const response = await fetch('/api/update-fails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address: player }),
+        });
+        console.log(`Failed Pass response: ${response}`)
+        const data = await response.json();
+        console.log(data.message);
+  
+      } catch (error) {
+        console.error('Error updating wins', error);
+      }
+    },
+  });
+  
+  
+
 
   useContractEvent({
     address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
@@ -118,7 +179,6 @@ export default function Play() {
       }
     },
   });
-
 
 
   useContractEvent({
@@ -968,7 +1028,7 @@ export default function Play() {
                 <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Active Tokens:</h1>
                 <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
                   {activeIds.map((tokenId, index) => (
-                    <div key={index} className="border rounded-lg p-2 text-center">
+                    <div key={index} className="border rounded-lg p-2 text-center place-items-center">
                       <Image src={darkMode ? redlogo : blacklogo} width={150} alt="Logo" />
                       {tokenId}
                     </div>

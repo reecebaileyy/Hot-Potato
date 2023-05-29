@@ -7,7 +7,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator leaderboard {
-  provider = "prisma-client-js"
+model leaderboard {
+  id               String @id @default(auto()) @map("_id") @db.ObjectId
+  address          String
+  successfulPasses Int
+  totalWins        Int
 }
-
