@@ -53,7 +53,7 @@ contract UNKNOWN is
     bool private explosionTimeInitialized = false;
     bool private _isExplosionInProgress = false;
 
-    uint256 public constant INITIAL_POTATO_EXPLOSION_DURATION = 3 minutes;
+    uint256 public constant INITIAL_POTATO_EXPLOSION_DURATION = 30 seconds; //CHANGE THIS LATER
     uint256 public constant DECREASE_INTERVAL = 10;
     uint256 public constant DECREASE_DURATION = 5 seconds;
     uint256 public TOTAL_PASSES;
@@ -85,6 +85,7 @@ contract UNKNOWN is
     mapping(address => uint256[]) public tokensOwnedByUser;
     mapping(GameState => string) private gameStateStrings;
     mapping(uint256 => address) public Winners;
+    mapping(address => uint256) public addressActiveTokenCount;
 
     VRFCoordinatorV2Interface COORDINATOR;
 
@@ -157,6 +158,7 @@ contract UNKNOWN is
             uint256 tokenId = _nextTokenId();
             activeTokens.push(tokenId);
             _safeMint(msg.sender, 1);
+            addressActiveTokenCount[ownerOf(tokenId)] += 1;
             tokenTraits[tokenId] = TokenTraits({
                 hasPotato: false,
                 generation: currentGeneration
@@ -522,24 +524,24 @@ contract UNKNOWN is
     }
 
     function _findNextActiveToken() internal view returns (uint256) {
-    // Generate a pseudo-random index based on the currentRandomWord
-    uint256 randomIndex = currentRandomWord % activeTokens.length;
+        // Generate a pseudo-random index based on the currentRandomWord
+        uint256 randomIndex = currentRandomWord % activeTokens.length;
 
-    // Find the next active token starting from the random index
-    uint256 loopCount = 0;
-    while (loopCount < activeTokens.length) {
-        uint256 tokenIndex = (randomIndex + loopCount) % activeTokens.length;
-        uint256 tokenId = activeTokens[tokenIndex];
-        if (tokenId != potatoTokenId && _isTokenActive(tokenId)) {
-            return tokenId;
+        // Find the next active token starting from the random index
+        uint256 loopCount = 0;
+        while (loopCount < activeTokens.length) {
+            uint256 tokenIndex = (randomIndex + loopCount) %
+                activeTokens.length;
+            uint256 tokenId = activeTokens[tokenIndex];
+            if (tokenId != potatoTokenId && _isTokenActive(tokenId)) {
+                return tokenId;
+            }
+            loopCount++;
         }
-        loopCount++;
+
+        // If no active token (excluding potatoTokenId) is found, return 0 or handle the case as desired
+        return 0;
     }
-
-    // If no active token (excluding potatoTokenId) is found, return 0 or handle the case as desired
-    return 0;
-}
-
 
     function _isTokenActive(uint256 tokenId) internal view returns (bool) {
         for (uint256 i = 1; i < activeTokens.length; i++) {
@@ -604,22 +606,22 @@ contract UNKNOWN is
         emit PotatoExploded(potatoTokenId);
         uint256 indexToAssign = currentRandomWord % activeTokens.length;
 
-        // 5. Check if the game should move to the final round or end
-        if (activeTokens.length == 3) {
-            address tokenOwner1 = ownerOf(activeTokens[1]); // Index starts from 1
-            address tokenOwner2 = ownerOf(activeTokens[2]);
-
-            if (tokenOwner1 != tokenOwner2) {
-                gameState = GameState.FinalRound;
-                assignPotato(_findNextActiveToken());
-            } else {
-                gameState = GameState.Ended;
+        // Get the unique addresses from activeTokens
+        uint256 uniqueAddresses = 0;
+        for (uint256 i = 0; i < activeTokens.length; i++) {
+            if (addressActiveTokenCount[ownerOf(activeTokens[i])] > 0) {
+                uniqueAddresses += 1;
             }
-        } else if (activeTokens.length == 2) {
+        }
+
+        // 5. Check if the game should move to the final round or end
+        if (uniqueAddresses == 2) {
+            gameState = GameState.FinalRound;
+            assignPotato(_findNextActiveToken());
+        } else if (uniqueAddresses == 1) {
             gameState = GameState.Ended;
-            console.log("Gamestate.Ended");
             emit PlayerWon(ownerOf(activeTokens[1]));
-            Winners[currentGeneration] = ownerOf(activeTokens[1]);
+            Winners[currentGeneration] = ownerOf(activeTokens[0]);
         } else {
             updateExplosionTimer();
             // calculate the index based on the current activeTokens.length

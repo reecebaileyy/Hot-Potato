@@ -58,7 +58,7 @@ export default function Play() {
 
 
    useContractEvent({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     eventName: 'SuccessfulPass',
     async listener(log) {
@@ -85,7 +85,7 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     eventName: 'PlayerWon',
     async listener(log) {
@@ -114,7 +114,7 @@ export default function Play() {
 
 
   useContractEvent({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     eventName: 'GamePaused',
     listener(log) {
@@ -124,7 +124,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     eventName: 'GameRestarted',
     listener(log) {
@@ -134,7 +134,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     eventName: 'PotatoExploded',
     listener(log) {
@@ -153,7 +153,7 @@ export default function Play() {
 
 
   useContractEvent({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     eventName: 'PotatoPassed',
     listener(log) {
@@ -189,14 +189,14 @@ export default function Play() {
 
   // GETTING GAME STATE
   const { data: getGameState, isLoading: loadingGameState, refetch: refetchGameState } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'getGameState',
   })
 
   // GETTING NUMBER OF PASSES
   const { data: successfulPasses, isLoading: loadingPasses, refetch: refetchSuccessfulPasses } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'successfulPasses',
     args: [address],
@@ -205,7 +205,7 @@ export default function Play() {
 
   // GETTING NUMBER OF FAILS
   const { data: failedPasses, isLoading: loadingFailedPasses, refetch: refetchFailedPasses } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'failedPasses',
     args: [address],
@@ -214,7 +214,7 @@ export default function Play() {
 
   // GETTING NUMBER OF WINS
   const { data: totalWins, isLoading: loadingWins, refetch: refetchTotalWins } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'totalWins',
     args: [address],
@@ -223,7 +223,7 @@ export default function Play() {
 
   // GET MINT PRICE
   const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: '_price',
   })
@@ -231,7 +231,7 @@ export default function Play() {
 
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getRoundMints, isLoading: loadingMints, refetch: refetchGetRoundMints } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'getRoundMints',
   })
@@ -239,7 +239,7 @@ export default function Play() {
 
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'getActiveTokenCount',
     args: [address],
@@ -248,7 +248,7 @@ export default function Play() {
 
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: '_maxsupply',
   })
@@ -256,7 +256,7 @@ export default function Play() {
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
@@ -265,7 +265,7 @@ export default function Play() {
 
   // GET POTATO HOLDER
   const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'getPotatoOwner',
   })
@@ -273,7 +273,7 @@ export default function Play() {
 
   // GET POTATO TOKEN ID
   const { data: getExplosionTime, isLoading: loadingExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'getExplosionTime',
   })
@@ -281,7 +281,7 @@ export default function Play() {
 
   // GET EXPLOSION TIME
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
@@ -289,7 +289,7 @@ export default function Play() {
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
@@ -297,7 +297,7 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'currentGeneration',
   })
@@ -305,7 +305,7 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: Winners, isLoadging: loadingWinners, refetch: refetchWinner } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'Winners',
     args: [currentRound],
@@ -313,7 +313,7 @@ export default function Play() {
   const winner = Winners?.toString();
 
   const { data: balanceOf, isLoading: loadingBalance, refetch: refetchBalanceOf } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'balanceOf',
     args: [address],
@@ -321,13 +321,13 @@ export default function Play() {
   const _balanceOf = parseInt(balanceOf, 10);
 
   const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: '_owner',
   })
 
   const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'getActiveTokenIds',
   })
@@ -348,7 +348,7 @@ export default function Play() {
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount],
@@ -357,7 +357,7 @@ export default function Play() {
 
   // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
@@ -368,7 +368,7 @@ export default function Play() {
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'checkExplosion',
   })
@@ -389,7 +389,7 @@ export default function Play() {
   */
   // START GAME
   const { config: startGame } = usePrepareContractWrite({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'startGame',
   })
@@ -397,7 +397,7 @@ export default function Play() {
 
   // END MINTING
   const { config: endMinting } = usePrepareContractWrite({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'endMinting',
   })
@@ -405,7 +405,7 @@ export default function Play() {
 
   // PAUSE GAME
   const { config: pauseGame } = usePrepareContractWrite({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'pauseGame',
   })
@@ -413,7 +413,7 @@ export default function Play() {
 
   // RESUME GAME
   const { config: resumeGame } = usePrepareContractWrite({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'resumeGame',
   })
@@ -421,7 +421,7 @@ export default function Play() {
 
   // RESTART GAME 
   const { config: restartGame } = usePrepareContractWrite({
-    address: '0xce431f0dfb1f075acfcb1d06efe29ba98b46ebf9',
+    address: '0x5B4fD99a616192833e447d325bf8df6E378CbdcA',
     abi: ABI,
     functionName: 'restartGame',
   })
@@ -779,7 +779,7 @@ export default function Play() {
                   {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${explosionTime}`}
                 </h2>
                 <Image alt='Image' src={potato} width={200} height={200} />
-                <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                   onClick={handlecheck}>
                   CHECK EXPLOSION
                 </button>
@@ -871,7 +871,7 @@ export default function Play() {
                               pattern="[0-9]*"
                               onChange={handleInputChangeMint}
                               placeholder="Enter mint amount" />
-                            <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                            <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                               onClick={handleMint}
                             >Join Round!</button>
                             <p>
@@ -934,7 +934,7 @@ export default function Play() {
                       pattern="[0-9]*"
                       onChange={handleInputChangeToken}
                       placeholder="tokenId" />
-                    <button className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-2 rounded-lg shadow`}
+                    <button className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-2 rounded-lg shadow`}
                       onClick={handlePass}
                     >Pass Potato</button>
                   </div>
@@ -999,7 +999,7 @@ export default function Play() {
                 <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Active Tokens:</h1>
                 <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
                   {activeIds.map((tokenId, index) => (
-                    <div key={index} className="border rounded-lg p-2 text-center place-items-center">
+                    <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
                       <Image src={darkMode ? redlogo : blacklogo} width={150} alt="Logo" />
                       {tokenId}
                     </div>
