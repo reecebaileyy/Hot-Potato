@@ -21,6 +21,16 @@ export default function Home() {
   const [searchAddress, setSearchAddress] = useState("");
   const itemsPerPage = 20; // Number of items per page
 
+  const [leaderboard, setLeaderboard] = useState([]);
+
+  useEffect(() => {
+      fetch('/api/get-leaderboard')
+          .then(response => response.json())
+          .then(data => setLeaderboard(data.leaderboard))
+          .catch(console.error);
+  }, []);
+
+
   const sortedLeaderboardData = [...leaderboardData].sort((a, b) => {
     if (a[sortKey] < b[sortKey]) return sortAsc ? -1 : 1;
     if (a[sortKey] > b[sortKey]) return sortAsc ? 1 : -1;
@@ -132,13 +142,13 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedData
+                  {leaderboard
                     .filter((player) => searchAddress ? player.address.includes(searchAddress) : true)
                     .map((player, index) => (
                       <tr key={index} className={index % 2 === 0 ? (darkMode ? 'bg-gray-700' : 'bg-gray-200') : ''}>
                         <td className={`px-4 py-2 sm:px-0 border sm:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>{player.address}</td>
-                        <td className={`px-4 py-2 sm:px-0 border sm:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>{player.successfulPasses}</td>
-                        <td className={`px-4 py-2 sm:px-0 border sm:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>{player.totalWins}</td>
+                        <td className={`px-4 py-2 sm:px-0 border sm:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>{player.passes}</td>
+                        <td className={`px-4 py-2 sm:px-0 border sm:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>{player.wins}</td>
                       </tr>
                     ))}
                 </tbody>

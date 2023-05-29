@@ -1,18 +1,19 @@
-const Redis = require('ioredis');
-const { promisify } = require('util');
+// lib/redis.js
 
-const client = new Redis(process.env.REDIS_URL);
-console.log('REDIS_URL:', process.env.REDIS_URL);
-client.on('error', (err) => {
-  console.error('Redis client error:', err);
-});
+const Redis = require("ioredis");
 
-const getAsync = promisify(client.get).bind(client);
-const setAsync = promisify(client.set).bind(client);
-const delAsync = promisify(client.del).bind(client);
+let client;
 
-module.exports = {
-  getAsync,
-  setAsync,
-  delAsync,
-};
+if (!client) {
+    client = new Redis();
+
+    client.connect()
+        .then(() => console.log('Connected to Redis'))
+        .catch(err => console.error('Failed to connect to Redis', err));
+        
+    client.on('error', (err) => console.error('Redis error', err));
+    client.on('connect', () => console.log('Redis connected'));
+    client.on('end', () => console.log('Redis connection closed'));
+}
+
+module.exports = client;

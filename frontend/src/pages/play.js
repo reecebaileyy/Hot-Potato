@@ -616,7 +616,7 @@ export default function Play() {
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
       console.log("A BLAZE PRODUCTION");
-    }, 5000);
+    }, 1000);
 
     return () => {
       clearInterval(intervalId);
