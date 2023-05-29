@@ -19,7 +19,7 @@ export default function Home() {
   const [sortAsc, setSortAsc] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchAddress, setSearchAddress] = useState("");
-  const itemsPerPage = 20; // Number of items per page
+  const itemsPerPage = 20; 
 
   const [leaderboard, setLeaderboard] = useState([]);
 
