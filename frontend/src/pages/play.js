@@ -783,9 +783,8 @@ export default function Play() {
                     {loadingActiveTokens ? (
                       <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
                     ) : (
-                      <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokens} </p>)
+                      <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokens} Active Tokens Remaing</p>)
                     }
-                    <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokens} Active Tokens Remaing</p>
                     <Link href="https://mumbai.polygonscan.com/" target='_blank' className='underline'>
                       Smart Contract
                     </Link>
