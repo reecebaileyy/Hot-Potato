@@ -1,8 +1,8 @@
-// pages/api/update-passes.js
 const { prisma } = require('../../../lib/prisma');
 
 export default async function handler(req, res) {
-    const { address } = req.body;
+    const { transaction } = req.body;
+    const address = transaction.from;
 
     try {
         const existingPlayer = await prisma.Leaderboard.findUnique({
@@ -18,7 +18,6 @@ export default async function handler(req, res) {
                     },
                 },
             });
-
         } else {
             await prisma.Leaderboard.create({
                 data: {
@@ -27,12 +26,11 @@ export default async function handler(req, res) {
                     wins: 1,  // initial value, adjust as needed
                 },
             });
-
         }
 
-        res.status(200).json({ message: `Updated successful passes for ${address}` });
+        res.status(200).json({ message: `Updated wins for ${address}` });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: `Error updating successful passes: ${error.message}` });
+        res.status(500).json({ error: `Error updating wins: ${error.message}` });
     }
 }
