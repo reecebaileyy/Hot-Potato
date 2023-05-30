@@ -6,4 +6,4 @@ const metadataSchema = new mongoose.Schema({
   totalWins: { type: Number, required: true },
 });
 
-module.exports = mongoose.model('leaderboard', metadataSchema);
+module.exports = mongoose.model('Leaderboard', metadataSchema);

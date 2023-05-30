@@ -26,7 +26,7 @@ export default function Home() {
       .then(response => response.json())
       .then(data => {
         console.log('Data from API:', data);
-        const sortedData = data.leaderboard.sort((a, b) => {
+        const sortedData = data.Leaderboard.sort((a, b) => {
           if (a[sortKey] < b[sortKey]) return sortAsc ? -1 : 1;
           if (a[sortKey] > b[sortKey]) return sortAsc ? 1 : -1;
           return 0;

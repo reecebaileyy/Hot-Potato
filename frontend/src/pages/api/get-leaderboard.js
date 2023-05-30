@@ -2,7 +2,7 @@ const { prisma } = require('../../../lib/prisma');
 
 export default async function handler(req, res) {
     try {
-        const leaderboard = await prisma.leaderboard.findMany({
+        const Leaderboard = await prisma.Leaderboard.findMany({
             orderBy: [
                 {
                     wins: 'desc',
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
             ],
         });
 
-        res.status(200).json({ leaderboard });
+        res.status(200).json({ Leaderboard });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: `Error fetching leaderboard data: ${error.message}` });
