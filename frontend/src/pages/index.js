@@ -94,7 +94,7 @@ export default function Home() {
         </header>
 
         <div className='flex flex-row sm:flex-col md:flex-col justify-between items-center gap-28 mx-12 mb-20'>
-          <Image alt="Add alt Here" src={hot} width={400} height={400} />
+          <Image alt="Add alt Here" src={potato} width={400} height={400} />
           <h1 className='text-2xl text-center text-white'>Feel the intense heat as you compete in thrilling, fast-paced, adrenaline-fueled rounds, passing the sizzling potato to your friends or opponents before the timer runs out. With our user-friendly interface and intuitive gameplay, OnChain Hot Potato offers an immersive experience that&apos;s incredibly easy to pick up and play, making it a game you won&apos;t be able to resist. Whether you&apos;re a seasoned gamer or a beginner looking for a captivating challenge, our button-based gameplay will keep you hooked for hours on end, ensuring endless excitement and intense competition.</h1>
         </div>
 
@@ -124,7 +124,7 @@ export default function Home() {
 
         <div className='flex flex-row sm:flex-col md:flex-col justify-between items-center gap-28 mx-12'>
           <h1 className='text-2xl text-center text-white'>Experience OnChain Hot Potato, where thrilling gameplay meets community spirit! After each round, a portion of minting funds goes to a charity chosen by our players, ensuring our game impacts real-world good. As the tension rises and the potato gets tossed, the ultimate victor receives 40% of the minting pool. Leveraging Chainlink VRF, our game guarantees transparent, unbiased gameplay where the outcome is genuinely unpredictable. Track your successes, strategize, and compete with others using our detailed statistics. Enjoy endless rounds of adrenaline-pumping excitement with game resets after each round. Play OnChain Hot Potato today and experience gaming that combines strategy, low gas fees, and community spirit.</h1>
-          <Image alt="Add alt Here" src={hot} width={400} height={400} />
+          <Image alt="Add alt Here" src={potato} width={400} height={400} />
         </div>
 
         <div className="flex items-center my-10 mx-10">
@@ -134,11 +134,11 @@ export default function Home() {
         </div>
 
         <div className='grid grid-cols-6 gap-4 sm:flex sm:flex-col sm:gap-3 md:flex md:flex-col sm:items-center md:items-center md:gap-3 mt-10 mx-10'>
-          <Image alt="Add alt Here" src={hot} width={200} className='col-start-1 col-end-3' />
+          <Image alt="Add alt Here" src={potato} width={200} className='col-start-1 col-end-3' />
           <h1 className="col-start-3 col-end-5 text-center text-white text-3xl sm:text-2xl md:text-2xl">Don&apos;t miss out on the most exciting onchain game of the year.
             <span className='text-black'><Link href="/play"> Get started </Link></span>
             with OnChain Hot Potato now!</h1>
-          <Image alt="Add alt Here" src={hot} width={200} className='col-end-7 col-span-1' />
+          <Image alt="Add alt Here" src={potato} width={200} className='col-end-7 col-span-1' />
         </div>
 
         <div className="flex flex-col items-center py-12 bg-black mt-12">

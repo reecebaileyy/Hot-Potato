@@ -164,7 +164,7 @@ export default function Home() {
                 </tbody>
               </table>
             </div>
-            <div className="mt-4 flex justify-between">
+            <div className="mt-4 p-2 flex justify-between">
               {currentPage > 1 && <button onClick={() => setCurrentPage(old => Math.max(old - 1, 1))} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>Previous</button>}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                 <button key={page} onClick={() => handleClickPage(page)} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>{page}</button>
