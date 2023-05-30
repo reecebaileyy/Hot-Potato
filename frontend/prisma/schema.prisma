@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Leaderboard {
+model leaderboard {
   id               String @id @default(auto()) @map("_id") @db.ObjectId
   address          String
   passes           Int

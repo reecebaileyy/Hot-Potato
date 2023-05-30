@@ -5,12 +5,12 @@ export default async function handler(req, res) {
     const address = transaction.from;
 
     try {
-        const existingPlayer = await prisma.Leaderboard.findUnique({
+        const existingPlayer = await prisma.leaderboard.findUnique({
             where: { address: address },
         });
 
         if (existingPlayer) {
-            await prisma.Leaderboard.updateMany({
+            await prisma.leaderboard.updateMany({
                 where: { address: address },
                 data: {
                     wins: {
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
                 },
             });
         } else {
-            await prisma.Leaderboard.create({
+            await prisma.leaderboard.create({
                 data: {
                     address: address,
                     passes: 0,
