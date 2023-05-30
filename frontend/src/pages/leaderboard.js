@@ -26,21 +26,17 @@ export default function Home() {
       .then(response => response.json())
       .then(data => {
         console.log('Data from API:', data);
-        setLeaderboardData(data.leaderboard);
+        const sortedData = data.leaderboard.sort((a, b) => {
+          if (a[sortKey] < b[sortKey]) return sortAsc ? -1 : 1;
+          if (a[sortKey] > b[sortKey]) return sortAsc ? 1 : -1;
+          return 0;
+        });
+        console.log('Sorted data:', sortedData);
+        setLeaderboardData(sortedData);
       })
       .catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    const sortedData = [...leaderboardData].sort((a, b) => {
-      if (a[sortKey] < b[sortKey]) return sortAsc ? -1 : 1;
-      if (a[sortKey] > b[sortKey]) return sortAsc ? 1 : -1;
-      return 0;
-    });
-    console.log('Sorted data:', sortedData);
-    setLeaderboardData(sortedData);
-  }, [sortKey, sortAsc, leaderboardData]);
-
+  }, [sortKey, sortAsc]);
+  
 
   const sortedLeaderboardData = [...leaderboardData].sort((a, b) => {
     if (a[sortKey] < b[sortKey]) return sortAsc ? -1 : 1;
