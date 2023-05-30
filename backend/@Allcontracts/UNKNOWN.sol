@@ -87,6 +87,7 @@ contract UNKNOWN is
     mapping(GameState => string) private gameStateStrings;
     mapping(uint256 => address) public Winners;
     mapping(address => uint256) public addressActiveTokenCount;
+    mapping(address => bool) public activePlayers;
     mapping(address => bool) private counted;
 
     VRFCoordinatorV2Interface COORDINATOR;
@@ -448,6 +449,11 @@ contract UNKNOWN is
         TOTAL_PASSES = 0;
         activeAddresses = 0;
 
+        for (uint256 i = 0; i < players.length; i++) {
+            addressActiveTokenCount[players[i]] = 0;
+        }
+
+        delete players;
         activeTokens.push(0);
 
         emit GameRestarted("The game has restarted");
