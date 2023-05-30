@@ -13,6 +13,9 @@ export default async function handler(req, res) {
             ],
         });
 
+        // Set Cache-Control headers
+        res.setHeader('Cache-Control', 's-maxage=1, stale-while-revalidate');
+
         res.status(200).json({ Leaderboard });
     } catch (error) {
         console.error(error);
