@@ -1008,7 +1008,8 @@ export default function Play() {
                 <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
                   {activeIds.map((tokenId, index) => (
                     <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
-                      <TokenImage tokenId={tokenId} ABI={ABI} />
+                      <TokenImage tokenId={tokenId} ABI={ABI} potatoTokenId={_potatoTokenId} />
+
                     </div>
                   ))}
                 </div>
