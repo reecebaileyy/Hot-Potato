@@ -33,11 +33,8 @@ export default function Play() {
   const [mintAmount, setMintAmount] = useState("");
   const [totalCost, setTotalCost] = useState(0);
   const [value, setValue] = useState('');
-  const [imageStrings, setImageStrings] = useState([]);
   const argsArray = [1, 2, 3, 4, 5];
   const [currentIndex, setCurrentIndex] = useState(0);
-  const activeTokenIdsRef = useRef([]);
-  const currentTokenIndexRef = useRef(0);
   const menuRef = useRef()
   const divRef = useRef(null);
 
@@ -45,7 +42,6 @@ export default function Play() {
   // STORING USERS ADDRESS
   const { address } = useAccount()
   const { balance } = useBalance(address)
-  const args = argsArray[currentIndex];
   /*
    ________ __     __ ________ __    __ ________      __    __  ______   ______  __    __  ______  
   |        \  \   |  \        \  \  |  \        \    |  \  |  \/      \ /      \|  \  /  \/      \ 
@@ -631,39 +627,15 @@ export default function Play() {
   }, [events]);
 
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    if (typeof window !== 'undefined') {
+      if (darkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      window.localStorage.setItem('darkMode', darkMode);
     }
-    window.localStorage.setItem('darkMode', darkMode);
   }, [darkMode]);
-
-  function updateImageStrings(tokenId, imageString) {
-    return [{ tokenId, imageString }];
-  }
-
-  // useEffect(() => {
-  //   if (!loadingImageString && getImageString) {
-  //     setImageStrings(updateImageStrings(activeTokenIdsRef.current[currentTokenIndexRef.current], getImageString));
-
-  //     currentTokenIndexRef.current += 1;
-  //     if (activeTokenIdsRef.current.length > currentTokenIndexRef.current) {
-  //       refetchImageString({ args: [activeTokenIdsRef.current[currentTokenIndexRef.current]] });
-  //     }
-  //   }
-  // }, [getImageString, loadingImageString]);
-
-
-  useEffect(() => {
-    if (currentIndex === argsArray.length - 1) {
-      setCurrentIndex(0); // Reset the index to loop back to the beginning
-    } else {
-      setCurrentIndex(currentIndex + 1); // Increment the index
-    }
-  }, [currentIndex]);
-
-
 
   /*
    __    __ ________ __       __ __             ______   ______   ______  

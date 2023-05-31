@@ -14,7 +14,7 @@ const TokenImage = ({ tokenId, ABI }) => {
   }
 
   if (isError || !getImageString) {
-    return <div>Error loading image</div>;
+    return <div>Error loading image. Try Refreshing.</div>;
   }
 
   return (
