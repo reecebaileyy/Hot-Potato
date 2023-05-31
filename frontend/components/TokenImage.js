@@ -18,9 +18,13 @@ const TokenImage = ({ tokenId, ABI }) => {
     return <div>Error loading image. Try Refreshing.</div>;
   }
 
+  
+
   return (
     <div key={tokenId}>
-      <Image src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`} alt={`Token ${tokenId} Image`} />
+      <Image src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`}
+      width={500}  
+      height={500}  alt={`Token ${tokenId} Image`} />
       Token ID: {tokenId}
       <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
     </div>
