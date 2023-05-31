@@ -32,16 +32,13 @@ const TokenImage = ({ tokenId, ABI }) => {
   }
 
   return (
-    <div key={tokenId} className={`${tokenId === _potatoTokenId ? 'animate-bounce' : ''}`}>
+    <div key={tokenId} className={`${tokenId == _potatoTokenId ? 'animate-bounce' : ''}`}>
         <Image
           src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`}
           width={500}
           height={500}
           alt={`Token ${tokenId} Image`}
         />
-        {tokenId === _potatoTokenId && (
-          <div className="absolute inset-0 bg-yellow-200 opacity-50"></div>
-        )}
       Token ID: {tokenId}
       <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
     </div>
