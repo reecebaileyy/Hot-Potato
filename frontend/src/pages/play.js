@@ -1009,7 +1009,6 @@ export default function Play() {
                   {activeIds.map((tokenId, index) => (
                     <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
                       <TokenImage tokenId={tokenId} ABI={ABI} potatoTokenId={_potatoTokenId} />
-
                     </div>
                   ))}
                 </div>
