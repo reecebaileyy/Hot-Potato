@@ -33,8 +33,8 @@ export default function Play() {
   const [totalCost, setTotalCost] = useState(0);
   const [value, setValue] = useState('');
   const [imageStrings, setImageStrings] = useState([]);
-  const [currentTokenIndex, setCurrentTokenIndex] = useState(0);
-  const [activeTokenIds, setActiveTokenIds] = useState([]);
+  const argsArray = [1, 2, 3, 4, 5];
+  const [currentIndex, setCurrentIndex] = useState(0);
   const activeTokenIdsRef = useRef([]);
   const currentTokenIndexRef = useRef(0);
   const menuRef = useRef()
@@ -44,7 +44,7 @@ export default function Play() {
   // STORING USERS ADDRESS
   const { address } = useAccount()
   const { balance } = useBalance(address)
-
+  const args = argsArray[currentIndex];
   /*
    ________ __     __ ________ __    __ ________      __    __  ______   ______  __    __  ______  
   |        \  \   |  \        \  \  |  \        \    |  \  |  \/      \ /      \|  \  /  \/      \ 
@@ -319,7 +319,7 @@ export default function Play() {
     address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'getImageString',
-    args: [2],
+    args: [args],
   });
 
 
@@ -628,7 +628,6 @@ export default function Play() {
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
       console.log("A BLAZE PRODUCTION");
-      console.log(activeTokenIds, imageStrings);
     }, 1000);
 
     return () => {
@@ -646,14 +645,14 @@ export default function Play() {
   }, [darkMode]);
 
 
-  useEffect(() => {
-  if (!loadingActiveTokenIds && getActiveTokenIds) {
-    activeTokenIdsRef.current = getActiveTokenIds;
-    setImageStrings([]);
-    currentTokenIndexRef.current = 0;
-    refetchImageString({ args: [getActiveTokenIds[0]] });
-  }
-}, [getActiveTokenIds, loadingActiveTokenIds]);
+//   useEffect(() => {
+//   if (!loadingActiveTokenIds && getActiveTokenIds) {
+//     activeTokenIdsRef.current = getActiveTokenIds;
+//     setImageStrings([]);
+//     currentTokenIndexRef.current = 0;
+//     refetchImageString({ args: [getActiveTokenIds[0]] });
+//   }
+// }, [getActiveTokenIds, loadingActiveTokenIds]);
 
 // When an image string is fetched, add it to the array and fetch the next one
 useEffect(() => {
@@ -669,6 +668,14 @@ useEffect(() => {
     }
   }
 }, [getImageString, loadingImageString]);
+
+useEffect(() => {
+  if (currentIndex === argsArray.length - 1) {
+    setCurrentIndex(0); // Reset the index to loop back to the beginning
+  } else {
+    setCurrentIndex(currentIndex + 1); // Increment the index
+  }
+}, [currentIndex]);
 
 
 
