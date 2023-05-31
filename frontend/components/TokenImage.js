@@ -32,7 +32,7 @@ const TokenImage = ({ tokenId, ABI }) => {
   }
 
   return (
-    <div className={`${tokenId == _potatoTokenId ? 'animate-pulse' : ''}`} key={tokenId} >
+    <div className={`${tokenId == _potatoTokenId ? ' flex flex-col animate-pulse' : 'flex flex-col'}`} key={tokenId} >
         <Image
           src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`}
           width={500}
