@@ -10,6 +10,11 @@ const TokenImage = ({ tokenId, ABI }) => {
     args: [tokenId],
   });
 
+  // Refetch image whenever tokenId or ABI changes
+  useEffect(() => {
+    refetchImageString({ args: [tokenId] });
+  }, [tokenId, ABI, refetchImageString]);
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -17,17 +22,15 @@ const TokenImage = ({ tokenId, ABI }) => {
   if (isError || !getImageString) {
     return <div>Error loading image. Try Refreshing.</div>;
   }
-  
-  useEffect(() => {
-    refetchImageString({ args: [tokenId] });
-  }, [tokenId, ABI, refetchImageString]);
-
 
   return (
     <div key={tokenId}>
-      <Image src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`}
-      width={500}  
-      height={500}  alt={`Token ${tokenId} Image`} />
+      <Image 
+        src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`}
+        width={500}  
+        height={500}
+        alt={`Token ${tokenId} Image`} 
+      />
       Token ID: {tokenId}
       <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
     </div>
