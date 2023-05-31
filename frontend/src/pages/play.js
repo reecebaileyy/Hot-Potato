@@ -9,7 +9,7 @@ import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useCo
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/BlackLogo.png'
 import redlogo from '../../public/assets/images/RedLogo.png'
-
+import { ReactSVG } from 'react-svg';
 
 export default function Play() {
 
@@ -32,9 +32,11 @@ export default function Play() {
   const [mintAmount, setMintAmount] = useState("");
   const [totalCost, setTotalCost] = useState(0);
   const [value, setValue] = useState('');
-
-
-
+  const [imageStrings, setImageStrings] = useState([]);
+  const [currentTokenIndex, setCurrentTokenIndex] = useState(0);
+  const [activeTokenIds, setActiveTokenIds] = useState([]);
+  const activeTokenIdsRef = useRef([]);
+  const currentTokenIndexRef = useRef(0);
   const menuRef = useRef()
   const divRef = useRef(null);
 
@@ -58,7 +60,7 @@ export default function Play() {
 
 
   useContractEvent({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     eventName: 'SuccessfulPass',
     async listener(log) {
@@ -85,7 +87,7 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     eventName: 'PlayerWon',
     async listener(log) {
@@ -114,7 +116,7 @@ export default function Play() {
 
 
   useContractEvent({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     eventName: 'GamePaused',
     listener(log) {
@@ -124,7 +126,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     eventName: 'GameRestarted',
     listener(log) {
@@ -134,7 +136,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     eventName: 'PotatoExploded',
     listener(log) {
@@ -153,7 +155,7 @@ export default function Play() {
 
 
   useContractEvent({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     eventName: 'PotatoPassed',
     listener(log) {
@@ -189,14 +191,14 @@ export default function Play() {
 
   // GETTING GAME STATE
   const { data: getGameState, isLoading: loadingGameState, refetch: refetchGameState } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'getGameState',
   })
 
   // GETTING NUMBER OF PASSES
   const { data: successfulPasses, isLoading: loadingPasses, refetch: refetchSuccessfulPasses } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'successfulPasses',
     args: [address],
@@ -205,7 +207,7 @@ export default function Play() {
 
   // GETTING NUMBER OF FAILS
   const { data: failedPasses, isLoading: loadingFailedPasses, refetch: refetchFailedPasses } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'failedPasses',
     args: [address],
@@ -214,7 +216,7 @@ export default function Play() {
 
   // GETTING NUMBER OF WINS
   const { data: totalWins, isLoading: loadingWins, refetch: refetchTotalWins } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'totalWins',
     args: [address],
@@ -223,7 +225,7 @@ export default function Play() {
 
   // GET MINT PRICE
   const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: '_price',
   })
@@ -231,7 +233,7 @@ export default function Play() {
 
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getRoundMints, isLoading: loadingMints, refetch: refetchGetRoundMints } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'getRoundMints',
   })
@@ -239,7 +241,7 @@ export default function Play() {
 
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'getActiveTokenCount',
     args: [address],
@@ -248,7 +250,7 @@ export default function Play() {
 
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: '_maxsupply',
   })
@@ -256,7 +258,7 @@ export default function Play() {
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
@@ -265,7 +267,7 @@ export default function Play() {
 
   // GET POTATO HOLDER
   const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'getPotatoOwner',
   })
@@ -273,7 +275,7 @@ export default function Play() {
 
   // GET POTATO TOKEN ID
   const { data: getExplosionTime, isLoading: loadingExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'getExplosionTime',
   })
@@ -281,7 +283,7 @@ export default function Play() {
 
   // GET EXPLOSION TIME
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
@@ -289,7 +291,7 @@ export default function Play() {
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
@@ -297,7 +299,7 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'currentGeneration',
   })
@@ -305,15 +307,24 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: Winners, isLoadging: loadingWinners, refetch: refetchWinner } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'Winners',
     args: [currentRound],
   })
   const winner = Winners?.toString();
 
+  // GET IMAGES
+  const { data: getImageString, isLoading: loadingImageString, refetch: refetchImageString, isError: imageStringError } = useContractRead({
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
+    abi: ABI,
+    functionName: 'getImageString',
+    args: [2],
+  });
+
+
   const { data: balanceOf, isLoading: loadingBalance, refetch: refetchBalanceOf } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'balanceOf',
     args: [address],
@@ -321,13 +332,13 @@ export default function Play() {
   const _balanceOf = parseInt(balanceOf, 10);
 
   const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: '_owner',
   })
 
   const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'getActiveTokenIds',
   })
@@ -348,7 +359,7 @@ export default function Play() {
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount],
@@ -357,7 +368,7 @@ export default function Play() {
 
   // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
@@ -368,7 +379,7 @@ export default function Play() {
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'checkExplosion',
   })
@@ -389,7 +400,7 @@ export default function Play() {
   */
   // START GAME
   const { config: startGame } = usePrepareContractWrite({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'startGame',
   })
@@ -397,7 +408,7 @@ export default function Play() {
 
   // END MINTING
   const { config: endMinting } = usePrepareContractWrite({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'endMinting',
   })
@@ -405,7 +416,7 @@ export default function Play() {
 
   // PAUSE GAME
   const { config: pauseGame } = usePrepareContractWrite({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'pauseGame',
   })
@@ -413,7 +424,7 @@ export default function Play() {
 
   // RESUME GAME
   const { config: resumeGame } = usePrepareContractWrite({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'resumeGame',
   })
@@ -421,7 +432,7 @@ export default function Play() {
 
   // RESTART GAME 
   const { config: restartGame } = usePrepareContractWrite({
-    address: '0x768f83360F95A8859430707D41f3BF4D09B688A2',
+    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'restartGame',
   })
@@ -613,9 +624,11 @@ export default function Play() {
       refetchGetActiveTokenIds();
       refetchGetPotatoOwner();
       allActivetokenIds();
+      refetchImageString();
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
       console.log("A BLAZE PRODUCTION");
+      console.log(activeTokenIds, imageStrings);
     }, 1000);
 
     return () => {
@@ -631,6 +644,32 @@ export default function Play() {
     }
     window.localStorage.setItem('darkMode', darkMode);
   }, [darkMode]);
+
+
+  useEffect(() => {
+  if (!loadingActiveTokenIds && getActiveTokenIds) {
+    activeTokenIdsRef.current = getActiveTokenIds;
+    setImageStrings([]);
+    currentTokenIndexRef.current = 0;
+    refetchImageString({ args: [getActiveTokenIds[0]] });
+  }
+}, [getActiveTokenIds, loadingActiveTokenIds]);
+
+// When an image string is fetched, add it to the array and fetch the next one
+useEffect(() => {
+  if (!loadingImageString && getImageString) {
+    setImageStrings(oldImageStrings => [
+      ...oldImageStrings,
+      { tokenId: activeTokenIdsRef.current[currentTokenIndexRef.current], imageString: getImageString }
+    ]);
+
+    currentTokenIndexRef.current += 1;
+    if (activeTokenIdsRef.current.length > currentTokenIndexRef.current) {
+      refetchImageString({ args: [activeTokenIdsRef.current[currentTokenIndexRef.current]] });
+    }
+  }
+}, [getImageString, loadingImageString]);
+
 
 
   /*
@@ -1004,7 +1043,16 @@ export default function Play() {
                 <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
                   {activeIds.map((tokenId, index) => (
                     <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
-                      <Image src={darkMode ? redlogo : blacklogo} width={150} alt="Logo" />
+                      {loadingImageString || loadingActiveTokenIds ? (
+                        <div className="text-center">
+                          <h1>Loading...</h1>
+                        </div>
+                      ) : imageStrings.map(({ tokenId, imageString }) => (
+                        <div key={tokenId}>
+                          <img src={`data:image/svg+xml,${encodeURIComponent(imageString)}`} alt={`Token ${tokenId} Image`} />
+                          <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
+                        </div>
+                      ))}
                       {tokenId}
                     </div>
                   ))}

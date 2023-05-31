@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.17;
 import "hardhat/console.sol";
+import "./HotGenerate.sol";
 import "./Base64.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
@@ -27,12 +28,6 @@ struct RequestStatus {
     bool exists;
 }
 
-struct TokenTraits {
-    bool hasPotato;
-    uint256 generation;
-    // TODO: ADD MORE TRAITS FOR HANDS
-}
-
 contract UNKNOWN is
     ERC721A,
     ERC721AQueryable,
@@ -42,6 +37,7 @@ contract UNKNOWN is
     ConfirmedOwner
 {
     using Strings for uint256;
+    using HotGenerate for HotGenerate.TokenTraits;
 
     address public _owner;
 
@@ -66,6 +62,24 @@ contract UNKNOWN is
     uint256 public roundMints = 0;
     uint256 public activeAddresses = 0;
 
+    string[] public COLORS = [
+        "Red",
+        "Green",
+        "Blue",
+        "Yellow",
+        "Aqua",
+        "Magenta"
+    ];
+
+    uint256[] public COLOR_WEIGHTS = [
+        10, 
+        30, 
+        30, 
+        30, 
+        20, 
+        10
+    ];
+
     uint256 private FINAL_POTATO_EXPLOSION_DURATION = 10 minutes;
     uint256 private remainingTime;
     uint256 private _currentIndex = 1;
@@ -76,7 +90,7 @@ contract UNKNOWN is
     bytes32 keyHash =
         0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
 
-    mapping(uint256 => TokenTraits) public tokenTraits;
+    mapping(uint256 => HotGenerate.TokenTraits) public tokenTraits;
     mapping(address => uint256) public tokensMintedPerRound;
     mapping(address => bool) private isPlayer;
     mapping(address => uint256) public successfulPasses;
@@ -168,10 +182,10 @@ contract UNKNOWN is
             }
             addressActiveTokenCount[msg.sender] += 1;
 
-            tokenTraits[tokenId] = TokenTraits({
-                hasPotato: false,
-                generation: currentGeneration
-            });
+            HotGenerate.TokenTraits memory trait = HotGenerate
+                .generateRandomTraits(tokenId, currentGeneration, COLORS, COLOR_WEIGHTS);
+
+            tokenTraits[tokenId] = trait;
             tokensOwnedByUser[msg.sender].push(tokenId);
         }
 
@@ -303,56 +317,28 @@ contract UNKNOWN is
             "ERC721Metadata: URI query for nonexistent token"
         );
 
-        string memory image;
-
-        // This is where you would conditionally set your image based on the token's traits
-        if (tokenTraits[tokenId].hasPotato) {
-            image = string(
-                abi.encodePacked(
-                    '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: #ffce9e; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="#ffffff" /><text x="50%" y="50%" class="base" text-anchor="middle">',
-                    "P",
-                    "</text></svg>"
-                )
-            );
-        } else {
-            image = string(
-                abi.encodePacked(
-                    '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: #ffce9e; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="#ffffff" /><text x="50%" y="50%" class="base" text-anchor="middle">',
-                    "NOT P",
-                    "</text></svg>"
-                )
-            );
-        }
-
-        string memory attributes = string(
-            abi.encodePacked(
-                '"attributes": [',
-                '{"trait_type": "Has Potato", "value": "',
-                tokenTraits[tokenId].hasPotato ? "Yes" : "No",
-                '"},',
-                '{"trait_type": "Generation", "value": "',
-                (tokenTraits[tokenId].generation).toString(),
-                '"}',
-                "]"
-            )
-        );
-        string memory imageBase64 = Base64.encode(bytes(image));
         string memory json = Base64.encode(
             bytes(
-                string(
-                    abi.encodePacked(
-                        '{"name": "Token #',
-                        tokenId.toString(),
-                        '", "description": "A very special token!", "image": "data:image/svg+xml;base64,',
-                        imageBase64,
-                        '", ',
-                        attributes,
-                        "}"
-                    )
+                getJson(
+                    tokenId,
+                    getImage(tokenTraits[tokenId]),
+                    HotGenerate.createAttributes(tokenTraits[tokenId], COLORS)
                 )
             )
         );
+
         return string(abi.encodePacked("data:application/json;base64,", json));
+    }
+
+    function getImageString(uint256 tokenId)
+        public
+        view
+        returns (string memory)
+    {
+        require(_exists(tokenId), "Token does not exist");
+
+        HotGenerate.TokenTraits memory trait = tokenTraits[tokenId];
+        return HotGenerate.getImageString(trait, COLORS);
     }
 
     function getRoundMints() public view returns (uint256) {
@@ -668,6 +654,40 @@ contract UNKNOWN is
         require(index <= activeTokens.length, "Invalid index");
         activeTokens[index] = activeTokens[activeTokens.length - 1];
         activeTokens.pop();
+    }
+
+    function getImage(HotGenerate.TokenTraits memory trait)
+        internal
+        view
+        returns (string memory)
+    {
+        string memory baseSvg = HotGenerate.createSVG(trait, COLORS);
+        string memory endSvg = "</text></svg>";
+
+        if (trait.hasPotato) {
+            return string(abi.encodePacked(baseSvg, "P", endSvg));
+        } else {
+            return string(abi.encodePacked(baseSvg, "NOT P", endSvg));
+        }
+    }
+
+    function getJson(
+        uint256 tokenId,
+        string memory image,
+        string memory attributes
+    ) internal pure returns (string memory) {
+        return
+            string(
+                abi.encodePacked(
+                    '{"name": "Token #',
+                    tokenId.toString(),
+                    '", "description": "A very special token!", "image": "data:image/svg+xml;base64,',
+                    Base64.encode(bytes(image)),
+                    '", ',
+                    attributes,
+                    "}"
+                )
+            );
     }
 
     // TODO: Implement logic for determining the winners and distributing rewards
