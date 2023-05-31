@@ -1,5 +1,6 @@
 import React from 'react';
 import { useContractRead } from 'wagmi';
+import Image from 'next/image';
 
 const TokenImage = ({ tokenId, ABI }) => {
   const { data: getImageString, isLoading, refetch: refetchImageString, isError } = useContractRead({
@@ -19,7 +20,7 @@ const TokenImage = ({ tokenId, ABI }) => {
 
   return (
     <div key={tokenId}>
-      <img src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`} alt={`Token ${tokenId} Image`} />
+      <Image src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`} alt={`Token ${tokenId} Image`} />
       Token ID: {tokenId}
       <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
     </div>
