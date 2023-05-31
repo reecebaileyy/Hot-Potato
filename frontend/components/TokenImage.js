@@ -10,18 +10,18 @@ const TokenImage = ({ tokenId, ABI }) => {
     args: [tokenId],
   });
 
-  const { data: potatoTokenId } = useContractRead({
+  const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
     address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
     abi: ABI,
     functionName: 'potatoTokenId',
   });
-
   const _potatoTokenId = parseInt(potatoTokenId, 10);
 
   // Refetch image whenever tokenId or ABI changes
   useEffect(() => {
     refetchImageString({ args: [tokenId] });
-  }, [tokenId, ABI, refetchImageString]);
+    refetchPotatoTokenId();
+  }, [tokenId, ABI, refetchImageString, refetchPotatoTokenId]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -32,13 +32,13 @@ const TokenImage = ({ tokenId, ABI }) => {
   }
 
   return (
-    <div key={tokenId} className={`${tokenId == _potatoTokenId ? 'animate-bounce' : ''}`}>
-        <Image
-          src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`}
-          width={500}
-          height={500}
-          alt={`Token ${tokenId} Image`}
-        />
+    <div key={tokenId} className={`${tokenId === _potatoTokenId ? 'animate-bounce' : ''}`} style={{ height: '500px' }}>
+      <Image
+        src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`}
+        width={500}
+        height={500}
+        alt={`Token ${tokenId} Image`}
+      />
       Token ID: {tokenId}
       <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
     </div>
