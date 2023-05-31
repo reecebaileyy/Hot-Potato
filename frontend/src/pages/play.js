@@ -315,12 +315,21 @@ export default function Play() {
   const winner = Winners?.toString();
 
   // GET IMAGES
-  const { data: getImageString, isLoading: loadingImageString, refetch: refetchImageString, isError: imageStringError } = useContractRead({
-    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
-    abi: ABI,
-    functionName: 'getImageString',
-    args: [args],
+  argsArray.forEach(tokenId => {
+    const { data: getImageString, isLoading: loadingImageString, refetch: refetchImageString, isError: imageStringError } = useContractRead({
+      address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
+      abi: ABI,
+      functionName: 'getImageString',
+      args: [tokenId],
+    });
+
+    useEffect(() => {
+      if (!loadingImageString && getImageString) {
+        setImageStrings(prevImageStrings => ({ ...prevImageStrings, [tokenId]: getImageString }));
+      }
+    }, [getImageString, loadingImageString]);
   });
+
 
 
   const { data: balanceOf, isLoading: loadingBalance, refetch: refetchBalanceOf } = useContractRead({
@@ -624,7 +633,7 @@ export default function Play() {
       refetchGetActiveTokenIds();
       refetchGetPotatoOwner();
       allActivetokenIds();
-      refetchImageString();
+      // refetchImageString();
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
       console.log("A BLAZE PRODUCTION");
@@ -644,38 +653,29 @@ export default function Play() {
     window.localStorage.setItem('darkMode', darkMode);
   }, [darkMode]);
 
+  function updateImageStrings(tokenId, imageString) {
+    return [{ tokenId, imageString }];
+  }
 
-//   useEffect(() => {
-//   if (!loadingActiveTokenIds && getActiveTokenIds) {
-//     activeTokenIdsRef.current = getActiveTokenIds;
-//     setImageStrings([]);
-//     currentTokenIndexRef.current = 0;
-//     refetchImageString({ args: [getActiveTokenIds[0]] });
-//   }
-// }, [getActiveTokenIds, loadingActiveTokenIds]);
+  // useEffect(() => {
+  //   if (!loadingImageString && getImageString) {
+  //     setImageStrings(updateImageStrings(activeTokenIdsRef.current[currentTokenIndexRef.current], getImageString));
 
-// When an image string is fetched, add it to the array and fetch the next one
-useEffect(() => {
-  if (!loadingImageString && getImageString) {
-    setImageStrings(oldImageStrings => [
-      ...oldImageStrings,
-      { tokenId: activeTokenIdsRef.current[currentTokenIndexRef.current], imageString: getImageString }
-    ]);
+  //     currentTokenIndexRef.current += 1;
+  //     if (activeTokenIdsRef.current.length > currentTokenIndexRef.current) {
+  //       refetchImageString({ args: [activeTokenIdsRef.current[currentTokenIndexRef.current]] });
+  //     }
+  //   }
+  // }, [getImageString, loadingImageString]);
 
-    currentTokenIndexRef.current += 1;
-    if (activeTokenIdsRef.current.length > currentTokenIndexRef.current) {
-      refetchImageString({ args: [activeTokenIdsRef.current[currentTokenIndexRef.current]] });
+
+  useEffect(() => {
+    if (currentIndex === argsArray.length - 1) {
+      setCurrentIndex(0); // Reset the index to loop back to the beginning
+    } else {
+      setCurrentIndex(currentIndex + 1); // Increment the index
     }
-  }
-}, [getImageString, loadingImageString]);
-
-useEffect(() => {
-  if (currentIndex === argsArray.length - 1) {
-    setCurrentIndex(0); // Reset the index to loop back to the beginning
-  } else {
-    setCurrentIndex(currentIndex + 1); // Increment the index
-  }
-}, [currentIndex]);
+  }, [currentIndex]);
 
 
 
@@ -1050,11 +1050,7 @@ useEffect(() => {
                 <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
                   {activeIds.map((tokenId, index) => (
                     <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
-                      {loadingImageString || loadingActiveTokenIds ? (
-                        <div className="text-center">
-                          <h1>Loading...</h1>
-                        </div>
-                      ) : imageStrings.map(({ tokenId, imageString }) => (
+                      {Object.entries(imageStrings).map(([tokenId, imageString]) => (
                         <div key={tokenId}>
                           <img src={`data:image/svg+xml,${encodeURIComponent(imageString)}`} alt={`Token ${tokenId} Image`} />
                           <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
