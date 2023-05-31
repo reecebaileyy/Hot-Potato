@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useContractRead } from 'wagmi';
 import Image from 'next/image';
 
@@ -17,8 +17,11 @@ const TokenImage = ({ tokenId, ABI }) => {
   if (isError || !getImageString) {
     return <div>Error loading image. Try Refreshing.</div>;
   }
-
   
+  useEffect(() => {
+    refetchImageString({ args: [tokenId] });
+  }, [tokenId, ABI, refetchImageString]);
+
 
   return (
     <div key={tokenId}>
