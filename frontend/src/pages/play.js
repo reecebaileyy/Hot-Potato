@@ -8,6 +8,7 @@ import ABI from '../abi/UNKNOWN.json'
 import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent } from 'wagmi'
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/BlackLogo.png'
+import TokenImage from '../../components/TokenImage'
 import redlogo from '../../public/assets/images/RedLogo.png'
 import { ReactSVG } from 'react-svg';
 
@@ -315,22 +316,7 @@ export default function Play() {
   const winner = Winners?.toString();
 
   // GET IMAGES
-  argsArray.forEach(tokenId => {
-    const { data: getImageString, isLoading: loadingImageString, refetch: refetchImageString, isError: imageStringError } = useContractRead({
-      address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
-      abi: ABI,
-      functionName: 'getImageString',
-      args: [tokenId],
-    });
-
-    useEffect(() => {
-      if (!loadingImageString && getImageString) {
-        setImageStrings(prevImageStrings => ({ ...prevImageStrings, [tokenId]: getImageString }));
-      }
-    }, [getImageString, loadingImageString]);
-  });
-
-
+  argsArray.map(tokenId => <TokenImage key={tokenId} tokenId={tokenId} ABI={ABI} />)
 
   const { data: balanceOf, isLoading: loadingBalance, refetch: refetchBalanceOf } = useContractRead({
     address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
@@ -1050,13 +1036,7 @@ export default function Play() {
                 <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
                   {activeIds.map((tokenId, index) => (
                     <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
-                      {Object.entries(imageStrings).map(([tokenId, imageString]) => (
-                        <div key={tokenId}>
-                          <img src={`data:image/svg+xml,${encodeURIComponent(imageString)}`} alt={`Token ${tokenId} Image`} />
-                          <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
-                        </div>
-                      ))}
-                      {tokenId}
+                      <TokenImage tokenId={tokenId} ABI={ABI} />
                     </div>
                   ))}
                 </div>
