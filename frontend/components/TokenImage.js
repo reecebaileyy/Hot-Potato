@@ -4,14 +4,14 @@ import Image from 'next/image';
 
 const TokenImage = ({ tokenId, ABI }) => {
   const { data: getImageString, isLoading, refetch: refetchImageString, isError } = useContractRead({
-    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
+    address: '0x20c1B01ABBafD1fCA950Db6b43f635B6ed5453AD',
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
   });
 
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x59730d6837bcE4Cd74a798cf0fC75257f4494299',
+    address: '0x20c1B01ABBafD1fCA950Db6b43f635B6ed5453AD',
     abi: ABI,
     functionName: 'potatoTokenId',
   })

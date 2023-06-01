@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.17;
 import "hardhat/console.sol";
-import "./HotGenerate.sol";
+import "./Library.sol";
 import "./Base64.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
