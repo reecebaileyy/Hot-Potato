@@ -450,29 +450,13 @@ contract UNKNOWN is
             id = uint64(_nextTokenId());
 
             // Getting Random traits
-            uint16 randBody = uint16(_rarity(rand, "BODY", id));
-            body = uint8(
-                randBody > nineNinePct
-                    ? (randBody % 3) + 25
-                    : randBody > sevenOnePct
-                    ? (randBody % 12) + 13
-                    : (randBody % 13) + 1
-            );
+            body = uint8(1);
 
-            uint16 randHelm = uint16(_rarity(rand, "HELM", id));
-            helm = uint8(randHelm < eightyPct ? 0 : (randHelm % 4) + 5);
+            helm = uint8(1);
 
-            uint16 randOffhand = uint16(_rarity(rand, "OFFHAND", id));
-            offhand = uint8(
-                randOffhand < eightyPct ? 0 : (randOffhand % 4) + 5
-            );
+            offhand = uint8(1);
 
-            uint16 randMainhand = uint16(_rarity(rand, "MAINHAND", id));
-            mainhand = uint8(
-                randMainhand < nineFivePct
-                    ? (randMainhand % 4) + 1
-                    : (randMainhand % 4) + 5
-            );
+            mainhand = uint8(1);
         }
 
         _safeMint(msg.sender, 1);
