@@ -1,7 +1,6 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.7;
 import "hardhat/console.sol";
-import "./Library.sol";
 import "./Base64.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
@@ -12,6 +11,27 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
+
+interface MetadataHandler {
+    function getTokenURI(
+        uint16 id_,
+        uint8 body_,
+        uint8 helm_,
+        uint8 mainhand_,
+        uint8 offhand_,
+        bool hasPotato_,
+        uint32 generation_
+    ) external view returns (string memory);
+}
+
+struct Hand {
+    bool hasPotato;
+    uint32 generation;
+    uint8 body;
+    uint8 helm;
+    uint8 mainhand;
+    uint8 offhand;
+}
 
 enum GameState {
     Queued,
@@ -37,7 +57,8 @@ contract UNKNOWN is
     ConfirmedOwner
 {
     using Strings for uint256;
-    using HotGenerate for HotGenerate.TokenTraits;
+
+    MetadataHandler public metadataHandler;
 
     address public _owner;
 
@@ -54,31 +75,13 @@ contract UNKNOWN is
     uint256 public constant DECREASE_DURATION = 5 seconds;
     uint256 public TOTAL_PASSES;
     uint256 public potatoTokenId;
-    uint256 public currentGeneration = 0;
     uint256 public lastRequestId;
+    uint32 public currentGeneration = 0;
     uint256 public _price = 0 ether;
     uint256 public _maxsupply = 10000;
     uint256 public _maxperwallet = 3;
     uint256 public roundMints = 0;
     uint256 public activeAddresses = 0;
-
-    string[] public COLORS = [
-        "Red",
-        "Green",
-        "Blue",
-        "Yellow",
-        "Aqua",
-        "Magenta"
-    ];
-
-    uint256[] public COLOR_WEIGHTS = [
-        10, 
-        30, 
-        30, 
-        30, 
-        20, 
-        10
-    ];
 
     uint256 private FINAL_POTATO_EXPLOSION_DURATION = 10 minutes;
     uint256 private remainingTime;
@@ -87,10 +90,11 @@ contract UNKNOWN is
     uint256 internal EXPLOSION_TIME;
     uint256 internal currentRandomWord;
 
+    bytes32 internal entropySauce;
     bytes32 keyHash =
         0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
 
-    mapping(uint256 => HotGenerate.TokenTraits) public tokenTraits;
+    mapping(uint256 => Hand) public hands;
     mapping(address => uint256) public tokensMintedPerRound;
     mapping(address => bool) private isPlayer;
     mapping(address => uint256) public successfulPasses;
@@ -124,7 +128,9 @@ contract UNKNOWN is
     event SuccessfulPass(address indexed player);
     event PlayerWon(address indexed player);
 
-    constructor(uint64 subscriptionId)
+    constructor(
+        uint64 subscriptionId
+    )
         payable
         PaymentSplitter(_payees, _shares)
         ERC721A("UNKNOWN", "UNKNOWN")
@@ -161,32 +167,20 @@ contract UNKNOWN is
 */
 
     function mintHand(uint256 count) external payable nonReentrant {
-        require(gameState == GameState.Minting, "Game not minting");
-        require(msg.value >= count * _price, "Must send at least 0.01 ETH");
+        // require(gameState == GameState.Minting, "Game not minting");
+        // require(msg.value >= count * _price, "Must send at least 0.01 ETH");
         // require(
         //     tokensMintedPerRound[msg.sender] + count <= _maxperwallet,
         //     "Exceeded maximum tokens per round"
         // );
-        require(roundMints < _maxsupply, "Max NFTs minted");
+        // require(roundMints < _maxsupply, "Max NFTs minted");
         require(count > 0, "Must mint at least one NFT");
 
-        // LOOP THROUGH THE COUNT AND MINT THE TOKENS WHILE ASSIGNING THE POTATO AS FALSE
+        uint256 rand = _rand();
+
+        
         for (uint256 i = 0; i < count; i++) {
-            uint256 tokenId = _nextTokenId();
-            activeTokens.push(tokenId);
-            _safeMint(msg.sender, 1);
-
-            // Increment the addressActiveTokenCount and activeAddresses if necessary
-            if (addressActiveTokenCount[msg.sender] == 0) {
-                activeAddresses += 1;
-            }
-            addressActiveTokenCount[msg.sender] += 1;
-
-            HotGenerate.TokenTraits memory trait = HotGenerate
-                .generateRandomTraits(tokenId, currentGeneration, COLORS, COLOR_WEIGHTS);
-
-            tokenTraits[tokenId] = trait;
-            tokensOwnedByUser[msg.sender].push(tokenId);
+            _mintHand(rand);
         }
 
         if (!isPlayer[msg.sender]) {
@@ -218,17 +212,17 @@ contract UNKNOWN is
             uint256 tokenIdFrom;
             uint256[] memory ownedTokens = tokensOwnedByUser[msg.sender];
             for (uint256 i = 0; i < ownedTokens.length; i++) {
-                if (tokenTraits[ownedTokens[i]].hasPotato) {
+                if (hands[ownedTokens[i]].hasPotato) {
                     tokenIdFrom = ownedTokens[i];
                     break;
                 }
             }
 
             uint256 newPotatoTokenId = tokenIdTo;
-            tokenTraits[potatoTokenId].hasPotato = false;
+            hands[potatoTokenId].hasPotato = false;
             potatoTokenId = newPotatoTokenId;
 
-            tokenTraits[potatoTokenId].hasPotato = true;
+            hands[potatoTokenId].hasPotato = true;
 
             TOTAL_PASSES += 1;
             successfulPasses[msg.sender] += 1;
@@ -279,22 +273,16 @@ contract UNKNOWN is
     function userHasPotatoToken(address user) public view returns (bool) {
         uint256[] memory ownedTokens = tokensOwnedByUser[user];
         for (uint256 i = 0; i < ownedTokens.length; i++) {
-            if (tokenTraits[ownedTokens[i]].hasPotato) {
+            if (hands[ownedTokens[i]].hasPotato) {
                 return true;
             }
         }
         return false;
     }
 
-    function getPlayerStats(address player)
-        public
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    function getPlayerStats(
+        address player
+    ) public view returns (uint256, uint256, uint256) {
         return (
             successfulPasses[player],
             failedPasses[player],
@@ -306,39 +294,26 @@ contract UNKNOWN is
         return activeTokens.length - 1;
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721A, IERC721A)
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721A) returns (string memory) {
         require(
             _exists(tokenId),
             "ERC721Metadata: URI query for nonexistent token"
         );
 
-        string memory json = Base64.encode(
-            bytes(
-                getJson(
-                    tokenId,
-                    getImage(tokenTraits[tokenId]),
-                    HotGenerate.createAttributes(tokenTraits[tokenId], COLORS)
-                )
-            )
-        );
+        Hand memory hand = hands[tokenId];
 
-        return string(abi.encodePacked("data:application/json;base64,", json));
-    }
-
-    function getImageString(uint256 tokenId)
-        public
-        view
-        returns (string memory)
-    {
-        require(_exists(tokenId), "Token does not exist");
-
-        HotGenerate.TokenTraits memory trait = tokenTraits[tokenId];
-        return HotGenerate.getImageString(trait, COLORS);
+        return
+            metadataHandler.getTokenURI(
+                uint16(tokenId),
+                hand.body,
+                hand.helm,
+                hand.mainhand,
+                hand.offhand,
+                hand.hasPotato,
+                hand.generation
+            );
     }
 
     function getRoundMints() public view returns (uint256) {
@@ -430,7 +405,7 @@ contract UNKNOWN is
         // Clear the activeTokens array and remove the potato token
         delete activeTokens;
         roundMints = 0;
-        delete tokenTraits[potatoTokenId];
+        delete hands[potatoTokenId];
         potatoTokenId = 0;
         TOTAL_PASSES = 0;
         activeAddresses = 0;
@@ -445,6 +420,10 @@ contract UNKNOWN is
         emit GameRestarted("The game has restarted");
     }
 
+    function setMetadataHandler(address addy) external onlyOwner {
+        metadataHandler = MetadataHandler(addy);
+    }
+
     /*
  ______            __                                         __      ________                              __     __                            
 |      \          |  \                                       |  \    |        \                            |  \   |  \                           
@@ -457,6 +436,86 @@ contract UNKNOWN is
  \▓▓▓▓▓▓\▓▓   \▓▓   \▓▓▓▓  \▓▓▓▓▓▓▓\▓▓      \▓▓   \▓▓ \▓▓▓▓▓▓▓\▓▓     \▓▓       \▓▓▓▓▓▓ \▓▓   \▓▓ \▓▓▓▓▓▓▓   \▓▓▓▓ \▓▓ \▓▓▓▓▓▓ \▓▓   \▓▓\▓▓▓▓▓▓▓ 
                                                                                                                                                  
 */
+
+    function _mintHand(uint256 rand) internal returns (uint64 id) {
+        (uint8 body, uint8 helm, uint8 mainhand, uint8 offhand) = (0, 0, 0, 0);
+
+        {
+            // Helpers to get Percentages
+            uint256 sevenOnePct = (type(uint16).max / 100) * 71;
+            uint256 eightyPct = (type(uint16).max / 100) * 80;
+            uint256 nineFivePct = (type(uint16).max / 100) * 95;
+            uint256 nineNinePct = (type(uint16).max / 100) * 99;
+
+            id = uint64(_nextTokenId());
+
+            // Getting Random traits
+            uint16 randBody = uint16(_rarity(rand, "BODY", id));
+            body = uint8(
+                randBody > nineNinePct
+                    ? (randBody % 3) + 25
+                    : randBody > sevenOnePct
+                    ? (randBody % 12) + 13
+                    : (randBody % 13) + 1
+            );
+
+            uint16 randHelm = uint16(_rarity(rand, "HELM", id));
+            helm = uint8(randHelm < eightyPct ? 0 : (randHelm % 4) + 5);
+
+            uint16 randOffhand = uint16(_rarity(rand, "OFFHAND", id));
+            offhand = uint8(
+                randOffhand < eightyPct ? 0 : (randOffhand % 4) + 5
+            );
+
+            uint16 randMainhand = uint16(_rarity(rand, "MAINHAND", id));
+            mainhand = uint8(
+                randMainhand < nineFivePct
+                    ? (randMainhand % 4) + 1
+                    : (randMainhand % 4) + 5
+            );
+        }
+
+        _safeMint(msg.sender, 1);
+        activeTokens.push(id);
+
+        if (addressActiveTokenCount[msg.sender] == 0) {
+            activeAddresses += 1;
+        }
+        addressActiveTokenCount[msg.sender] += 1;
+        tokensOwnedByUser[msg.sender].push(id);
+
+        hands[uint256(id)] = Hand({
+            hasPotato: false,
+            generation: currentGeneration,
+            body: body,
+            helm: helm,
+            mainhand: mainhand,
+            offhand: offhand
+        });
+    }
+
+    function _rarity(
+        uint256 rand,
+        string memory val,
+        uint256 spicy
+    ) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encode(rand, val, spicy)));
+    }
+
+    function _rand() internal view returns (uint256) {
+        return
+            uint256(
+                keccak256(
+                    abi.encodePacked(
+                        msg.sender,
+                        block.timestamp,
+                        block.basefee,
+                        block.timestamp,
+                        entropySauce
+                    )
+                )
+            );
+    }
 
     function randomize() public onlyOwner returns (uint256 requestId) {
         requestId = COORDINATOR.requestRandomWords(
@@ -478,10 +537,10 @@ contract UNKNOWN is
         return requestId;
     }
 
-    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords)
-        internal
-        override
-    {
+    function fulfillRandomWords(
+        uint256 requestId,
+        uint256[] memory randomWords
+    ) internal override {
         require(statuses[requestId].exists, "request not found");
         statuses[requestId].fulfilled = true;
         statuses[requestId].randomWord = randomWords;
@@ -507,12 +566,12 @@ contract UNKNOWN is
     function assignPotato(uint256 tokenId) internal {
         // Remove the potato from the current holder, if any
         if (potatoTokenId != 0) {
-            tokenTraits[potatoTokenId].hasPotato = false;
+            hands[potatoTokenId].hasPotato = false;
         }
         // Assign the potato trait to the desired token
         require(_isTokenActive(tokenId), "Token is not active");
         potatoTokenId = tokenId;
-        tokenTraits[potatoTokenId].hasPotato = true;
+        hands[potatoTokenId].hasPotato = true;
     }
 
     function _findFirstActiveToken() internal view returns (uint256) {
@@ -595,7 +654,7 @@ contract UNKNOWN is
         failedPasses[failedPlayer] += 1;
 
         // 2. Remove the potato from the exploded NFT
-        tokenTraits[potatoTokenId].hasPotato = false;
+        hands[potatoTokenId].hasPotato = false;
 
         // 3. Remove the exploded NFT from the activeTokens array
         uint256 indexToRemove = _indexOfTokenInActiveTokens(potatoTokenId);
@@ -636,11 +695,9 @@ contract UNKNOWN is
         _isExplosionInProgress = false;
     }
 
-    function _indexOfTokenInActiveTokens(uint256 tokenId)
-        internal
-        view
-        returns (uint256)
-    {
+    function _indexOfTokenInActiveTokens(
+        uint256 tokenId
+    ) internal view returns (uint256) {
         require(activeTokens.length > 1, "Not enough active tokens");
         for (uint256 i = 1; i < activeTokens.length; i++) {
             if (activeTokens[i] == tokenId) {
@@ -654,40 +711,6 @@ contract UNKNOWN is
         require(index <= activeTokens.length, "Invalid index");
         activeTokens[index] = activeTokens[activeTokens.length - 1];
         activeTokens.pop();
-    }
-
-    function getImage(HotGenerate.TokenTraits memory trait)
-        internal
-        view
-        returns (string memory)
-    {
-        string memory baseSvg = HotGenerate.createSVG(trait, COLORS);
-        string memory endSvg = "</text></svg>";
-
-        if (trait.hasPotato) {
-            return string(abi.encodePacked(baseSvg, "P", endSvg));
-        } else {
-            return string(abi.encodePacked(baseSvg, "NOT P", endSvg));
-        }
-    }
-
-    function getJson(
-        uint256 tokenId,
-        string memory image,
-        string memory attributes
-    ) internal pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    '{"name": "Token #',
-                    tokenId.toString(),
-                    '", "description": "A very special token!", "image": "data:image/svg+xml;base64,',
-                    Base64.encode(bytes(image)),
-                    '", ',
-                    attributes,
-                    "}"
-                )
-            );
     }
 
     // TODO: Implement logic for determining the winners and distributing rewards

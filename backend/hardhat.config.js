@@ -3,17 +3,17 @@ require('dotenv').config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  defaultNetwork: "sepolia",
+  defaultNetwork: "mumbai",
   networks: {
     hardhat: {
     },
-    sepolia: {
-      url: process.env.INFURA_URL,
+    mumbai: {
+      url: process.env.ALCHEMY_URL,
       accounts: [process.env.PRIVATE_KEY]
     }
   },
   solidity: {
-    version: "0.8.17",
+    version: "0.8.7",
     settings: {
       optimizer: {
         enabled: true,
@@ -31,8 +31,6 @@ module.exports = {
     timeout: 40000
   },
   etherscan: {
-    apiKey: {
-      sepolia: process.env.API_KEY
-    }
+    apiKey: process.env.API_KEY
   }
 }
