@@ -68,12 +68,11 @@ contract InventoryManager {
                     Base64.encode(
                         bytes(
                             abi.encodePacked(
-                                '{"name":"Orc #',
+                                '{"name": "Token #',
                                 toString(id_),
-                                '", "description":"EtherOrcs is a collection of 5050 Orcs ready to pillage the blockchain. With no IPFS or API, these Orcs are the very first role-playing game that takes place 100% on-chain. Spawn new Orcs, battle your Orc to level up, and pillage different loot pools to get new weapons and gear which upgrades your Orc metadata. This Horde of Orcs will stand the test of time and live on the blockchain for eternity.", "image": "',
-                                "data:image/svg+xml;base64,",
+                                '", "description": "A simple Token", "image": "data:image/svg+xml;base64,',
                                 svg,
-                                '",',
+                                '", ',
                                 getAttributes(
                                     body_,
                                     helm_,
@@ -183,7 +182,7 @@ contract InventoryManager {
 
     function getData(Part part) internal pure returns (string memory sig) {
         if (part == Part.body) {
-            return "getBody1()";
+            return "getBodies1()";
         } else if (part == Part.helm) {
             return "getHelms1()";
         } else if (part == Part.mainhand) {
@@ -252,7 +251,7 @@ contract InventoryManager {
         return
             string(
                 abi.encodePacked(
-                    '{"trait_type":"Body","value":"',
+                    '{"trait_type":"Body", "value":"',
                     getBodyName(body_),
                     '"}'
                 )
@@ -265,8 +264,8 @@ contract InventoryManager {
         return
             string(
                 abi.encodePacked(
-                    '{"trait_type":"Helm","value":"',
-                    getHelmName(helm_),"}"
+                    '{"trait_type":"Helm", "value": "',
+                    getHelmName(helm_),'"}'
                 )
             );
     }
@@ -277,9 +276,9 @@ contract InventoryManager {
         return
             string(
                 abi.encodePacked(
-                    '{"trait_type":"Mainhand","value":"',
+                    '{"trait_type":"Mainhand", "value": "',
                     getMainhandName(mainhand_),
-                    "}"
+                    '"}'
                 )
             );
     }
@@ -290,9 +289,9 @@ contract InventoryManager {
         return
             string(
                 abi.encodePacked(
-                    '{"trait_type":"Offhand","value":"',
+                    '{"trait_type":"Offhand", "value": "',
                     getOffhandName(offhand_),
-                    "}"
+                    '"}'
                 )
             );
     }

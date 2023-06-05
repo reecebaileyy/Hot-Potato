@@ -176,11 +176,9 @@ contract UNKNOWN is
         // require(roundMints < _maxsupply, "Max NFTs minted");
         require(count > 0, "Must mint at least one NFT");
 
-        uint256 rand = _rand();
-
         
         for (uint256 i = 0; i < count; i++) {
-            _mintHand(rand);
+            _mintHand();
         }
 
         if (!isPlayer[msg.sender]) {
@@ -437,15 +435,10 @@ contract UNKNOWN is
                                                                                                                                                  
 */
 
-    function _mintHand(uint256 rand) internal returns (uint64 id) {
+    function _mintHand() internal returns (uint64 id) {
         (uint8 body, uint8 helm, uint8 mainhand, uint8 offhand) = (0, 0, 0, 0);
 
         {
-            // Helpers to get Percentages
-            uint256 sevenOnePct = (type(uint16).max / 100) * 71;
-            uint256 eightyPct = (type(uint16).max / 100) * 80;
-            uint256 nineFivePct = (type(uint16).max / 100) * 95;
-            uint256 nineNinePct = (type(uint16).max / 100) * 99;
 
             id = uint64(_nextTokenId());
 

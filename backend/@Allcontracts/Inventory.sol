@@ -7,15 +7,15 @@ contract Bodies {
     string public constant body2 = "iVBORw0KGgoAAAANSUhEUgAAADwAAAA8BAMAAADI0sRBAAAAJ1BMVEUAAAAMDA0HBREWGisuOko3CDs9VF9XE0GBJUOuN0bRtpj78Nr///+uf4lfAAAAAnRSTlMAAHaTzTgAAAJxSURBVHhe7dRPjtMwFAbwmTnBxCeoUyKXbVME+0aw9+jJEetRD2Dx9FyJVaXKL1yAWFxgpLnAIHasORTPmYT+G/Ys+LJIlJ/tz4miXP2j+Z9iSCnRxZgLVqt10yz/yvPN+02z1md8nWmYfL/Z5OmXfCvnm6bZ3AtPXbfXJzz/8Ok+xNWLfFOWrwKHLsVatn/JxIZTSj2/S2l3uXjl9tClPXBCN7tkA59/tmx/9XvwpeSEVVniNjF3qQdXuZD68oiVITDfUyfHE3lHnFLUB644ov2RJN+efBWicO//sHJMCI8PzPz4gIFjLomzA5Pwx05mf2FkpsCSAwMRgOtlTuIo1+KB7cQVDTy8liCMLhf4iU1eGyAIxyCELp6yo5aRmCOhDIqWj1g56W5Tj7lDtM/MAfXI5IhcJz4UMKMNzEQTozAE8cipZ6mwRmpo9swVAHnDkr1YZq2Ijhm0yoBhUNSm6ye+cQi2UCIEbnBfLGSDODKF6ItiwZgXD9Jqi9fC/mpiJl0oBI7MAIR6YDsxMZW6qFyI0ntX11p1wrOJJcGruhlS18tcnXhiFwjbXXW3yrqu32CZJHHkaxN477yDu1rydt/ytg+p390eMVgCXAu3UfjrVjY+cUUcsSKH0rsKLEdmPbEKRN7sCZtV3YQucmy7FI+Y93YRhZu6WXQ9xwXzrvjDjqN/5tXaCLPZ9gfO/xRtmKw82VKFxNx2vT9wjiHU8/zrMMzkZfwpVwRWrZbF8FV7uXHGALaYa2H3EqvMaqyx56zKzOM6LuozNugQ9MAmOranrBzSyCoI+zOmA3ME3p0zEEyMEEaeosqcgZ8vx63/BonNWyIQPbgXAAAAAElFTkSuQmCC";
     string public constant body3 = "iVBORw0KGgoAAAANSUhEUgAAADwAAAA8BAMAAADI0sRBAAAAJ1BMVEUAAAAMDA0HBREWGisuOko3CDs9VF9XE0GBJUOuN0bRtpj78Nr///+uf4lfAAAAAnRSTlMAAHaTzTgAAAJxSURBVHhe7dRPjtMwFAbwmTnBxCeoUyKXbVME+0aw9+jJEetRD2Dx9FyJVaXKL1yAWFxgpLnAIHasORTPmYT+G/Ys+LJIlJ/tz4miXP2j+Z9iSCnRxZgLVqt10yz/yvPN+02z1md8nWmYfL/Z5OmXfCvnm6bZ3AtPXbfXJzz/8Ok+xNWLfFOWrwKHLsVatn/JxIZTSj2/S2l3uXjl9tClPXBCN7tkA59/tmx/9XvwpeSEVVniNjF3qQdXuZD68oiVITDfUyfHE3lHnFLUB644ov2RJN+efBWicO//sHJMCI8PzPz4gIFjLomzA5Pwx05mf2FkpsCSAwMRgOtlTuIo1+KB7cQVDTy8liCMLhf4iU1eGyAIxyCELp6yo5aRmCOhDIqWj1g56W5Tj7lDtM/MAfXI5IhcJz4UMKMNzEQTozAE8cipZ6mwRmpo9swVAHnDkr1YZq2Ijhm0yoBhUNSm6ye+cQi2UCIEbnBfLGSDODKF6ItiwZgXD9Jqi9fC/mpiJl0oBI7MAIR6YDsxMZW6qFyI0ntX11p1wrOJJcGruhlS18tcnXhiFwjbXXW3yrqu32CZJHHkaxN477yDu1rydt/ytg+p390eMVgCXAu3UfjrVjY+cUUcsSKH0rsKLEdmPbEKRN7sCZtV3YQucmy7FI+Y93YRhZu6WXQ9xwXzrvjDjqN/5tXaCLPZ9gfO/xRtmKw82VKFxNx2vT9wjiHU8/zrMMzkZfwpVwRWrZbF8FV7uXHGALaYa2H3EqvMaqyx56zKzOM6LuozNugQ9MAmOranrBzSyCoI+zOmA3ME3p0zEEyMEEaeosqcgZ8vx63/BonNWyIQPbgXAAAAAElFTkSuQmCC";
 
-    function getBody1() public pure returns (string memory) {
+    function getBodies1() public pure returns (string memory) {
         return body1;
     }
 
-    function getBody2() public pure returns (string memory) {
+    function getBodies2() public pure returns (string memory) {
         return body2;
     }
 
-    function getBody3() public pure returns (string memory) {
+    function getBodies3() public pure returns (string memory) {
         return body3;
     }
 }
