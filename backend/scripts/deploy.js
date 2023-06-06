@@ -17,22 +17,22 @@ async function main() {
 
     console.log("Account balance:", (await deployer.getBalance()).toString());
 
-  // const UNKNOWN = await hre.ethers.getContractFactory("UNKNOWN");
-  // const unknown = await UNKNOWN.deploy(4783);
-  // await unknown.deployed();
+  const UNKNOWN = await hre.ethers.getContractFactory("UNKNOWN");
+  const unknown = await UNKNOWN.deploy(4783);
+  await unknown.deployed();
 
   const InventoryManager = await hre.ethers.getContractFactory("InventoryManager");
   const inventorymanager = await InventoryManager.deploy();
   await inventorymanager.deployed();
 
 
-  // const Uniques = await hre.ethers.getContractFactory("Uniques");
-  // const uniques = await Uniques.deploy();
-  // await uniques.deployed();
+  const Backgrounds = await hre.ethers.getContractFactory("Backgrounds");
+  const backgrounds = await Backgrounds.deploy();
+  await backgrounds.deployed();
 
-  // const Offhands = await hre.ethers.getContractFactory("Offhands");
-  // const offhands = await Offhands.deploy();
-  // await offhands.deployed();
+  const Hands = await hre.ethers.getContractFactory("Hands");
+  const hands = await Hands.deploy();
+  await hands.deployed();
 
   // const Mainhands = await hre.ethers.getContractFactory("Mainhands");
   // const mainhands = await Mainhands.deploy();
@@ -46,16 +46,16 @@ async function main() {
   // const bodies = await Bodies.deploy();
   // await bodies.deployed();
 
-  // console.log(`Main Contract was deployed to https://mumbai.polygonscan.com/${unknown.address}`);
+  console.log(`Main Contract was deployed to https://mumbai.polygonscan.com/${unknown.address}`);
   console.log(
     `InventoryManager deployed to https://mumbai.polygonscan.com/${inventorymanager.address}`
   );
-  // console.log(
-  //   `uniques deployed to https://mumbai.polygonscan.com/${uniques.address}`
-  // );
-  // console.log(
-  //   `offhands deployed to https://mumbai.polygonscan.com/${offhands.address}`
-  // );
+  console.log(
+    `Backgrounds deployed to https://mumbai.polygonscan.com/${backgrounds.address}`
+  );
+  console.log(
+    `Hands deployed to https://mumbai.polygonscan.com/${hands.address}`
+  );
   // console.log(
   //   `mainhands deployed to https://mumbai.polygonscan.com/${mainhands.address}`
   // );

@@ -7,38 +7,28 @@ contract InventoryManager {
     address public manager;
 
     enum Part {
-        body,
-        helm,
-        mainhand,
-        offhand,
-        unique
+        background,
+        hand_type
     }
 
-    mapping(uint8 => address) public bodies;
-    mapping(uint8 => address) public helms;
-    mapping(uint8 => address) public mainhands;
-    mapping(uint8 => address) public offhands;
-    mapping(uint8 => address) public uniques;
+    mapping(uint8 => address) public backgrounds;
+    mapping(uint8 => address) public hand_types;
 
-    string public constant header =
+    string public constant header = //CHANGE THIS LATER
         '<svg id="orc" width="100%" height="100%" version="1.1" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">';
-    string public constant footer =
+    string public constant footer = //CHANGE THIS LATER
         "<style>#orc{shape-rendering: crispedges; image-rendering: -webkit-crisp-edges; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; image-rendering: pixelated; -ms-interpolation-mode: nearest-neighbor;}</style></svg>";
 
     function getSVG(
-        uint8 body_,
-        uint8 helm_,
-        uint8 mainhand_,
-        uint8 offhand_
+        uint8 background_,
+        uint8 hand_type_
     ) public view returns (string memory) {
         return
             string(
                 abi.encodePacked(
                     header,
-                    get(Part.body, body_),
-                    get(Part.helm, helm_),
-                    get(Part.mainhand, mainhand_),
-                    get(Part.offhand, offhand_),
+                    get(Part.background, background_),
+                    get(Part.hand_type, hand_type_),
                     footer
                 )
             );
@@ -50,15 +40,13 @@ contract InventoryManager {
 
     function getTokenURI(
         uint16 id_,
-        uint8 body_,
-        uint8 helm_,
-        uint8 mainhand_,
-        uint8 offhand_,
+        uint8 background_,
+        uint8 hand_type_,
         bool hasPotato_,
         uint32 generation_
     ) external view returns (string memory) {
         string memory svg = Base64.encode(
-            bytes(getSVG(body_, helm_, mainhand_, offhand_))
+            bytes(getSVG(background_, hand_type_))
         );
 
         return
@@ -74,10 +62,8 @@ contract InventoryManager {
                                 svg,
                                 '", ',
                                 getAttributes(
-                                    body_,
-                                    helm_,
-                                    mainhand_,
-                                    offhand_,
+                                    background_,
+                                    hand_type_,
                                     hasPotato_,
                                     generation_
                                 ),
@@ -93,11 +79,11 @@ contract InventoryManager {
                     INVENTORY MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    function setBodies(uint8 count, address source) external {
+    function setBackgrounds(uint8 count, address source) external {
         require(msg.sender == manager, "not manager");
 
         for (uint8 id = 1; id <= count; id++) {
-            bodies[id] = source;
+            backgrounds[id] = source;
         }
     }
 
@@ -105,31 +91,7 @@ contract InventoryManager {
         require(msg.sender == manager, "not manager");
 
         for (uint8 id = 1; id <= count; id++) {
-            helms[id] = source;
-        }
-    }
-
-    function setMainhands(uint8 count, address source) external {
-        require(msg.sender == manager, "not manager");
-
-        for (uint8 id = 1; id <= count; id++) {
-            mainhands[id] = source;
-        }
-    }
-
-    function setOffhands(uint8 count, address source) external {
-        require(msg.sender == manager, "not manager");
-
-        for (uint8 id = 1; id <= count; id++) {
-            offhands[id] = source;
-        }
-    }
-
-    function setUniques(uint8 count, address source) external {
-        require(msg.sender == manager, "not manager");
-
-        for (uint8 id = 1; id <= count; id++) {
-            uniques[id] = source;
+            hand_types[id] = source;
         }
     }
 
@@ -148,16 +110,10 @@ contract InventoryManager {
 
     function get(Part part, uint8 id) public view returns (string memory svg) {
         address source;
-        if (part == Part.body) {
-            source = bodies[id];
-        } else if (part == Part.helm) {
-            source = helms[id];
-        } else if (part == Part.mainhand) {
-            source = mainhands[id];
-        } else if (part == Part.offhand) {
-            source = offhands[id];
-        } else if (part == Part.unique) {
-            source = uniques[id];
+        if (part == Part.background) {
+            source = backgrounds[id];
+        } else if (part == Part.hand_type) {
+            source = hand_types[id];
         } else {
             revert("invalid part");
         }
@@ -181,16 +137,10 @@ contract InventoryManager {
     }
 
     function getData(Part part) internal pure returns (string memory sig) {
-        if (part == Part.body) {
-            return "getBodies1()";
-        } else if (part == Part.helm) {
-            return "getHelms1()";
-        } else if (part == Part.mainhand) {
-            return "getMainhand1()";
-        } else if (part == Part.offhand) {
-            return "getOffhand1()";
-        } else if (part == Part.unique) {
-            return "getUnique1()";
+        if (part == Part.background) {
+            return "getBackground1()";
+        } else if (part == Part.hand_type) {
+            return "getHand1()";
         }
         revert("invalid part/id");
     }
@@ -218,10 +168,8 @@ contract InventoryManager {
     }
 
     function getAttributes(
-        uint8 body_,
-        uint8 helm_,
-        uint8 mainhand_,
-        uint8 offhand_,
+        uint8 background_,
+        uint8 hand_type_,
         bool hasPotato_,
         uint32 generation_
     ) public pure returns (string memory) {
@@ -229,13 +177,9 @@ contract InventoryManager {
             string(
                 abi.encodePacked(
                     '"attributes": [',
-                    getBodyAttributes(body_),
+                    getBackgroundAttributes(background_),
                     ",",
-                    getHelmAttributes(helm_),
-                    ",",
-                    getMainhandAttributes(mainhand_),
-                    ",",
-                    getOffhandAttributes(offhand_),
+                    getHandAttributes(hand_type_),
                     ',{"trait_type": "Potato", "value":"',
                     hasPotato_ ? "Yes" : "No",
                     '"},{"display_type": "number","trait_type": "Generation", "value":',
@@ -245,79 +189,48 @@ contract InventoryManager {
             );
     }
 
-    function getBodyAttributes(
-        uint8 body_
+    function getBackgroundAttributes(
+        uint8 background_
     ) internal pure returns (string memory) {
         return
             string(
                 abi.encodePacked(
                     '{"trait_type":"Body", "value":"',
-                    getBodyName(body_),
+                    getBackgroundName(background_),
                     '"}'
                 )
             );
     }
 
-    function getHelmAttributes(
-        uint8 helm_
+    function getHandAttributes(
+        uint8 hand_type_
     ) internal pure returns (string memory) {
         return
             string(
                 abi.encodePacked(
                     '{"trait_type":"Helm", "value": "',
-                    getHelmName(helm_),'"}'
+                    getHandName(hand_type_),'"}'
                 )
             );
     }
 
-    function getMainhandAttributes(
-        uint8 mainhand_
-    ) internal pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    '{"trait_type":"Mainhand", "value": "',
-                    getMainhandName(mainhand_),
-                    '"}'
-                )
-            );
-    }
-
-    function getOffhandAttributes(
-        uint8 offhand_
-    ) internal pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    '{"trait_type":"Offhand", "value": "',
-                    getOffhandName(offhand_),
-                    '"}'
-                )
-            );
-    }
-
-    function getTier(uint16 id) internal pure returns (uint16) {
-        if (id > 40) return 100;
-        if (id == 0) return 0;
-        return ((id - 1) / 4);
-    }
 
     // Here, we do sort of a Binary Search to find the correct name. Not the pritiest code I've wrote, but hey, it works!
 
-    function getBodyName(uint8 id) public pure returns (string memory) {
+    function getBackgroundName(uint8 id) public pure returns (string memory) {
         if (id > 40) return getUniqueName(id);
         if (id < 20) {
             if (id < 10) {
                 if (id < 5) {
                     if (id < 3) {
-                        return id == 1 ? "Green Orc 1" : "Green Orc 2";
+                        return id == 1 ? "Background 1" : "Background 2";
                     }
-                    return id == 3 ? "Green Orc 3" : "Dark Green Orc 1";
+                    return id == 3 ? "Background 3" : "Dark Background 1";
                 }
                 if (id < 7)
-                    return id == 5 ? "Dark Green Orc 2" : "Dark Green Orc 3";
+                    return id == 5 ? "Dark Background 2" : "Dark Background 3";
                 return
-                    id == 7 ? "Red Orc 1" : id == 8 ? "Red Orc 2" : "Red Orc 3";
+                    id == 7 ? "Red Background 1" : id == 8 ? "Red Background 2" : "Red Background 3";
             }
             if (id <= 15) {
                 if (id < 13) {
@@ -352,28 +265,28 @@ contract InventoryManager {
         }
     }
 
-    function getHelmName(uint8 id) public pure returns (string memory) {
+    function getHandName(uint8 id) public pure returns (string memory) {
         if (id > 40) return getUniqueName(id);
         if (id < 20) {
             if (id < 10) {
                 if (id < 5) {
                     if (id < 3) {
-                        return id == 1 ? "None" : "None";
+                        return id == 1 ? "Hand 1" : "Hand 2";
                     }
-                    return id == 3 ? "None" : "None";
+                    return id == 3 ? "Hand 3" : "Hand 4";
                 }
                 if (id < 7)
-                    return id == 5 ? "Leather Helm +1" : "Orcish Helm +1";
+                    return id == 5 ? "Leather Hand 1" : "Orcish Hand 1";
                 return
-                    id == 7 ? "Leather Cap +1" : id == 8
-                        ? "Iron Helm +1"
-                        : "Bone Helm +2";
+                    id == 7 ? "Leather Hand 1" : id == 8
+                        ? "Iron Hand 1"
+                        : "Bone Hand 2";
             }
             if (id <= 15) {
                 if (id < 13) {
                     return
-                        id == 10 ? "Full Orc Helm +2" : id == 11
-                            ? "Chainmail Cap +2"
+                        id == 10 ? "Full Orc Hand 2" : id == 11
+                            ? "Chainmail Hand 2"
                             : "Strange Helm +2";
                 }
                 return

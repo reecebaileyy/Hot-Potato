@@ -15,10 +15,8 @@ import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 interface MetadataHandler {
     function getTokenURI(
         uint16 id_,
-        uint8 body_,
-        uint8 helm_,
-        uint8 mainhand_,
-        uint8 offhand_,
+        uint8 background_,
+        uint8 hand_type_,
         bool hasPotato_,
         uint32 generation_
     ) external view returns (string memory);
@@ -27,10 +25,8 @@ interface MetadataHandler {
 struct Hand {
     bool hasPotato;
     uint32 generation;
-    uint8 body;
-    uint8 helm;
-    uint8 mainhand;
-    uint8 offhand;
+    uint8 background;
+    uint8 hand_type;
 }
 
 enum GameState {
@@ -305,10 +301,8 @@ contract UNKNOWN is
         return
             metadataHandler.getTokenURI(
                 uint16(tokenId),
-                hand.body,
-                hand.helm,
-                hand.mainhand,
-                hand.offhand,
+                hand.background,
+                hand.hand_type,
                 hand.hasPotato,
                 hand.generation
             );
@@ -436,20 +430,15 @@ contract UNKNOWN is
 */
 
     function _mintHand() internal returns (uint64 id) {
-        (uint8 body, uint8 helm, uint8 mainhand, uint8 offhand) = (0, 0, 0, 0);
+        (uint8 background, uint8 hand_type) = (0, 0);
 
         {
-
             id = uint64(_nextTokenId());
 
-            // Getting Random traits
-            body = uint8(1);
+            // TODO: GET RANDOM TRAITS
+            background = uint8(1);
 
-            helm = uint8(1);
-
-            offhand = uint8(1);
-
-            mainhand = uint8(1);
+            hand_type = uint8(1);
         }
 
         _safeMint(msg.sender, 1);
@@ -464,10 +453,8 @@ contract UNKNOWN is
         hands[uint256(id)] = Hand({
             hasPotato: false,
             generation: currentGeneration,
-            body: body,
-            helm: helm,
-            mainhand: mainhand,
-            offhand: offhand
+            background: background,
+            hand_type: hand_type
         });
     }
 
