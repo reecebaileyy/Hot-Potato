@@ -34,17 +34,9 @@ async function main() {
   const hands = await Hands.deploy();
   await hands.deployed();
 
-  // const Mainhands = await hre.ethers.getContractFactory("Mainhands");
-  // const mainhands = await Mainhands.deploy();
-  // await mainhands.deployed();
-
-  // const Helms = await hre.ethers.getContractFactory("Helms");
-  // const helms = await Helms.deploy();
-  // await helms.deployed();
-
-  // const Bodies = await hre.ethers.getContractFactory("Bodies");
-  // const bodies = await Bodies.deploy();
-  // await bodies.deployed();
+  const Potato = await hre.ethers.getContractFactory("Potato");
+  const potato = await Potato.deploy();
+  await potato.deployed();
 
   console.log(`Main Contract was deployed to https://mumbai.polygonscan.com/${unknown.address}`);
   console.log(
@@ -56,15 +48,9 @@ async function main() {
   console.log(
     `Hands deployed to https://mumbai.polygonscan.com/${hands.address}`
   );
-  // console.log(
-  //   `mainhands deployed to https://mumbai.polygonscan.com/${mainhands.address}`
-  // );
-  // console.log(
-  //   `helms deployed to https://mumbai.polygonscan.com/${helms.address}`
-  // );
-  // console.log(
-  //   `bodies deployed to https://mumbai.polygonscan.com/${bodies.address}`
-  // );
+  console.log(
+    `potato deployed to https://mumbai.polygonscan.com/${potato.address}`
+  );
 }
 
 // We recommend this pattern to be able to use async/await everywhere

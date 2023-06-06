@@ -18,7 +18,8 @@ interface MetadataHandler {
         uint8 background_,
         uint8 hand_type_,
         bool hasPotato_,
-        uint32 generation_
+        uint32 generation_,
+        uint8 potato_
     ) external view returns (string memory);
 }
 
@@ -27,6 +28,7 @@ struct Hand {
     uint32 generation;
     uint8 background;
     uint8 hand_type;
+    uint8 potato;
 }
 
 enum GameState {
@@ -304,7 +306,8 @@ contract UNKNOWN is
                 hand.background,
                 hand.hand_type,
                 hand.hasPotato,
-                hand.generation
+                hand.generation,
+                hand.potato
             );
     }
 
@@ -437,7 +440,6 @@ contract UNKNOWN is
 
             // TODO: GET RANDOM TRAITS
             background = uint8(1);
-
             hand_type = uint8(1);
         }
 
@@ -454,7 +456,8 @@ contract UNKNOWN is
             hasPotato: false,
             generation: currentGeneration,
             background: background,
-            hand_type: hand_type
+            hand_type: hand_type,
+            potato: uint8(1)
         });
     }
 

@@ -8,11 +8,13 @@ contract InventoryManager {
 
     enum Part {
         background,
-        hand_type
+        hand_type,
+        potato
     }
 
     mapping(uint8 => address) public backgrounds;
     mapping(uint8 => address) public hand_types;
+    mapping(uint8 => address) public potatoes;
 
     string public constant header = //CHANGE THIS LATER
         '<svg id="orc" width="100%" height="100%" version="1.1" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">';
@@ -21,7 +23,9 @@ contract InventoryManager {
 
     function getSVG(
         uint8 background_,
-        uint8 hand_type_
+        uint8 hand_type_,
+        bool hasPotato_,
+        uint8 potato_
     ) public view returns (string memory) {
         return
             string(
@@ -29,6 +33,7 @@ contract InventoryManager {
                     header,
                     get(Part.background, background_),
                     get(Part.hand_type, hand_type_),
+                    hasPotato_ ? get(Part.potato, potato_) : "",
                     footer
                 )
             );
@@ -43,10 +48,11 @@ contract InventoryManager {
         uint8 background_,
         uint8 hand_type_,
         bool hasPotato_,
-        uint32 generation_
+        uint32 generation_,
+        uint8 potato_
     ) external view returns (string memory) {
         string memory svg = Base64.encode(
-            bytes(getSVG(background_, hand_type_))
+            bytes(getSVG(background_, hand_type_, hasPotato_, potato_))
         );
 
         return
@@ -87,11 +93,19 @@ contract InventoryManager {
         }
     }
 
-    function setHelms(uint8 count, address source) external {
+    function setHands(uint8 count, address source) external {
         require(msg.sender == manager, "not manager");
 
         for (uint8 id = 1; id <= count; id++) {
             hand_types[id] = source;
+        }
+    }
+
+    function setPotatoes(uint8 count, address source) external {
+        require(msg.sender == manager, "not manager");
+
+        for (uint8 id = 1; id <= count; id++) {
+            potatoes[id] = source;
         }
     }
 
@@ -114,6 +128,8 @@ contract InventoryManager {
             source = backgrounds[id];
         } else if (part == Part.hand_type) {
             source = hand_types[id];
+        } else if (part == Part.potato){
+            source = potatoes[id];
         } else {
             revert("invalid part");
         }
@@ -129,7 +145,7 @@ contract InventoryManager {
         return
             string(
                 abi.encodePacked(
-                    '<image x="1" y="1" width="60" height="60" image-rendering="pixelated" preserveAspectRatio="xMidYMid" xlink:href="data:image/png;base64,',
+                    '<image x="1" y="1" width="60" height="60" image-rendering="pixelated" preserveAspectRatio="xMidYMid" xlink:href="data:image/svg+xml;base64,',
                     uri,
                     '"/>'
                 )
@@ -141,6 +157,10 @@ contract InventoryManager {
             return "getBackground1()";
         } else if (part == Part.hand_type) {
             return "getHand1()";
+        } else if (part == Part.potato) {
+            return "getPotato()";
+        } else {
+            revert("invalid part");
         }
         revert("invalid part/id");
     }
