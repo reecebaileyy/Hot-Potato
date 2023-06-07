@@ -20,6 +20,25 @@ contract InventoryManager {
         '<svg id="backburner" width="100%" height="100%" version="1.1" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">';
     string public constant footer = //CHANGE THIS LATER
         "<style>#backburner{shape-rendering: crispedges; image-rendering: -webkit-crisp-edges; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; image-rendering: pixelated; -ms-interpolation-mode: nearest-neighbor;}</style></svg>";
+    
+    function getSVG(
+        uint8 background_,
+        uint8 hand_type_,
+        bool hasPotato_,
+        uint8 potato_
+    ) public view returns (string memory) {
+        return
+            string(
+                abi.encodePacked(
+                    header,
+                    get(Part.background, background_),
+                    get(Part.hand_type, hand_type_),
+                    hasPotato_ ? get(Part.potato, potato_) : "",
+                    footer
+                )
+            );
+    }
+
 
     constructor() {
         manager = msg.sender;
@@ -33,7 +52,9 @@ contract InventoryManager {
         uint32 generation_,
         uint8 potato_
     ) external view returns (string memory) {
-
+        
+        string memory svg = Base64.encode(bytes(getSVG(background_,hand_type_,hasPotato_,potato_)));
+        
         return
             string(
                 abi.encodePacked(
@@ -44,11 +65,7 @@ contract InventoryManager {
                                 '{"name": "Token #',
                                 toString(id_),
                                 '", "description": "A simple Token", "image": "data:image/svg+xml;base64,',
-                                header,
-                                get(Part.background, background_),
-                                get(Part.hand_type, hand_type_),
-                                hasPotato_ ? get(Part.potato, potato_) : "",
-                                footer,
+                                svg,
                                 '", ',
                                 getAttributes(
                                     background_,
@@ -120,27 +137,27 @@ contract InventoryManager {
     } else {
         revert("invalid part");
     }
-    bytes4 sig;
+    string memory sig;
     if (part == Part.background) {
-        sig = bytes4(keccak256(bytes("getBlue()")));
+        sig = "getBlue()";
     } else if (part == Part.hand_type) {
-        sig = bytes4(keccak256(bytes("getHand1()")));
+        sig = "getHand1()";
     } else if (part == Part.potato) {
-        sig = bytes4(keccak256(bytes("getPotato()")));
+        sig = "getPotato()";
     } else {
         revert("invalid part");
     }
-    (bool succ, bytes memory data) = source.staticcall(abi.encodePacked(sig));
-    require(succ, "failed to get data");
+(bool succ, bytes memory data) = source.staticcall(
+            abi.encodeWithSignature(sig)
+        );    require(succ, "failed to get data");
     return wrapTag(abi.decode(data, (string)));
 }
 
-
-    function wrapTag(string memory uri) internal pure returns (string memory) {
+function wrapTag(string memory uri) internal pure returns (string memory) {
         return
             string(
                 abi.encodePacked(
-                    '<image x="1" y="1" width="60" height="60" image-rendering="pixelated" preserveAspectRatio="xMidYMid" xlink:href="data:image/svg+xml;base64,',
+                    '<image x="1" y="1" width="60" height="60" image-rendering="pixelated" preserveAspectRatio="xMidYMid" xlink:href="data:image/png;base64,',
                     uri,
                     '"/>'
                 )
@@ -210,7 +227,7 @@ contract InventoryManager {
         return
             string(
                 abi.encodePacked(
-                    '{"trait_type":"Helm", "value": "',
+                    '{"trait_type":"Hand Type", "value": "',
                     getHandName(hand_type_),'"}'
                 )
             );
