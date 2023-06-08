@@ -1,4 +1,4 @@
-// pages/api/get-game-state.js
+// pages/api/get-previous-game-state.js
 import { prisma } from '../../../lib/prisma';
 
 export default async function handler(req, res) {
@@ -10,13 +10,10 @@ export default async function handler(req, res) {
     } else {
       // Set the cache-control header to stale-while-revalidate with a max age of 1 hour
       res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
-      res.status(200).json(gameState);
+      res.status(200).json({ previous: gameState.previous });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error fetching game state." });
+    res.status(500).json({ error: "Error fetching previous game state." });
   }
 }
-
-
-    

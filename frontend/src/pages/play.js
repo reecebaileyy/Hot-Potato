@@ -60,26 +60,26 @@ export default function Play() {
    \▓▓▓▓▓▓▓▓    \▓    \▓▓▓▓▓▓▓▓\▓▓   \▓▓   \▓▓        \▓▓   \▓▓ \▓▓▓▓▓▓  \▓▓▓▓▓▓ \▓▓   \▓▓ \▓▓▓▓▓▓ 
                                                                                            
   */
-/*
-                                                                                     
-  ▄▄█▀▀▀█▄█                                      ▄█▀▀▀█▄█ ██            ██           
-▄██▀     ▀█                                     ▄██    ▀█ ██            ██           
-██▀       ▀ ▄█▀██▄ ▀████████▄█████▄   ▄▄█▀██    ▀███▄   ██████ ▄█▀██▄ ██████  ▄▄█▀██ 
-██         ██   ██   ██    ██    ██  ▄█▀   ██     ▀█████▄ ██  ██   ██   ██   ▄█▀   ██
-██▄    ▀████▄█████   ██    ██    ██  ██▀▀▀▀▀▀   ▄     ▀██ ██   ▄█████   ██   ██▀▀▀▀▀▀
-▀██▄     ████   ██   ██    ██    ██  ██▄    ▄   ██     ██ ██  ██   ██   ██   ██▄    ▄
-  ▀▀███████▀████▀██▄████  ████  ████▄ ▀█████▀   █▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀
-                                                                                     
-                                                                                     
-
-*/
+  /*
+                                                                                       
+    ▄▄█▀▀▀█▄█                                      ▄█▀▀▀█▄█ ██            ██           
+  ▄██▀     ▀█                                     ▄██    ▀█ ██            ██           
+  ██▀       ▀ ▄█▀██▄ ▀████████▄█████▄   ▄▄█▀██    ▀███▄   ██████ ▄█▀██▄ ██████  ▄▄█▀██ 
+  ██         ██   ██   ██    ██    ██  ▄█▀   ██     ▀█████▄ ██  ██   ██   ██   ▄█▀   ██
+  ██▄    ▀████▄█████   ██    ██    ██  ██▀▀▀▀▀▀   ▄     ▀██ ██   ▄█████   ██   ██▀▀▀▀▀▀
+  ▀██▄     ████   ██   ██    ██    ██  ██▄    ▄   ██     ██ ██  ██   ██   ██   ██▄    ▄
+    ▀▀███████▀████▀██▄████  ████  ████▄ ▀█████▀   █▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀
+                                                                                       
+                                                                                       
+  
+  */
 
   useEffect(() => {
     setPreviousGameState(getGameState);
   }, [getGameState]);
 
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'GameStarted',
     listener(log) {
@@ -101,47 +101,49 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'GameResumed',
     async listener(log) {
       const message = "Heating up";
       console.log("Resumed");
-
-      try {
+  
+      let previousGameState = getPreviousGameState(); // assuming you have this function to get previous game state from local state
+  
+      if (!previousGameState) {
         // Fetch the current game state
         const response = await fetch('/api/get-game-state');
         const data = await response.json();
-
+  
         // Find the previous game state
-        const previousGameState = Object.keys(data).find(key => data[key] === "Prev");
-
-        if (previousGameState) {
-          setGetGameState(previousGameState);
-
-          // Update the game state in the database
-          const updateResponse = await fetch('/api/update-game-state', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ newState: previousGameState }),
-          });
-          const updateData = await updateResponse.json();
-          console.log(updateData);
-        } else {
-          console.log("No previous game state found");
-        }
-      } catch (error) {
-        console.error(error);
+        previousGameState = Object.keys(data).find(key => data[key] === "Prev");
       }
+  
+      if (previousGameState) {
+        // Update the game state in the database
+        const updateResponse = await fetch('/api/update-game-state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newState: previousGameState, prevState: "True" }),
+        });
+        const updateData = await updateResponse.json();
+        console.log(updateData);
+  
+        // After the update, set the game state in the component state
+        setGetGameState(previousGameState);
+      } else {
+        console.log("No previous game state found");
+      }
+  
       // CACHE THIS DATA IN LOCAL STORAGE
-
+  
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
 
 
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'GamePaused',
     listener(log) {
@@ -163,7 +165,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'GameRestarted',
     listener(log) {
@@ -185,7 +187,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'FinalRoundStarted',
     listener(log) {
@@ -205,21 +207,21 @@ export default function Play() {
   })
 
 
-/*
-             ▄▄                                                                           
-▀███▀▀▀██▄ ▀███                                        ▄█▀▀▀█▄█ ██            ██          
-  ██   ▀██▄  ██                                       ▄██    ▀█ ██            ██          
-  ██   ▄██   ██  ▄█▀██▄ ▀██▀   ▀██▀ ▄▄█▀██▀███▄███    ▀███▄   ██████ ▄█▀██▄ ██████ ▄██▀███
-  ███████    ██ ██   ██   ██   ▄█  ▄█▀   ██ ██▀ ▀▀      ▀█████▄ ██  ██   ██   ██   ██   ▀▀
-  ██         ██  ▄█████    ██ ▄█   ██▀▀▀▀▀▀ ██        ▄     ▀██ ██   ▄█████   ██   ▀█████▄
-  ██         ██ ██   ██     ███    ██▄    ▄ ██        ██     ██ ██  ██   ██   ██   █▄   ██
-▄████▄     ▄████▄████▀██▄   ▄█      ▀█████▀████▄      █▀█████▀  ▀████████▀██▄ ▀██████████▀
-                          ▄█                                                              
-                        ██▀                                                               
-*/
+  /*
+               ▄▄                                                                           
+  ▀███▀▀▀██▄ ▀███                                        ▄█▀▀▀█▄█ ██            ██          
+    ██   ▀██▄  ██                                       ▄██    ▀█ ██            ██          
+    ██   ▄██   ██  ▄█▀██▄ ▀██▀   ▀██▀ ▄▄█▀██▀███▄███    ▀███▄   ██████ ▄█▀██▄ ██████ ▄██▀███
+    ███████    ██ ██   ██   ██   ▄█  ▄█▀   ██ ██▀ ▀▀      ▀█████▄ ██  ██   ██   ██   ██   ▀▀
+    ██         ██  ▄█████    ██ ▄█   ██▀▀▀▀▀▀ ██        ▄     ▀██ ██   ▄█████   ██   ▀█████▄
+    ██         ██ ██   ██     ███    ██▄    ▄ ██        ██     ██ ██  ██   ██   ██   █▄   ██
+  ▄████▄     ▄████▄████▀██▄   ▄█      ▀█████▀████▄      █▀█████▀  ▀████████▀██▄ ▀██████████▀
+                            ▄█                                                              
+                          ██▀                                                               
+  */
 
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'PlayerWon',
     async listener(log) {
@@ -234,7 +236,7 @@ export default function Play() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ address: player }),
+          body: JSON.stringify({ address: address }),
         });
 
         // If the passing player is the connected address, fetch the latest data for this address
@@ -257,7 +259,7 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'SuccessfulPass',
     async listener(log) {
@@ -272,7 +274,7 @@ export default function Play() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ address: player }),
+          body: JSON.stringify({ address: address }),
         });
 
         if (player === address) {
@@ -293,19 +295,19 @@ export default function Play() {
     },
   });
 
-/*
-                                                                     ▄▄                   
-▀███▀▀▀██▄           ██            ██               ▀████▄     ▄███▀ ██              ██   
-  ██   ▀██▄          ██            ██                 ████    ████                   ██   
-  ██   ▄██  ▄██▀██▄██████ ▄█▀██▄ ██████  ▄██▀██▄      █ ██   ▄█ ██ ▀███ ▀████████▄ ██████ 
-  ███████  ██▀   ▀██ ██  ██   ██   ██   ██▀   ▀██     █  ██  █▀ ██   ██   ██    ██   ██   
-  ██       ██     ██ ██   ▄█████   ██   ██     ██     █  ██▄█▀  ██   ██   ██    ██   ██   
-  ██       ██▄   ▄██ ██  ██   ██   ██   ██▄   ▄██     █  ▀██▀   ██   ██   ██    ██   ██   
-▄████▄      ▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀    ▄███▄ ▀▀  ▄████▄████▄████  ████▄ ▀████
-*/
+  /*
+                                                                       ▄▄                   
+  ▀███▀▀▀██▄           ██            ██               ▀████▄     ▄███▀ ██              ██   
+    ██   ▀██▄          ██            ██                 ████    ████                   ██   
+    ██   ▄██  ▄██▀██▄██████ ▄█▀██▄ ██████  ▄██▀██▄      █ ██   ▄█ ██ ▀███ ▀████████▄ ██████ 
+    ███████  ██▀   ▀██ ██  ██   ██   ██   ██▀   ▀██     █  ██  █▀ ██   ██   ██    ██   ██   
+    ██       ██     ██ ██   ▄█████   ██   ██     ██     █  ██▄█▀  ██   ██   ██    ██   ██   
+    ██       ██▄   ▄██ ██  ██   ██   ██   ██▄   ▄██     █  ▀██▀   ██   ██   ██    ██   ██   
+  ▄████▄      ▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀    ▄███▄ ▀▀  ▄████▄████▄████  ████▄ ▀████
+  */
 
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
@@ -341,18 +343,18 @@ export default function Play() {
     },
   });
 
-/*
-                                                  ▄▄  
-▀███▀▀▀██▄                                      ▀███  
-  ██   ▀██▄                                       ██  
-  ██   ▄██   ▄██▀██▄▀███  ▀███ ▀████████▄    ▄█▀▀███  
-  ███████   ██▀   ▀██ ██    ██   ██    ██  ▄██    ██  
-  ██  ██▄   ██     ██ ██    ██   ██    ██  ███    ██  
-  ██   ▀██▄ ██▄   ▄██ ██    ██   ██    ██  ▀██    ██  
-▄████▄ ▄███▄ ▀█████▀  ▀████▀███▄████  ████▄ ▀████▀███▄
-*/
+  /*
+                                                    ▄▄  
+  ▀███▀▀▀██▄                                      ▀███  
+    ██   ▀██▄                                       ██  
+    ██   ▄██   ▄██▀██▄▀███  ▀███ ▀████████▄    ▄█▀▀███  
+    ███████   ██▀   ▀██ ██    ██   ██    ██  ▄██    ██  
+    ██  ██▄   ██     ██ ██    ██   ██    ██  ███    ██  
+    ██   ▀██▄ ██▄   ▄██ ██    ██   ██    ██  ▀██    ██  
+  ▄████▄ ▄███▄ ▀█████▀  ▀████▀███▄████  ████▄ ▀████▀███▄
+  */
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
@@ -369,19 +371,19 @@ export default function Play() {
   });
 
 
-/*
-             ▄▄                                   
-███▀▀██▀▀███ ██                                   
-█▀   ██   ▀█                                      
-     ██    ▀███ ▀████████▄█████▄   ▄▄█▀██▀███▄███ 
-     ██      ██   ██    ██    ██  ▄█▀   ██ ██▀ ▀▀ 
-     ██      ██   ██    ██    ██  ██▀▀▀▀▀▀ ██     
-     ██      ██   ██    ██    ██  ██▄    ▄ ██     
-   ▄████▄  ▄████▄████  ████  ████▄ ▀█████▀████▄   
-*/
+  /*
+               ▄▄                                   
+  ███▀▀██▀▀███ ██                                   
+  █▀   ██   ▀█                                      
+       ██    ▀███ ▀████████▄█████▄   ▄▄█▀██▀███▄███ 
+       ██      ██   ██    ██    ██  ▄█▀   ██ ██▀ ▀▀ 
+       ██      ██   ██    ██    ██  ██▀▀▀▀▀▀ ██     
+       ██      ██   ██    ██    ██  ██▄    ▄ ██     
+     ▄████▄  ▄████▄████  ████  ████▄ ▀█████▀████▄   
+  */
 
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'UpdatedTimer',
     async listener(log) {
@@ -400,20 +402,20 @@ export default function Play() {
     },
   });
 
-/*
-                                 ▄▄                   ▄▄                      
-▀███▀▀▀███                     ▀███                   ██                      
-  ██    ▀█                       ██                                           
-  ██   █  ▀██▀   ▀██▀████████▄   ██   ▄██▀██▄ ▄██▀██████   ▄██▀██▄▀████████▄  
-  ██████    ▀██ ▄█▀   ██   ▀██   ██  ██▀   ▀████   ▀▀ ██  ██▀   ▀██ ██    ██  
-  ██   █  ▄   ███     ██    ██   ██  ██     ██▀█████▄ ██  ██     ██ ██    ██  
-  ██     ▄█ ▄█▀ ██▄   ██   ▄██   ██  ██▄   ▄███▄   ██ ██  ██▄   ▄██ ██    ██  
-▄████████████▄   ▄██▄ ██████▀  ▄████▄ ▀█████▀ ██████▀████▄ ▀█████▀▄████  ████▄
-                      ██                                                      
-                    ▄████▄
-*/
+  /*
+                                   ▄▄                   ▄▄                      
+  ▀███▀▀▀███                     ▀███                   ██                      
+    ██    ▀█                       ██                                           
+    ██   █  ▀██▀   ▀██▀████████▄   ██   ▄██▀██▄ ▄██▀██████   ▄██▀██▄▀████████▄  
+    ██████    ▀██ ▄█▀   ██   ▀██   ██  ██▀   ▀████   ▀▀ ██  ██▀   ▀██ ██    ██  
+    ██   █  ▄   ███     ██    ██   ██  ██     ██▀█████▄ ██  ██     ██ ██    ██  
+    ██     ▄█ ▄█▀ ██▄   ██   ▄██   ██  ██▄   ▄███▄   ██ ██  ██▄   ▄██ ██    ██  
+  ▄████████████▄   ▄██▄ ██████▀  ▄████▄ ▀█████▀ ██████▀████▄ ▀█████▀▄████  ████▄
+                        ██                                                      
+                      ▄████▄
+  */
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'PotatoExploded',
     listener(log) {
@@ -431,19 +433,19 @@ export default function Play() {
     },
   });
 
-/*
-                                 
-▀███▀▀▀██▄                       
-  ██   ▀██▄                      
-  ██   ▄██ ▄█▀██▄  ▄██▀███▄██▀███
-  ███████ ██   ██  ██   ▀▀██   ▀▀
-  ██       ▄█████  ▀█████▄▀█████▄
-  ██      ██   ██  █▄   ███▄   ██
-▄████▄    ▀████▀██▄██████▀██████▀                           
-*/
+  /*
+                                   
+  ▀███▀▀▀██▄                       
+    ██   ▀██▄                      
+    ██   ▄██ ▄█▀██▄  ▄██▀███▄██▀███
+    ███████ ██   ██  ██   ▀▀██   ▀▀
+    ██       ▄█████  ▀█████▄▀█████▄
+    ██      ██   ██  █▄   ███▄   ██
+  ▄████▄    ▀████▀██▄██████▀██████▀                           
+  */
 
   useContractEvent({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     eventName: 'PotatoPassed',
     listener(log) {
@@ -481,7 +483,7 @@ export default function Play() {
 
   // GET MINT PRICE
   const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: '_price',
   })
@@ -489,7 +491,7 @@ export default function Play() {
 
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'getActiveTokenCount',
     args: [address],
@@ -498,7 +500,7 @@ export default function Play() {
 
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: '_maxsupply',
   })
@@ -506,7 +508,7 @@ export default function Play() {
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
@@ -515,7 +517,7 @@ export default function Play() {
 
   // GET POTATO HOLDER
   const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'getPotatoOwner',
   })
@@ -523,7 +525,7 @@ export default function Play() {
 
   // GET POTATO TOKEN ID
   const { data: getExplosionTime, isLoading: loadingExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'getExplosionTime',
   })
@@ -531,7 +533,7 @@ export default function Play() {
 
   // GET EXPLOSION TIME
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
@@ -539,7 +541,7 @@ export default function Play() {
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
@@ -547,21 +549,21 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'currentGeneration',
   })
   const _currentGeneration = parseInt(currentGeneration, 10);
 
   const { data: getRoundMints, isLoading: loadingGetRoundMints, refetch: refetchGetRoundMints } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'getRoundMints',
   })
 
   // GET CURRENT GENERATION
   const { data: Winners, isLoadging: loadingWinners, refetch: refetchWinner } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'Winners',
     args: [_currentGeneration],
@@ -572,7 +574,7 @@ export default function Play() {
   argsArray.map(tokenId => <TokenImage key={tokenId} tokenId={tokenId} ABI={ABI} />)
 
   const { data: balanceOf, isLoading: loadingBalance, refetch: refetchBalanceOf } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'balanceOf',
     args: [address],
@@ -580,13 +582,13 @@ export default function Play() {
   const _balanceOf = parseInt(balanceOf, 10);
 
   const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: '_owner',
   })
 
   const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'getActiveTokenIds',
   })
@@ -607,7 +609,7 @@ export default function Play() {
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount],
@@ -616,7 +618,7 @@ export default function Play() {
 
   // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
@@ -627,7 +629,7 @@ export default function Play() {
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'checkExplosion',
   })
@@ -648,7 +650,7 @@ export default function Play() {
   */
   // START GAME
   const { config: startGame } = usePrepareContractWrite({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'startGame',
   })
@@ -656,7 +658,7 @@ export default function Play() {
 
   // END MINTING
   const { config: endMinting } = usePrepareContractWrite({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'endMinting',
   })
@@ -664,7 +666,7 @@ export default function Play() {
 
   // PAUSE GAME
   const { config: pauseGame } = usePrepareContractWrite({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'pauseGame',
   })
@@ -672,7 +674,7 @@ export default function Play() {
 
   // RESUME GAME
   const { config: resumeGame } = usePrepareContractWrite({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'resumeGame',
   })
@@ -680,7 +682,7 @@ export default function Play() {
 
   // RESTART GAME 
   const { config: restartGame } = usePrepareContractWrite({
-    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    address: '0xB6Ca854B9fC43B2817B573843F43fCEC0f1EeE98',
     abi: ABI,
     functionName: 'restartGame',
   })
@@ -700,29 +702,32 @@ export default function Play() {
                                                                                                
   */
 
+   async function getPreviousGameState() {
+    try {
+      const response = await fetch('/api/get-previous-game-state');
+      const data = await response.json();
+  
+      if (data && data.previous) {
+        return data.previous;
+      } else {
+        console.error("No previous game state found");
+        return null;
+      }
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }  
+
   function fetchGameStateAndMore() {
     // Fetch the game state
     fetch('/api/get-game-state')
       .then(response => response.json())
       .then(data => {
-        for (const key in data) {
-          if (data[key] === "True") {
-            setGetGameState(key);
-            break;
-          }
-        }
+        setGetGameState(data.current);
+        setPreviousGameState(data.previous);
       })
       .catch(error => console.error(error));
-
-    // // Fetch other data...
-    // fetch('/api/get-other-data')
-    //   .then(response => response.json())
-    //   .then(data => {
-    //     // Do something with the data...
-    //   })
-    //   .catch(error => console.error(error));
-
-    // And so on...
   }
 
 
@@ -864,6 +869,26 @@ export default function Play() {
     setValue(numericValue);
   }
 
+  const fetchPlayerData = async () => {
+    try {
+      console.log(address);
+      const response = await fetch('/api/get-player-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: address }),
+      });
+
+      const data = await response.json();
+      console.log(data);
+      setPlayerData(data);
+
+    } catch (error) {
+      console.error('Error fetching player data', error);
+    }
+  };
+
 
   /* 
    _______  ________ ________ _______  ________  ______  __    __ 
@@ -920,57 +945,26 @@ export default function Play() {
     fetch('/api/get-game-state')
       .then(response => response.json())
       .then(data => {
-        for (const key in data) {
-          if (data[key] === "True") {
-            setGetGameState(key);
-            break;
-          }
-        }
+        setGetGameState(data.current);
       })
       .catch(error => console.error(error));
-  
+
     refetchGetRoundMints();
     const roundMints = parseInt(getRoundMints, 10);
-    if(!isNaN(roundMints)) {
+    if (!isNaN(roundMints)) {
       setRoundMints(roundMints);
       console.log(`Mints: ${roundMints}`);
     }
-  
+
     refetchCurrentGeneration();
     const currentRound = parseInt(currentGeneration, 10);
-    if(!isNaN(currentRound)) {
+    if (!isNaN(currentRound)) {
       setRound(currentRound);
       console.log(`Round: ${currentRound}`);
     }
-  }, [currentGeneration, getRoundMints]);
-
-
-
-  useEffect(() => {
-    // Here you should fetch the initial data for the address
-    // and set it to the playerData state.
-    // For example:
-
-    const fetchPlayerData = async () => {
-      try {
-        const response = await fetch('/api/get-player-data', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ address }),
-        });
-
-        const data = await response.json();
-        setPlayerData(data);
-
-      } catch (error) {
-        console.error('Error fetching player data', error);
-      }
-    };
 
     fetchPlayerData();
-  }, [address]);
+  }, [currentGeneration, getRoundMints, address]);
 
   /*
    __    __ ________ __       __ __             ______   ______   ______  
