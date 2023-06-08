@@ -8,7 +8,7 @@ import ABI from '../abi/UNKNOWN.json'
 import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent } from 'wagmi'
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/BlackLogo.png'
-import TokenImage from '../../components/displayStats'
+import TokenImage from '../../components/displayImage'
 
 
 export default function Play() {
@@ -33,9 +33,14 @@ export default function Play() {
   const [totalCost, setTotalCost] = useState(0);
   const [value, setValue] = useState('');
   const argsArray = [1, 2, 3, 4, 5];
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [getGameState, setGetGameState] = useState("Loading...");
+  const [previousGameState, setPreviousGameState] = useState(null);
+  const [playerData, setPlayerData] = useState(null);
   const menuRef = useRef()
   const divRef = useRef(null);
+  const [passes, setPasses] = useState(0);
+  const [wins, setWins] = useState(0);
+
 
 
   // STORING USERS ADDRESS
@@ -54,33 +59,73 @@ export default function Play() {
                                                                                            
   */
 
+  useEffect(() => {
+    setPreviousGameState(getGameState);
+  }, [getGameState]);
 
   useContractEvent({
     address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
     abi: ABI,
-    eventName: 'SuccessfulPass',
-    async listener(log) {
-      try {
-        const player = log[0].args.player.toString();
-        setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
-
-        // Send a POST request to the API route to update the database
-        const response = await fetch('/api/update-passes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ address: player }),
-        });
-
-        const data = await response.json();
-        console.log(data.message);
-
-      } catch (error) {
-        console.error('Error updating successful passes', error);
-      }
+    eventName: 'GameStarted',
+    listener(log) {
+      const message = "Heating up";
+      console.log("Started");
+      setGetGameState("Minting");
+      setEvents(prevEvents => [...prevEvents, message]);
     },
-  });
+  })
+
+  useContractEvent({
+    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    abi: ABI,
+    eventName: 'GameResumed',
+    listener(log) {
+      const message = "Heating up";
+      console.log("Resumed");
+      setGetGameState(previousGameState);
+      {/* if(!setGetGameState(previousGameState) {
+            fetch the gamestate from db
+          } esle {
+            setGetGameState(previousGameState)
+          }
+      */}
+      setEvents(prevEvents => [...prevEvents, message]);
+    },
+  })
+
+  useContractEvent({
+    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    abi: ABI,
+    eventName: 'GamePaused',
+    listener(log) {
+      const message = "Cooling off";
+      console.log("Paused");
+      setGetGameState("Paused");
+      setEvents(prevEvents => [...prevEvents, message]);
+    },
+  })
+
+  useContractEvent({
+    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    abi: ABI,
+    eventName: 'GameRestarted',
+    listener(log) {
+      const message = "Game Over";
+      setGetGameState("Queued");
+      setEvents(prevEvents => [...prevEvents, message]);
+    },
+  })
+
+  useContractEvent({
+    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    abi: ABI,
+    eventName: 'FinalRoundStarted',
+    listener(log) {
+      const message = "HOT HANDZ";
+      setGetGameState("Final Round");
+      setEvents(prevEvents => [...prevEvents, message]);
+    },
+  })
 
   useContractEvent({
     address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
@@ -100,8 +145,18 @@ export default function Play() {
           body: JSON.stringify({ address: player }),
         });
 
-        const data = await response.json();
-        console.log(data.message);
+        // If the passing player is the connected address, fetch the latest data for this address
+        if (player === address) {
+          const response = await fetch(`/api/get-player-data/${address}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          const data = await response.json();
+          setWins(data.wins);
+        }
 
       } catch (error) {
         console.error('Error updating wins', error);
@@ -109,27 +164,107 @@ export default function Play() {
     },
   });
 
+  useContractEvent({
+    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    abi: ABI,
+    eventName: 'SuccessfulPass',
+    async listener(log) {
+      try {
+        const player = log[0].args.player.toString();
+        setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
 
+        // Send a POST request to the API route to update the database
+        const response = await fetch('/api/update-passes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address: player }),
+        });
+
+        if (player === address) {
+          const response = await fetch(`/api/get-player-data/${address}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          const data = await response.json();
+          setPasses(data.passes);
+        }
+
+      } catch (error) {
+        console.error('Error updating successful passes', error);
+      }
+    },
+  });
 
   useContractEvent({
     address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
     abi: ABI,
-    eventName: 'GamePaused',
-    listener(log) {
-      const message = "Game Paused";
-      setEvents(prevEvents => [...prevEvents, message]);
+    eventName: 'PotatoMinted',
+    async listener(log) {
+      try {
+        const player = log[0].args.player.toString();
+        const amount = log[0].args.amount.toString(); //Need this one
+        setEvents(prevEvents => [...prevEvents, `+${amount}: ${player}`]);
+
+        // Send a POST request to the API route to update the database
+        const response = await fetch('/api/update-mints', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address: player, amount }),
+        });
+
+        const data = await response.json();
+        console.log(data.message);
+
+      } catch (error) {
+        console.error('Error updating mints', error);
+      }
     },
-  })
+  });
 
   useContractEvent({
     address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
     abi: ABI,
-    eventName: 'GameRestarted',
-    listener(log) {
-      const message = "Game Restarted";
-      setEvents(prevEvents => [...prevEvents, message]);
+    eventName: 'NewRound',
+    async listener(log) {
+      try {
+        const round = log[0].args.currentGeneration.toString();
+        setEvents(prevEvents => [...prevEvents, `${round}`]);
+
+        {/*  
+          Someohow store the current round from the contract without having to update database
+        */}
+
+      } catch (error) {
+        console.error('Error updating mints', error);
+      }
     },
-  })
+  });
+
+  useContractEvent({
+    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    abi: ABI,
+    eventName: 'UpdatedTimer',
+    async listener(log) {
+      try {
+        const time = log[0].args.time.toString();
+        setEvents(prevEvents => [...prevEvents, `+${time}`]);
+
+        {/*  
+          Someohow store the time left from the contract without having to update database also count down from this time and pause when game is paused and resume when game is resumed
+        */}
+
+      } catch (error) {
+        console.error('Error updating timer', error);
+      }
+    },
+  });
 
   useContractEvent({
     address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
@@ -149,7 +284,6 @@ export default function Play() {
     },
   });
 
-
   useContractEvent({
     address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
     abi: ABI,
@@ -159,7 +293,8 @@ export default function Play() {
         if (typeof log[0]?.args?.tokenIdFrom === 'bigint' && typeof log[0]?.args?.tokenIdTo === 'bigint') {
           const tokenIdFrom = log[0]?.args?.tokenIdFrom?.toString();
           const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
-          setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo}`]);
+          const yielder = log[0]?.args?.potatoYielder?.toString();
+          setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo} ${yielder} now has the potato`]);
         } else {
           console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
         }
@@ -184,40 +319,6 @@ export default function Play() {
    \▓▓   \▓▓\▓▓▓▓▓▓▓▓\▓▓   \▓▓\▓▓▓▓▓▓▓      \▓▓   \▓▓ \▓▓▓▓▓▓  \▓▓▓▓▓▓ \▓▓   \▓▓ \▓▓▓▓▓▓ 
   
   */
-
-  // GETTING GAME STATE
-  const { data: getGameState, isLoading: loadingGameState, refetch: refetchGameState } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
-    abi: ABI,
-    functionName: 'getGameState',
-  })
-
-  // GETTING NUMBER OF PASSES
-  const { data: successfulPasses, isLoading: loadingPasses, refetch: refetchSuccessfulPasses } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
-    abi: ABI,
-    functionName: 'successfulPasses',
-    args: [address],
-  })
-  const passes = parseInt(successfulPasses, 10);
-
-  // GETTING NUMBER OF FAILS
-  const { data: failedPasses, isLoading: loadingFailedPasses, refetch: refetchFailedPasses } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
-    abi: ABI,
-    functionName: 'failedPasses',
-    args: [address],
-  })
-  const failed = parseInt(failedPasses, 10);
-
-  // GETTING NUMBER OF WINS
-  const { data: totalWins, isLoading: loadingWins, refetch: refetchTotalWins } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
-    abi: ABI,
-    functionName: 'totalWins',
-    args: [address],
-  })
-  const wins = parseInt(totalWins, 10);
 
   // GET MINT PRICE
   const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
@@ -596,17 +697,6 @@ export default function Play() {
     }
 
     const intervalId = setInterval(() => {
-      // refetchGameState();
-      // refetchSuccessfulPasses();
-      // refetchFailedPasses();
-      // refetchTotalWins();
-      // refetchPrice();
-      // refetchGetRoundMints();
-      // refetchGetActiveTokenCount();
-      // refetchMaxSupply();
-      // refetchUserHasPotatoToken();
-      // refetchGetExplosionTime();
-      // refetchPotatoTokenId();
       // refetchGetActiveTokens();
       // refetchCurrentGeneration();
       // refetchBalanceOf();
@@ -634,6 +724,32 @@ export default function Play() {
       window.localStorage.setItem('darkMode', darkMode);
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    // Here you should fetch the initial data for the address
+    // and set it to the playerData state.
+    // For example:
+
+    const fetchPlayerData = async () => {
+      try {
+        const response = await fetch('/api/get-player-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address }),
+        });
+
+        const data = await response.json();
+        setPlayerData(data);
+
+      } catch (error) {
+        console.error('Error fetching player data', error);
+      }
+    };
+
+    fetchPlayerData();
+  }, [address]);
 
   /*
    __    __ ________ __       __ __             ______   ______   ______  
@@ -708,7 +824,7 @@ export default function Play() {
           <div className={`${darkMode ? 'w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}>
             <h1 className={`${darkMode ? 'text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4' : "text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4"}`}>Hodl, Pass, Survive...</h1>
             <h2 className={`${darkMode ? 'text-xl font-bold mb-2 text-center' : "text-xl font-bold mb-2 text-center"}`}>
-              Game State: {loadingGameState ? 'Loading...' : getGameState}
+              Game State: {getGameState}
             </h2>
             <p className={`${darkMode ? 'text-sm text-center' : "text-sm text-center"}`}>This is the current game state. It will be updated automatically.</p>
           </div>
@@ -726,9 +842,6 @@ export default function Play() {
                   <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Statistics:</h2>
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
                     Successful Passes: {loadingPasses ? "Loading..." : passes}
-                  </p>
-                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                    Failed Passes: {loadingFailedPasses ? "Loading..." : failed}
                   </p>
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
                     Total Wins: {loadingWins ? "Loading..." : wins}

@@ -122,12 +122,11 @@ contract UNKNOWN is
     event GameRestarted(string message);
     event FinalRoundStarted(string message);
     event PotatoExploded(uint256 tokenId);
-    event PotatoMinted(address indexed player, uint32 amount);
     event NewRound(uint256 round);
     event HandsActivated(uint256 count);
     event UpdatedTimer(uint256 time);
-    event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo);
-    event PotatoObtained(address hotHands);
+    event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo, address yielder);
+    event PotatoObtained(address hotHands, uint256 tokenId);
     event RequestSent(uint256 requestId, uint32 numWords);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
     event FailedPass(address indexed player);
@@ -194,7 +193,6 @@ contract UNKNOWN is
 
         roundMints += count;
         tokensMintedPerRound[msg.sender] += count;
-        emit PotatoMinted(msg.sender, uint32(count));
     }
 
     function passPotato(uint256 tokenIdTo) public {
@@ -228,7 +226,7 @@ contract UNKNOWN is
             potatoTokenId = newPotatoTokenId;
 
             hands[potatoTokenId].hasPotato = true;
-            emit PotatoObtained(ownerOf(potatoTokenId));
+            emit PotatoObtained(ownerOf(potatoTokenId), potatoTokenId);
             
 
             TOTAL_PASSES += 1;
@@ -236,7 +234,7 @@ contract UNKNOWN is
             emit SuccessfulPass(msg.sender);
 
             checkAndProcessExplosion();
-            emit PotatoPassed(tokenIdFrom, tokenIdTo);
+            emit PotatoPassed(tokenIdFrom, tokenIdTo, ownerOf(potatoTokenId));
         }
     }
 
@@ -545,6 +543,7 @@ contract UNKNOWN is
         updateExplosionTimer();
         getExplosionTime();
         emit UpdatedTimer(_secondsLeft);
+        emit PotatoPassed(0, potatoTokenId, ownerOf(potatoTokenId));
     }
 
     function assignPotato(uint256 tokenId) internal {
@@ -556,6 +555,7 @@ contract UNKNOWN is
         require(_isTokenActive(tokenId), "Token is not active");
         potatoTokenId = tokenId;
         hands[potatoTokenId].hasPotato = true;
+         emit PotatoPassed(0, potatoTokenId, ownerOf(potatoTokenId));
     }
 
     function _findFirstActiveToken() internal view returns (uint256) {
