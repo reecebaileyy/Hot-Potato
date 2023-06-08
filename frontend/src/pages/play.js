@@ -34,9 +34,9 @@ export default function Play() {
   const [value, setValue] = useState('');
   const argsArray = [1, 2, 3, 4, 5];
   const [getGameState, setGetGameState] = useState("Loading...");
-  const [_roundMints, setRoundMints] = useState(0);
   const [previousGameState, setPreviousGameState] = useState(null);
   const [playerData, setPlayerData] = useState(null);
+  const [_roundMints, setRoundMints] = useState(0);
   const [round, setRound] = useState(0);
   const menuRef = useRef()
   const divRef = useRef(null);
@@ -80,6 +80,7 @@ export default function Play() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newState: "Minting" }),
       })
+      // CACHE THIS DATA IN LOCAL STORAGE
         .then(response => response.json())
         .then(data => console.log(data))
         .catch(error => console.error(error));
@@ -119,6 +120,7 @@ export default function Play() {
       } catch (error) {
         console.error(error);
       }
+      // CACHE THIS DATA IN LOCAL STORAGE
 
       setEvents(prevEvents => [...prevEvents, message]);
     },
@@ -140,7 +142,7 @@ export default function Play() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newState: "Paused" }),
-      })
+      })// CACHE THIS DATA IN LOCAL STORAGE
         .then(response => response.json())
         .then(data => console.log(data))
         .catch(error => console.error(error));
@@ -160,7 +162,7 @@ export default function Play() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newState: "Ended" }),
-      })
+      })// CACHE THIS DATA IN LOCAL STORAGE
         .then(response => response.json())
         .then(data => console.log(data))
         .catch(error => console.error(error));
@@ -182,7 +184,7 @@ export default function Play() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newState: "Final Round" }),
-      })
+      })// CACHE THIS DATA IN LOCAL STORAGE
         .then(response => response.json())
         .then(data => console.log(data))
         .catch(error => console.error(error));
@@ -271,30 +273,37 @@ export default function Play() {
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
-        let _prevRoundMints = _roundMints;
-        setRoundMints(_prevRoundMints + parseInt(log[0].args.amount));
-        console.log(`Minted ${_roundMints} potatoes this round`);
-        const player = log[0].args.player.toString();
-        const amount = String(log[0].args.amount); //Need this one
-        setEvents(prevEvents => [...prevEvents, `+${amount}: ${player}`]);
-
-        // Send a POST request to the API route to update the database
-        const response = await fetch('/api/update-mints', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ address: player, amount }),
+        const amount = parseInt(log[0].args.amount);
+        setRoundMints(prevRoundMints => {
+          const newRoundMints = prevRoundMints + amount;
+          console.log(`Minted ${newRoundMints} potatoes this round`);
+          return newRoundMints;
         });
+  
+        const player = log[0].args.player.toString();
+        const amountDisplay = String(log[0].args.amount); //Need this one
+        setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
 
+        // CACHE THIS DATA IN LOCAL STORAGE
+
+        // // Send a POST request to the API route to update the database
+        // const response = await fetch('/api/update-mints', {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify({ address: player, amount: String(amount) }),
+        // });
+  
         const data = await response.json();
         console.log(data.message);
-
+  
       } catch (error) {
         console.error('Error updating mints', error);
       }
     },
   });
+  
 
   useContractEvent({
   address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
@@ -309,7 +318,7 @@ export default function Play() {
       setRound(currentRound);
     } catch (error) {
       console.error('Error updating mints', error);
-    }
+    }// CACHE THIS DATA IN LOCAL STORAGE
   },
 });
 
@@ -332,7 +341,7 @@ export default function Play() {
 
       } catch (error) {
         console.error('Error updating timer', error);
-      }
+      }// CACHE THIS DATA IN LOCAL STORAGE
     },
   });
 
@@ -648,12 +657,16 @@ export default function Play() {
   }
 
   const handleRestartGame = () => {
-    if (!address) {
-      alert("please connect to join the heat!!!")
-    } else if (getGameState !== "Ended" && getGameState !== "Paused") {
-      alert("The game is not over!");
-    } else {
-      _restartGame?.();
+    try {
+      if (!address) {
+        alert("please connect to join the heat!!!")
+      } else if (getGameState !== "Ended" && getGameState !== "Paused") {
+        alert("The game is not over!");
+      } else {
+        _restartGame?.();
+      }
+    } catch (error) {
+      console.log(error)
     }
   }
 
