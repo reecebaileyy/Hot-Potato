@@ -301,18 +301,19 @@ export default function Play() {
     async listener(log) {
       try {
         console.log(`new round ${log[0].args.currentGeneration}`);
-        const round = parseInt(log[0].args.currentGeneration);
-        setEvents(prevEvents => [...prevEvents, `Round: ${round.toString()}`]);
-
+        const round = String(log[0].args.currentGeneration); // Convert BigInt to string
+        setEvents(prevEvents => [...prevEvents, `Round: ${round}`]);
+  
         {/*  
           Someohow store the current round from the contract without having to update database
         */}
-
+  
       } catch (error) {
         console.error('Error updating mints', error);
       }
     },
   });
+  
 
   useContractEvent({
     address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
