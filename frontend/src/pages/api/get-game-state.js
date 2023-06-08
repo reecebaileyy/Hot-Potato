@@ -10,6 +10,9 @@ export default async function handler(req, res) {
       return;
     }
 
+    // Set the cache-control header to stale-while-revalidate with a max age of 1 hour
+    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
+
     res.status(200).json(gameState);
   } catch (error) {
     console.error(error);

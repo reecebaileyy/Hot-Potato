@@ -60,6 +60,19 @@ export default function Play() {
    \▓▓▓▓▓▓▓▓    \▓    \▓▓▓▓▓▓▓▓\▓▓   \▓▓   \▓▓        \▓▓   \▓▓ \▓▓▓▓▓▓  \▓▓▓▓▓▓ \▓▓   \▓▓ \▓▓▓▓▓▓ 
                                                                                            
   */
+/*
+                                                                                     
+  ▄▄█▀▀▀█▄█                                      ▄█▀▀▀█▄█ ██            ██           
+▄██▀     ▀█                                     ▄██    ▀█ ██            ██           
+██▀       ▀ ▄█▀██▄ ▀████████▄█████▄   ▄▄█▀██    ▀███▄   ██████ ▄█▀██▄ ██████  ▄▄█▀██ 
+██         ██   ██   ██    ██    ██  ▄█▀   ██     ▀█████▄ ██  ██   ██   ██   ▄█▀   ██
+██▄    ▀████▄█████   ██    ██    ██  ██▀▀▀▀▀▀   ▄     ▀██ ██   ▄█████   ██   ██▀▀▀▀▀▀
+▀██▄     ████   ██   ██    ██    ██  ██▄    ▄   ██     ██ ██  ██   ██   ██   ██▄    ▄
+  ▀▀███████▀████▀██▄████  ████  ████▄ ▀█████▀   █▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀
+                                                                                     
+                                                                                     
+
+*/
 
   useEffect(() => {
     setPreviousGameState(getGameState);
@@ -80,7 +93,7 @@ export default function Play() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newState: "Minting" }),
       })
-      // CACHE THIS DATA IN LOCAL STORAGE
+        // CACHE THIS DATA IN LOCAL STORAGE
         .then(response => response.json())
         .then(data => console.log(data))
         .catch(error => console.error(error));
@@ -191,6 +204,20 @@ export default function Play() {
     },
   })
 
+
+/*
+             ▄▄                                                                           
+▀███▀▀▀██▄ ▀███                                        ▄█▀▀▀█▄█ ██            ██          
+  ██   ▀██▄  ██                                       ▄██    ▀█ ██            ██          
+  ██   ▄██   ██  ▄█▀██▄ ▀██▀   ▀██▀ ▄▄█▀██▀███▄███    ▀███▄   ██████ ▄█▀██▄ ██████ ▄██▀███
+  ███████    ██ ██   ██   ██   ▄█  ▄█▀   ██ ██▀ ▀▀      ▀█████▄ ██  ██   ██   ██   ██   ▀▀
+  ██         ██  ▄█████    ██ ▄█   ██▀▀▀▀▀▀ ██        ▄     ▀██ ██   ▄█████   ██   ▀█████▄
+  ██         ██ ██   ██     ███    ██▄    ▄ ██        ██     ██ ██  ██   ██   ██   █▄   ██
+▄████▄     ▄████▄████▀██▄   ▄█      ▀█████▀████▄      █▀█████▀  ▀████████▀██▄ ▀██████████▀
+                          ▄█                                                              
+                        ██▀                                                               
+*/
+
   useContractEvent({
     address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
     abi: ABI,
@@ -266,6 +293,16 @@ export default function Play() {
     },
   });
 
+/*
+                                                                     ▄▄                   
+▀███▀▀▀██▄           ██            ██               ▀████▄     ▄███▀ ██              ██   
+  ██   ▀██▄          ██            ██                 ████    ████                   ██   
+  ██   ▄██  ▄██▀██▄██████ ▄█▀██▄ ██████  ▄██▀██▄      █ ██   ▄█ ██ ▀███ ▀████████▄ ██████ 
+  ███████  ██▀   ▀██ ██  ██   ██   ██   ██▀   ▀██     █  ██  █▀ ██   ██   ██    ██   ██   
+  ██       ██     ██ ██   ▄█████   ██   ██     ██     █  ██▄█▀  ██   ██   ██    ██   ██   
+  ██       ██▄   ▄██ ██  ██   ██   ██   ██▄   ▄██     █  ▀██▀   ██   ██   ██    ██   ██   
+▄████▄      ▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀    ▄███▄ ▀▀  ▄████▄████▄████  ████▄ ▀████
+*/
 
   useContractEvent({
     address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
@@ -279,7 +316,7 @@ export default function Play() {
           console.log(`Minted ${newRoundMints} potatoes this round`);
           return newRoundMints;
         });
-  
+
         const player = log[0].args.player.toString();
         const amountDisplay = String(log[0].args.amount); //Need this one
         setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
@@ -294,36 +331,54 @@ export default function Play() {
         //   },
         //   body: JSON.stringify({ address: player, amount: String(amount) }),
         // });
-  
+
         const data = await response.json();
         console.log(data.message);
-  
+
       } catch (error) {
         console.error('Error updating mints', error);
       }
     },
   });
-  
 
+/*
+                                                  ▄▄  
+▀███▀▀▀██▄                                      ▀███  
+  ██   ▀██▄                                       ██  
+  ██   ▄██   ▄██▀██▄▀███  ▀███ ▀████████▄    ▄█▀▀███  
+  ███████   ██▀   ▀██ ██    ██   ██    ██  ▄██    ██  
+  ██  ██▄   ██     ██ ██    ██   ██    ██  ███    ██  
+  ██   ▀██▄ ██▄   ▄██ ██    ██   ██    ██  ▀██    ██  
+▄████▄ ▄███▄ ▀█████▀  ▀████▀███▄████  ████▄ ▀████▀███▄
+*/
   useContractEvent({
-  address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
-  abi: ABI,
-  eventName: 'NewRound',
-  async listener(log) {
-    try {
-      console.log(log); 
-      console.log(`new round ${log[0]?.args?.round}`);
-      const currentRound = String(log[0]?.args?.round); 
-      console.log(`round: ${currentRound}`);
-      setRound(currentRound);
-    } catch (error) {
-      console.error('Error updating mints', error);
-    }// CACHE THIS DATA IN LOCAL STORAGE
-  },
-});
+    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    abi: ABI,
+    eventName: 'NewRound',
+    async listener(log) {
+      try {
+        console.log(log);
+        console.log(`new round ${log[0]?.args?.round}`);
+        const currentRound = String(log[0]?.args?.round);
+        console.log(`round: ${currentRound}`);
+        setRound(currentRound);
+      } catch (error) {
+        console.error('Error updating mints', error);
+      }// CACHE THIS DATA IN LOCAL STORAGE
+    },
+  });
 
 
-
+/*
+             ▄▄                                   
+███▀▀██▀▀███ ██                                   
+█▀   ██   ▀█                                      
+     ██    ▀███ ▀████████▄█████▄   ▄▄█▀██▀███▄███ 
+     ██      ██   ██    ██    ██  ▄█▀   ██ ██▀ ▀▀ 
+     ██      ██   ██    ██    ██  ██▀▀▀▀▀▀ ██     
+     ██      ██   ██    ██    ██  ██▄    ▄ ██     
+   ▄████▄  ▄████▄████  ████  ████▄ ▀█████▀████▄   
+*/
 
   useContractEvent({
     address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
@@ -345,6 +400,18 @@ export default function Play() {
     },
   });
 
+/*
+                                 ▄▄                   ▄▄                      
+▀███▀▀▀███                     ▀███                   ██                      
+  ██    ▀█                       ██                                           
+  ██   █  ▀██▀   ▀██▀████████▄   ██   ▄██▀██▄ ▄██▀██████   ▄██▀██▄▀████████▄  
+  ██████    ▀██ ▄█▀   ██   ▀██   ██  ██▀   ▀████   ▀▀ ██  ██▀   ▀██ ██    ██  
+  ██   █  ▄   ███     ██    ██   ██  ██     ██▀█████▄ ██  ██     ██ ██    ██  
+  ██     ▄█ ▄█▀ ██▄   ██   ▄██   ██  ██▄   ▄███▄   ██ ██  ██▄   ▄██ ██    ██  
+▄████████████▄   ▄██▄ ██████▀  ▄████▄ ▀█████▀ ██████▀████▄ ▀█████▀▄████  ████▄
+                      ██                                                      
+                    ▄████▄
+*/
   useContractEvent({
     address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
     abi: ABI,
@@ -363,6 +430,17 @@ export default function Play() {
       }
     },
   });
+
+/*
+                                 
+▀███▀▀▀██▄                       
+  ██   ▀██▄                      
+  ██   ▄██ ▄█▀██▄  ▄██▀███▄██▀███
+  ███████ ██   ██  ██   ▀▀██   ▀▀
+  ██       ▄█████  ▀█████▄▀█████▄
+  ██      ██   ██  █▄   ███▄   ██
+▄████▄    ▀████▀██▄██████▀██████▀                           
+*/
 
   useContractEvent({
     address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
@@ -473,14 +551,20 @@ export default function Play() {
     abi: ABI,
     functionName: 'currentGeneration',
   })
-  const currentRound = parseInt(currentGeneration, 10);
+  const _currentGeneration = parseInt(currentGeneration, 10);
+
+  const { data: getRoundMints, isLoading: loadingGetRoundMints, refetch: refetchGetRoundMints } = useContractRead({
+    address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
+    abi: ABI,
+    functionName: 'getRoundMints',
+  })
 
   // GET CURRENT GENERATION
   const { data: Winners, isLoadging: loadingWinners, refetch: refetchWinner } = useContractRead({
     address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
     abi: ABI,
     functionName: 'Winners',
-    args: [currentRound],
+    args: [_currentGeneration],
   })
   const winner = Winners?.toString();
 
@@ -615,6 +699,33 @@ export default function Play() {
    \▓▓   \▓▓\▓▓   \▓▓\▓▓   \▓▓\▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓▓\▓▓▓▓▓▓▓▓\▓▓   \▓▓ \▓▓▓▓▓▓ 
                                                                                                
   */
+
+  function fetchGameStateAndMore() {
+    // Fetch the game state
+    fetch('/api/get-game-state')
+      .then(response => response.json())
+      .then(data => {
+        for (const key in data) {
+          if (data[key] === "True") {
+            setGetGameState(key);
+            break;
+          }
+        }
+      })
+      .catch(error => console.error(error));
+
+    // // Fetch other data...
+    // fetch('/api/get-other-data')
+    //   .then(response => response.json())
+    //   .then(data => {
+    //     // Do something with the data...
+    //   })
+    //   .catch(error => console.error(error));
+
+    // And so on...
+  }
+
+
 
   const handleStartGame = () => {
     if (!address) {
@@ -781,6 +892,9 @@ export default function Play() {
       // refetchGetActiveTokenIds();
       // refetchGetPotatoOwner();
       // allActivetokenIds();
+      // refetchCurrentGeneration();
+      // setRound(currentRound);
+      // console.log(currentRound)
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
       console.log("A BLAZE PRODUCTION");
@@ -801,6 +915,36 @@ export default function Play() {
       window.localStorage.setItem('darkMode', darkMode);
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    fetch('/api/get-game-state')
+      .then(response => response.json())
+      .then(data => {
+        for (const key in data) {
+          if (data[key] === "True") {
+            setGetGameState(key);
+            break;
+          }
+        }
+      })
+      .catch(error => console.error(error));
+  
+    refetchGetRoundMints();
+    const roundMints = parseInt(getRoundMints, 10);
+    if(!isNaN(roundMints)) {
+      setRoundMints(roundMints);
+      console.log(`Mints: ${roundMints}`);
+    }
+  
+    refetchCurrentGeneration();
+    const currentRound = parseInt(currentGeneration, 10);
+    if(!isNaN(currentRound)) {
+      setRound(currentRound);
+      console.log(`Round: ${currentRound}`);
+    }
+  }, [currentGeneration, getRoundMints]);
+
+
 
   useEffect(() => {
     // Here you should fetch the initial data for the address
@@ -897,7 +1041,9 @@ export default function Play() {
         </nav>
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
-
+          {!getGameState && (
+            <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/5  hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Refresh Data</button>
+          )}
           <div className={`${darkMode ? 'w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}>
             <h1 className={`${darkMode ? 'text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4' : "text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4"}`}>Hodl, Pass, Survive...</h1>
             <h2 className={`${darkMode ? 'text-xl font-bold mb-2 text-center' : "text-xl font-bold mb-2 text-center"}`}>
