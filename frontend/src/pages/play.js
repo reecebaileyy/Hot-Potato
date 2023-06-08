@@ -300,8 +300,8 @@ export default function Play() {
     eventName: 'NewRound',
     async listener(log) {
       try {
-        console.log(`new round ${log[0]}`);
-        const round = log[0].args.currentGeneration.toString();
+        console.log(`new round ${log[0].args.currentGeneration}`);
+        const round = parseInt(log[0].args.currentGeneration);
         setEvents(prevEvents => [...prevEvents, `${round}`]);
 
         {/*  
