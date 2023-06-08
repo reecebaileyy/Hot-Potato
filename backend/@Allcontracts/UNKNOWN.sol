@@ -132,6 +132,7 @@ contract UNKNOWN is
     event FailedPass(address indexed player);
     event SuccessfulPass(address indexed player);
     event PlayerWon(address indexed player);
+    event PotatoMinted(uint32 amount, address indexed player);
 
     constructor(
         uint64 subscriptionId
@@ -181,10 +182,14 @@ contract UNKNOWN is
         // require(roundMints < _maxsupply, "Max NFTs minted");
         require(count > 0, "Must mint at least one NFT");
 
-        
+        uint32 amount = 0;
+
         for (uint256 i = 0; i < count; i++) {
+            amount++;
             _mintHand();
         }
+
+        emit PotatoMinted(amount, msg.sender);
 
         if (!isPlayer[msg.sender]) {
             players.push(msg.sender);

@@ -7,9 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model GameState {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  Ended       String
+  Final_Round String @map("Final Round")
+  Minting     String
+  Paused      String
+  Playing     String
+  Queued      String
+}
+
 model Leaderboard {
-  id               String @id @default(auto()) @map("_id") @db.ObjectId
-  address          String
-  passes           Int
-  wins             Int
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  address String
+  fails   BigInt
+  passes  BigInt
+  wins    BigInt
 }

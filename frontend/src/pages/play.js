@@ -64,7 +64,7 @@ export default function Play() {
   }, [getGameState]);
 
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'GameStarted',
     listener(log) {
@@ -72,67 +72,126 @@ export default function Play() {
       console.log("Started");
       setGetGameState("Minting");
       setEvents(prevEvents => [...prevEvents, message]);
+
+      fetch('/api/update-game-state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newState: "Minting" }),
+      })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
     },
   })
 
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'GameResumed',
-    listener(log) {
+    async listener(log) {
       const message = "Heating up";
       console.log("Resumed");
-      setGetGameState(previousGameState);
-      {/* if(!setGetGameState(previousGameState) {
-            fetch the gamestate from db
-          } esle {
-            setGetGameState(previousGameState)
-          }
-      */}
+
+      try {
+        // Fetch the current game state
+        const response = await fetch('/api/get-game-state');
+        const data = await response.json();
+
+        // Find the previous game state
+        const previousGameState = Object.keys(data).find(key => data[key] === "Prev");
+
+        if (previousGameState) {
+          setGetGameState(previousGameState);
+
+          // Update the game state in the database
+          const updateResponse = await fetch('/api/update-game-state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newState: previousGameState }),
+          });
+          const updateData = await updateResponse.json();
+          console.log(updateData);
+        } else {
+          console.log("No previous game state found");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
 
+
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'GamePaused',
     listener(log) {
+      console.log(log);
       const message = "Cooling off";
       console.log("Paused");
       setGetGameState("Paused");
       setEvents(prevEvents => [...prevEvents, message]);
+
+      fetch('/api/update-game-state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newState: "Paused" }),
+      })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
     },
   })
 
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'GameRestarted',
     listener(log) {
       const message = "Game Over";
       setGetGameState("Queued");
       setEvents(prevEvents => [...prevEvents, message]);
+
+      fetch('/api/update-game-state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newState: "Ended" }),
+      })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
     },
   })
 
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'FinalRoundStarted',
     listener(log) {
       const message = "HOT HANDZ";
       setGetGameState("Final Round");
       setEvents(prevEvents => [...prevEvents, message]);
+
+      fetch('/api/update-game-state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newState: "Final Round" }),
+      })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
     },
   })
 
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'PlayerWon',
     async listener(log) {
       try {
+        console.log(`Player ${log} won!`)
         const player = log[0].args.player.toString();
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
 
@@ -165,11 +224,12 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'SuccessfulPass',
     async listener(log) {
       try {
+        console.log(`Successful pass by ${log}`);
         const player = log[0].args.player.toString();
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
 
@@ -200,12 +260,16 @@ export default function Play() {
     },
   });
 
+
+  let _roundMints = 0;
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
+        _roundMints += parseInt(log[0].args.amount);
+        console.log(`Minted ${_roundMints} potatoes this round`);
         const player = log[0].args.player.toString();
         const amount = log[0].args.amount.toString(); //Need this one
         setEvents(prevEvents => [...prevEvents, `+${amount}: ${player}`]);
@@ -229,11 +293,12 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
       try {
+        console.log(`new round ${log[0]}`);
         const round = log[0].args.currentGeneration.toString();
         setEvents(prevEvents => [...prevEvents, `${round}`]);
 
@@ -248,11 +313,12 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'UpdatedTimer',
     async listener(log) {
       try {
+        console.log(`updated timer ${log}`);
         const time = log[0].args.time.toString();
         setEvents(prevEvents => [...prevEvents, `+${time}`]);
 
@@ -267,11 +333,12 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'PotatoExploded',
     listener(log) {
       try {
+        console.log(`potato exploded ${log}`)
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
@@ -285,11 +352,12 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     eventName: 'PotatoPassed',
     listener(log) {
       try {
+        console.log(`potato passed ${log}`)
         if (typeof log[0]?.args?.tokenIdFrom === 'bigint' && typeof log[0]?.args?.tokenIdTo === 'bigint') {
           const tokenIdFrom = log[0]?.args?.tokenIdFrom?.toString();
           const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
@@ -322,23 +390,15 @@ export default function Play() {
 
   // GET MINT PRICE
   const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: '_price',
   })
   const price = parseInt(_price, 10);
 
   // GET NUMBER OF MINTS DURING THE ROUND
-  const { data: getRoundMints, isLoading: loadingMints, refetch: refetchGetRoundMints } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
-    abi: ABI,
-    functionName: 'getRoundMints',
-  })
-  const _roundMints = parseInt(getRoundMints, 10);
-
-  // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'getActiveTokenCount',
     args: [address],
@@ -347,7 +407,7 @@ export default function Play() {
 
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: '_maxsupply',
   })
@@ -355,7 +415,7 @@ export default function Play() {
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
@@ -364,7 +424,7 @@ export default function Play() {
 
   // GET POTATO HOLDER
   const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'getPotatoOwner',
   })
@@ -372,7 +432,7 @@ export default function Play() {
 
   // GET POTATO TOKEN ID
   const { data: getExplosionTime, isLoading: loadingExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'getExplosionTime',
   })
@@ -380,7 +440,7 @@ export default function Play() {
 
   // GET EXPLOSION TIME
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
@@ -388,7 +448,7 @@ export default function Play() {
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
@@ -396,7 +456,7 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'currentGeneration',
   })
@@ -404,7 +464,7 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: Winners, isLoadging: loadingWinners, refetch: refetchWinner } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'Winners',
     args: [currentRound],
@@ -415,7 +475,7 @@ export default function Play() {
   argsArray.map(tokenId => <TokenImage key={tokenId} tokenId={tokenId} ABI={ABI} />)
 
   const { data: balanceOf, isLoading: loadingBalance, refetch: refetchBalanceOf } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'balanceOf',
     args: [address],
@@ -423,13 +483,13 @@ export default function Play() {
   const _balanceOf = parseInt(balanceOf, 10);
 
   const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: '_owner',
   })
 
   const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'getActiveTokenIds',
   })
@@ -450,7 +510,7 @@ export default function Play() {
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount],
@@ -459,7 +519,7 @@ export default function Play() {
 
   // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
@@ -470,7 +530,7 @@ export default function Play() {
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'checkExplosion',
   })
@@ -491,7 +551,7 @@ export default function Play() {
   */
   // START GAME
   const { config: startGame } = usePrepareContractWrite({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'startGame',
   })
@@ -499,7 +559,7 @@ export default function Play() {
 
   // END MINTING
   const { config: endMinting } = usePrepareContractWrite({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'endMinting',
   })
@@ -507,7 +567,7 @@ export default function Play() {
 
   // PAUSE GAME
   const { config: pauseGame } = usePrepareContractWrite({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'pauseGame',
   })
@@ -515,7 +575,7 @@ export default function Play() {
 
   // RESUME GAME
   const { config: resumeGame } = usePrepareContractWrite({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'resumeGame',
   })
@@ -523,7 +583,7 @@ export default function Play() {
 
   // RESTART GAME 
   const { config: restartGame } = usePrepareContractWrite({
-    address: '0x9E9674118e0F2d100cbC22DE8F719060C371D42f',
+    address: '0xeA9eEbaB25b0E09eC275431f8405d3cD0b732d27',
     abi: ABI,
     functionName: 'restartGame',
   })
@@ -841,7 +901,7 @@ export default function Play() {
                 <>
                   <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Statistics:</h2>
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                    Successful Passes: {loadingPasses ? "Loading..." : passes}
+                    Successful Passes: {!passes ? "Loading..." : passes}
                   </p>
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
                     Total Wins: {loadingWins ? "Loading..." : wins}
