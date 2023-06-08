@@ -82,11 +82,7 @@ contract InventoryManager {
     }
 
     /*///////////////////////////////////////////////////////////////
-                    INVENTORY MANAGheader,
-                    get(Part.background, background_),
-                    get(Part.hand_type, hand_type_),
-                    hasPotato_ ? get(Part.potato, potato_) : "",
-                    footerEMENT
+                    INVENTORY MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
     function setBackgrounds(uint8 count, address source) external {
