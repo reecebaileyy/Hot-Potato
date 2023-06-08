@@ -34,6 +34,7 @@ export default function Play() {
   const [value, setValue] = useState('');
   const argsArray = [1, 2, 3, 4, 5];
   const [getGameState, setGetGameState] = useState("Loading...");
+  const [_roundMints, setRoundMints] = useState(0);
   const [previousGameState, setPreviousGameState] = useState(null);
   const [playerData, setPlayerData] = useState(null);
   const [round, setRound] = useState(0);
@@ -164,7 +165,7 @@ export default function Play() {
         .then(data => console.log(data))
         .catch(error => console.error(error));
 
-      _roundMints = 0;
+      setRoundMints(0);
     },
   })
 
@@ -264,17 +265,17 @@ export default function Play() {
   });
 
 
-  let _roundMints = 0;
   useContractEvent({
     address: '0x68583053211Ff2BddefBc503a171B543FfF45f78',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
-        _roundMints += parseInt(log[0].args.amount);
+        let _prevRoundMints = _roundMints;
+        setRoundMints(_prevRoundMints + parseInt(log[0].args.amount));
         console.log(`Minted ${_roundMints} potatoes this round`);
         const player = log[0].args.player.toString();
-        const amount = log[0].args.amount.toString(); //Need this one
+        const amount = String(log[0].args.amount); //Need this one
         setEvents(prevEvents => [...prevEvents, `+${amount}: ${player}`]);
 
         // Send a POST request to the API route to update the database
@@ -306,8 +307,6 @@ export default function Play() {
       const currentRound = String(log[0]?.args?.round); 
       console.log(`round: ${currentRound}`);
       setRound(currentRound);
-      setEvents(prevEvents => [...prevEvents, `Round: ${round}`]);
-
     } catch (error) {
       console.error('Error updating mints', error);
     }
