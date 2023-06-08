@@ -614,7 +614,6 @@ export default function Play() {
       // refetchGetActiveTokenIds();
       // refetchGetPotatoOwner();
       // allActivetokenIds();
-      refetchImageString();
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
       console.log("A BLAZE PRODUCTION");

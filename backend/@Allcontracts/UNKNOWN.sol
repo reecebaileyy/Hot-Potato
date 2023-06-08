@@ -80,6 +80,7 @@ contract UNKNOWN is
     uint256 public _maxperwallet = 3;
     uint256 public roundMints = 0;
     uint256 public activeAddresses = 0;
+    uint256 internal _secondsLeft;
 
     uint256 private FINAL_POTATO_EXPLOSION_DURATION = 10 minutes;
     uint256 private remainingTime;
@@ -117,9 +118,16 @@ contract UNKNOWN is
 
     event GameStarted(string message);
     event GamePaused(string message);
+    event GameResumed(string message);
     event GameRestarted(string message);
+    event FinalRoundStarted(string message);
     event PotatoExploded(uint256 tokenId);
+    event PotatoMinted(address indexed player, uint32 amount);
+    event NewRound(uint256 round);
+    event HandsActivated(uint256 count);
+    event UpdatedTimer(uint256 time);
     event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo);
+    event PotatoObtained(address hotHands);
     event RequestSent(uint256 requestId, uint32 numWords);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
     event FailedPass(address indexed player);
@@ -186,6 +194,7 @@ contract UNKNOWN is
 
         roundMints += count;
         tokensMintedPerRound[msg.sender] += count;
+        emit PotatoMinted(msg.sender, uint32(count));
     }
 
     function passPotato(uint256 tokenIdTo) public {
@@ -219,6 +228,8 @@ contract UNKNOWN is
             potatoTokenId = newPotatoTokenId;
 
             hands[potatoTokenId].hasPotato = true;
+            emit PotatoObtained(ownerOf(potatoTokenId));
+            
 
             TOTAL_PASSES += 1;
             successfulPasses[msg.sender] += 1;
@@ -243,10 +254,11 @@ contract UNKNOWN is
         return count;
     }
 
-    function getExplosionTime() public view returns (uint256) {
+    function getExplosionTime() public returns (uint256) {
         if (block.timestamp >= EXPLOSION_TIME) {
             return 0;
         } else {
+            _secondsLeft = EXPLOSION_TIME - block.timestamp;
             return EXPLOSION_TIME - block.timestamp;
         }
     }
@@ -349,12 +361,14 @@ contract UNKNOWN is
         );
         gameState = GameState.Minting;
         currentGeneration += 1;
+        emit NewRound(currentGeneration);
         emit GameStarted("The game has started");
     }
 
     function endMinting() external onlyOwner {
         require(gameState == GameState.Minting, "Game not minting");
         randomize();
+        emit HandsActivated(activeTokens.length);
     }
 
     function pauseGame() external onlyOwner {
@@ -382,6 +396,7 @@ contract UNKNOWN is
             EXPLOSION_TIME = block.timestamp + remainingTime;
         }
         gameState = previousGameState;
+        emit GameResumed("The game has resumed");
     }
 
     function restartGame() external onlyOwner {
@@ -528,6 +543,8 @@ contract UNKNOWN is
 
         gameState = GameState.Playing;
         updateExplosionTimer();
+        getExplosionTime();
+        emit UpdatedTimer(_secondsLeft);
     }
 
     function assignPotato(uint256 tokenId) internal {
@@ -644,6 +661,7 @@ contract UNKNOWN is
         // 5. Check if the game should move to the final round or end
         if (activeAddresses == 2) {
             gameState = GameState.FinalRound;
+            emit FinalRoundStarted("Final Round Started");
             assignPotato(_findNextActiveToken());
         } else if (activeAddresses < 2) {
             gameState = GameState.Ended;
@@ -651,6 +669,8 @@ contract UNKNOWN is
             Winners[currentGeneration] = ownerOf(activeTokens[1]);
         } else {
             updateExplosionTimer();
+            getExplosionTime();
+            emit UpdatedTimer(_secondsLeft);
             // calculate the index based on the current activeTokens.length
             if (indexToAssign == 0 && activeTokens.length > 1) {
                 indexToAssign = 1;
@@ -659,6 +679,8 @@ contract UNKNOWN is
         }
 
         updateExplosionTimer();
+        getExplosionTime();
+        emit UpdatedTimer(_secondsLeft);
         _isExplosionInProgress = false;
     }
 
