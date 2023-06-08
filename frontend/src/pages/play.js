@@ -162,6 +162,8 @@ export default function Play() {
         .then(response => response.json())
         .then(data => console.log(data))
         .catch(error => console.error(error));
+
+        _roundMints = 0;
     },
   })
 
@@ -1049,23 +1051,11 @@ export default function Play() {
                             <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                               onClick={handleMint}
                             >Join Round!</button>
-                            <p>
-                              {loadingMints ? (
-                                <p className="text-lg text-center mb-4">Loading Mints...</p>
-                              ) : (
-                                <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
-                              )}
-                            </p>
+                            <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
                           </>
                           :
                           <>
-                            <p>
-                              {loadingMints ? (
-                                <p className="text-3xl text-center mb-4">Loading Mints...</p>
-                              ) : (
-                                <p className={`text-3xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
-                              )}
-                            </p>
+                              <p className={`text-3xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
                             <p1 className={`text-2xl md:text-xl lg:text-3xl text-center font-bold ${darkMode ? 'text-white' : 'text-black'}`}>
                               Connect first to join the fun!
                             </p1>
