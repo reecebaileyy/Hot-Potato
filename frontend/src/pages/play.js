@@ -302,7 +302,7 @@ export default function Play() {
       try {
         console.log(`new round ${log[0].args.currentGeneration}`);
         const round = parseInt(log[0].args.currentGeneration);
-        setEvents(prevEvents => [...prevEvents, `${round}`]);
+        setEvents(prevEvents => [...prevEvents, `Round: ${round.toString()}`]);
 
         {/*  
           Someohow store the current round from the contract without having to update database
