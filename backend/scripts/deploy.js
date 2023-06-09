@@ -38,18 +38,18 @@ async function main() {
   const potato = await Potato.deploy();
   await potato.deployed();
 
-  console.log(`Main Contract was deployed to https://mumbai.polygonscan.com/${unknown.address}`);
+  console.log(`Main Contract was deployed to https://mumbai.polygonscan.com/address/${unknown.address}`);
   console.log(
-    `InventoryManager deployed to https://mumbai.polygonscan.com/${inventorymanager.address}`
+    `InventoryManager deployed to https://mumbai.polygonscan.com/address/${inventorymanager.address}`
   );
   console.log(
-    `Backgrounds deployed to https://mumbai.polygonscan.com/${backgrounds.address}`
+    `Backgrounds deployed to https://mumbai.polygonscan.com/address/${backgrounds.address}`
   );
   console.log(
-    `Hands deployed to https://mumbai.polygonscan.com/${hands.address}`
+    `Hands deployed to https://mumbai.polygonscan.com/address/${hands.address}`
   );
   console.log(
-    `potato deployed to https://mumbai.polygonscan.com/${potato.address}`
+    `potato deployed to https://mumbai.polygonscan.com/address/${potato.address}`
   );
 }
 

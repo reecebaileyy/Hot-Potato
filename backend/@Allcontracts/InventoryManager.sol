@@ -135,9 +135,9 @@ contract InventoryManager {
     }
     string memory sig;
     if (part == Part.background) {
-        sig = "getBlue()";
+        sig = "getPurple()";
     } else if (part == Part.hand_type) {
-        sig = "getHand1()";
+        sig = "getGreenSlime()";
     } else if (part == Part.potato) {
         sig = "getPotato()";
     } else {
