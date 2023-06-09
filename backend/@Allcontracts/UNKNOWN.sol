@@ -19,6 +19,7 @@ interface MetadataHandler {
         uint8 hand_type_,
         bool hasPotato_,
         uint32 generation_,
+        bool isActive_,
         uint8 potato_
     ) external view returns (string memory);
 }
@@ -26,6 +27,7 @@ interface MetadataHandler {
 struct Hand {
     bool hasPotato;
     uint32 generation;
+    bool isActive;
     uint8 background;
     uint8 hand_type;
     uint8 potato;
@@ -232,7 +234,6 @@ contract UNKNOWN is
 
             hands[potatoTokenId].hasPotato = true;
             emit PotatoObtained(ownerOf(potatoTokenId), potatoTokenId);
-            
 
             TOTAL_PASSES += 1;
             successfulPasses[msg.sender] += 1;
@@ -322,6 +323,7 @@ contract UNKNOWN is
                 hand.hand_type,
                 hand.hasPotato,
                 hand.generation,
+                hand.isActive,
                 hand.potato
             );
     }
@@ -451,15 +453,34 @@ contract UNKNOWN is
 */
 
     function _mintHand() internal returns (uint64 id) {
-        (uint8 background, uint8 hand_type) = (0, 0);
+        uint8 background;
+        uint8 hand_type;
 
-        {
-            id = uint64(_nextTokenId());
+        // Helpers to get Percentages
+        uint256 fortyPct = (type(uint64).max / 100) * 40;
+        uint256 seventyPct = (type(uint64).max / 100) * 70;
 
-            // TODO: GET RANDOM TRAITS
-            background = uint8(1);
-            hand_type = uint8(1);
-        }
+        id = uint64(_nextTokenId());
+
+        // Getting Random traits
+        // Getting Random traits
+        uint64 randBackground = uint64(_rarity(_rand(), "BACKGROUND", id));
+        background = uint8(
+            randBackground >= seventyPct
+                ? (randBackground % 3) + 18 //Legendary 18-20
+                : randBackground >= fortyPct
+                ? (randBackground % 6) + 12 //Rare 12-17
+                : (randBackground % 11) + 1 //Common 1-11
+        );
+
+        uint64 randHandType = uint64(_rarity(_rand(), "HAND_TYPE", id));
+        hand_type = uint8(
+            randHandType >= seventyPct
+                ? (randHandType % 3) + 18 //Legendary 18-20
+                : randHandType >= fortyPct
+                ? (randHandType % 6) + 12 //Rare 12-17
+                : (randHandType % 11) + 1 //Common 1-11
+        );
 
         _safeMint(msg.sender, 1);
         activeTokens.push(id);
@@ -473,6 +494,7 @@ contract UNKNOWN is
         hands[uint256(id)] = Hand({
             hasPotato: false,
             generation: currentGeneration,
+            isActive: true,
             background: background,
             hand_type: hand_type,
             potato: uint8(1)
@@ -482,9 +504,9 @@ contract UNKNOWN is
     function _rarity(
         uint256 rand,
         string memory val,
-        uint256 spicy
+        uint256 heat
     ) internal pure returns (uint256) {
-        return uint256(keccak256(abi.encode(rand, val, spicy)));
+        return uint256(keccak256(abi.encode(rand, val, heat)));
     }
 
     function _rand() internal view returns (uint256) {
@@ -560,7 +582,7 @@ contract UNKNOWN is
         require(_isTokenActive(tokenId), "Token is not active");
         potatoTokenId = tokenId;
         hands[potatoTokenId].hasPotato = true;
-         emit PotatoPassed(0, potatoTokenId, ownerOf(potatoTokenId));
+        emit PotatoPassed(0, potatoTokenId, ownerOf(potatoTokenId));
     }
 
     function _findFirstActiveToken() internal view returns (uint256) {
@@ -636,7 +658,6 @@ contract UNKNOWN is
             gameState == GameState.Playing || gameState == GameState.FinalRound,
             "Game not playing"
         );
-        console.log("enter exp");
 
         // 1. +1 for the address of the player who failed to pass the potato kek loser lol
         address failedPlayer = ownerOf(potatoTokenId);
@@ -647,9 +668,8 @@ contract UNKNOWN is
 
         // 3. Remove the exploded NFT from the activeTokens array
         uint256 indexToRemove = _indexOfTokenInActiveTokens(potatoTokenId);
-        console.log("IR");
         _removeTokenFromActiveTokensByIndex(indexToRemove);
-        console.log("rTFATBI");
+        hands[potatoTokenId].isActive = false;
 
         // 4. Emit an event to notify that the potato exploded and get ready to assign potato to a rand tokenId
         emit PotatoExploded(potatoTokenId);

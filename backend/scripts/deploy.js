@@ -49,7 +49,7 @@ async function main() {
     `Hands deployed to https://mumbai.polygonscan.com/address/${hands.address}`
   );
   console.log(
-    `potato deployed to https://mumbai.polygonscan.com/address/${potato.address}`
+    `Potato deployed to https://mumbai.polygonscan.com/address/${potato.address}`
   );
 }
 
