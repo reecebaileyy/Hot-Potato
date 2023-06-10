@@ -1186,7 +1186,7 @@ export default function Play() {
   useEffect(() => {
     setMaxMintAmount(maxPerWallet);
     localStorage.setItem('maxMintAmount', maxMintAmount);
-  }, []);
+  }, [maxMintAmount, maxPerWallet]);
 
   useEffect(() => {
     if (roundWinner === undefined) {
@@ -1231,7 +1231,7 @@ export default function Play() {
     }
     setActiveTokens(_activeTokens);
     // refetchHallOfFame();
-  }, [currentGeneration, getRoundMints, roundWinner, address, _getGameState, getGameState, refetchGetRoundMints, _potatoTokenId, potatoTokenId, potatoOwner, _potatoOwner, refetchCurrentGeneration, _activeTokens, fetchPlayerData, allWinners, refetchGameState, refetchGetRoundMints]);
+  }, [currentGeneration, getRoundMints, roundWinner, address, _getGameState, getGameState, _potatoTokenId, potatoTokenId, potatoOwner, _potatoOwner, refetchCurrentGeneration, _activeTokens, fetchPlayerData, allWinners, refetchGameState, refetchGetRoundMints]);
 
   useEffect(() => {
     // Retrieve remainingTime from localStorage when the component mounts
