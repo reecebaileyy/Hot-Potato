@@ -1087,7 +1087,7 @@ export default function Play() {
     setActiveTokens(_activeTokens);
     // refetchHallOfFame();
     console.log(`roundWinner: ${roundWinner}`);
-  }, [currentGeneration, getRoundMints, address, _getGameState, getGameState, refetchGetRoundMints, _potatoTokenId, potatoTokenId, potatoOwner, _potatoOwner, refetchCurrentGeneration, _activeTokens, fetchPlayerData, allWinners, refetchGameState, refetchGetRoundMints]);
+  }, [currentGeneration, getRoundMints, roundWinner, address, _getGameState, getGameState, refetchGetRoundMints, _potatoTokenId, potatoTokenId, potatoOwner, _potatoOwner, refetchCurrentGeneration, _activeTokens, fetchPlayerData, allWinners, refetchGameState, refetchGetRoundMints]);
 
   useEffect(() => {
     // Retrieve remainingTime from localStorage when the component mounts
