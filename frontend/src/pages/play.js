@@ -317,17 +317,17 @@ export default function Play() {
           body: JSON.stringify({ address: address }),
         });
 
-          const response2 = await fetch(`/api/get-player-data/${address}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
+        const response2 = await fetch(`/api/get-player-data/${address}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-          const data = await response.json();
-          console.log(`Successful pass data ${data}`);
-          setPasses(data.passes);
-        
+        const data = await response.json();
+        console.log(`Successful pass data ${data}`);
+        setPasses(data.passes);
+
 
       } catch (error) {
         console.error('Error updating successful passes', error);
@@ -354,7 +354,6 @@ export default function Play() {
       try {
         const amount = parseInt(log[0].args.amount);
         setRoundMints(prevRoundMints => prevRoundMints + amount);
-        console.log(`${_roundMints} pairs of hands ready to handle the heat this round!`)
 
         const player = log[0].args.player.toString();
         const amountDisplay = String(log[0].args.amount); //Need this one
@@ -542,7 +541,7 @@ export default function Play() {
 
 
   // GET MINT PRICE
-  const { data: _getGameState } = useContractRead({
+  const { data: _getGameState, refetch: refetchGameState } = useContractRead({
     address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'getGameState',
@@ -657,7 +656,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getActiveTokenIds',
   })
-  
+
   const { data: hallOfFame = [], isLoading: loadingGetWinners, refetch: refetchGetWinners } = useContractRead({
     address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
@@ -1010,8 +1009,8 @@ export default function Play() {
 
   const getRoundWon = async () => {
     try {
-      for(let i = 0; i < currentGeneration; i++){
-        if(address === getWinners[i]){
+      for (let i = 0; i < currentGeneration; i++) {
+        if (address === getWinners[i]) {
           _roundWon = true;
         }
       }
@@ -1066,6 +1065,7 @@ export default function Play() {
 
   //GAME STATE
   useEffect(() => {
+    refetchGameState();
     setGetGameState(_getGameState);
     console.log(`Game State: ${_getGameState}`);
     refetchGetRoundMints();
@@ -1208,9 +1208,18 @@ export default function Play() {
           <div className={`${darkMode ? 'w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-full col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}>
             <h1 className={`${darkMode ? 'text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4' : "text-3xl md:text-4xl lg:text-5xl text-center font-bold mb-4"}`}>Hodl, Pass, Survive...</h1>
             <h2 className={`${darkMode ? 'text-xl font-bold mb-2 text-center' : "text-xl font-bold mb-2 text-center"}`}>
+
               Game State: {getGameState}
             </h2>
-            <h2 className={`${darkMode ? 'text-xl text-center' : "text-xl text-center"}`}>Round {_currentGeneration}</h2>
+            { getGameState == "Minting" ? 
+            null :
+            _currentGeneration == 0 ?
+              null :
+              <h2 className={`${darkMode ? 'text-xl text-center' : "text-xl text-center"}`}>
+                Round {_currentGeneration}
+              </h2>
+            }
+              
           </div>
           <div className={`w-full flex flex-col justify-center items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {!address ?
@@ -1240,7 +1249,7 @@ export default function Play() {
                     :
                     null
                   }
-                 </>
+                </>
                 : getGameState == "Queued" ?
                   <>
                     <Image alt='Image' src={potato} width={200} height={200} className='self-center' />
@@ -1256,7 +1265,7 @@ export default function Play() {
                         <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
                         :
                         null
-                      }                    
+                      }
                     </>
                     : getGameState == "Minting" ?
                       <>
@@ -1273,7 +1282,7 @@ export default function Play() {
                           <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
                           :
                           null
-                        }                      
+                        }
                       </>
                       : getGameState == "Ended" &&
                       <>
@@ -1282,7 +1291,7 @@ export default function Play() {
                           <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
                           :
                           null
-                        }                      
+                        }
                       </>
             }
           </div>
