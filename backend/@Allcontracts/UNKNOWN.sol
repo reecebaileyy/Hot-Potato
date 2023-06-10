@@ -59,6 +59,7 @@ contract UNKNOWN is
     using Strings for uint256;
 
     MetadataHandler public metadataHandler;
+    PaymentSplitter public teamPaymentSplitter;
 
     address public _owner;
 
@@ -77,8 +78,8 @@ contract UNKNOWN is
     uint256 public potatoTokenId;
     uint256 public lastRequestId;
     uint32 public currentGeneration = 0;
-    uint256 public _price = 0 ether;
-    uint256 public _maxsupply = 10000;
+    uint256 public _price = 100000000000000000;
+    uint256 public _maxsupplyPerRound = 10000;
     uint256 public _maxperwallet = 3;
     uint256 public roundMints = 0;
     uint256 public activeAddresses = 0;
@@ -105,6 +106,11 @@ contract UNKNOWN is
     mapping(address => uint256[]) public tokensOwnedByUser;
     mapping(GameState => string) private gameStateStrings;
     mapping(uint256 => address) public Winners;
+    mapping(address => uint256) public rewards;
+    mapping(uint256 => uint256) public projectFunds;
+    mapping(uint256 => uint256) public teamFunds;
+    mapping(uint256 => uint256) public charityFunds;
+    mapping(uint256 => uint256) public roundFunds;
     mapping(address => uint256) public addressActiveTokenCount;
     mapping(address => bool) public activePlayers;
     mapping(address => bool) private counted;
@@ -119,6 +125,7 @@ contract UNKNOWN is
     address[] public players;
 
     event GameStarted(string message);
+    event MintingEnded(string message);
     event GamePaused(string message);
     event GameResumed(string message);
     event GameRestarted(string message);
@@ -175,13 +182,13 @@ contract UNKNOWN is
 */
 
     function mintHand(uint256 count) external payable nonReentrant {
-        // require(gameState == GameState.Minting, "Game not minting");
-        // require(msg.value >= count * _price, "Must send at least 0.01 ETH");
-        // require(
-        //     tokensMintedPerRound[msg.sender] + count <= _maxperwallet,
-        //     "Exceeded maximum tokens per round"
-        // );
-        // require(roundMints < _maxsupply, "Max NFTs minted");
+        require(gameState == GameState.Minting, "Game not minting");
+        require(msg.value >= count * _price, "Must send at least 1 MATIC");
+        require(
+            tokensMintedPerRound[msg.sender] + count <= _maxperwallet,
+            "Exceeded maximum tokens per round"
+        );
+        require(roundMints < _maxsupplyPerRound, "Max NFTs minted");
         require(count > 0, "Must mint at least one NFT");
 
         uint32 amount = 0;
@@ -200,6 +207,7 @@ contract UNKNOWN is
 
         roundMints += count;
         tokensMintedPerRound[msg.sender] += count;
+        roundFunds[currentGeneration] += msg.value;
     }
 
     function passPotato(uint256 tokenIdTo) public {
@@ -244,6 +252,16 @@ contract UNKNOWN is
         }
     }
 
+    function withdrawWinnersFunds() external nonReentrant{
+        uint256 reward = rewards[msg.sender];
+        require(reward > 0, "No reward to claim");
+
+        rewards[msg.sender] = 0; // Reset the reward to avoid reentrancy attacks
+
+        // Send the funds to the user
+        payable(msg.sender).transfer(reward);
+    }
+
     function getGameState() public view returns (string memory) {
         return gameStateStrings[gameState];
     }
@@ -258,11 +276,10 @@ contract UNKNOWN is
         return count;
     }
 
-    function getExplosionTime() public returns (uint256) {
+    function getExplosionTime() public view returns (uint256) {
         if (block.timestamp >= EXPLOSION_TIME) {
             return 0;
         } else {
-            _secondsLeft = EXPLOSION_TIME - block.timestamp;
             return EXPLOSION_TIME - block.timestamp;
         }
     }
@@ -374,6 +391,7 @@ contract UNKNOWN is
         require(gameState == GameState.Minting, "Game not minting");
         randomize();
         emit HandsActivated(activeTokens.length);
+        emit MintingEnded("Minting has ended");
     }
 
     function pauseGame() external onlyOwner {
@@ -431,6 +449,7 @@ contract UNKNOWN is
 
         delete players;
         activeTokens.push(0);
+        roundFunds[currentGeneration] = 0;
 
         emit GameRestarted("The game has restarted");
     }
@@ -438,6 +457,62 @@ contract UNKNOWN is
     function setMetadataHandler(address addy) external onlyOwner {
         metadataHandler = MetadataHandler(addy);
     }
+
+    function withdrawCategoryFunds(
+    uint256 round,
+    string memory category
+) external onlyOwner nonReentrant{
+    uint256 amount;
+    if (
+        keccak256(abi.encodePacked((category))) ==
+        keccak256(abi.encodePacked(("project")))
+    ) {
+        require(amount > 0, "No funds to withdraw");
+        amount = projectFunds[round];
+        projectFunds[round] = 0;
+        payable(msg.sender).transfer(amount);
+        return;
+    } else if (
+        keccak256(abi.encodePacked((category))) ==
+        keccak256(abi.encodePacked(("team")))
+    ) {
+        require(amount > 0, "No funds to withdraw");
+        amount = teamFunds[round];
+        teamFunds[round] = 0;
+        
+        // Addresses to which you want to send the funds
+        address nonPayableAddr1 = 0x41447b831CBbffb74883eFF27FC5AaA13BE3CA52;
+        address nonPayableAddr2 = 0x57b18277B530Fa0C1748C29F9b1887B7691FF701;
+
+        // Convert them to payable addresses
+        address payable teamMember1 = payable(nonPayableAddr1);
+        address payable teamMember2 = payable(nonPayableAddr2);
+        
+        // Split the amount
+        uint256 halfAmount = amount / 2;
+        
+        // Send funds to the addresses
+        teamMember1.transfer(halfAmount);
+        teamMember2.transfer(halfAmount);
+
+        return;
+    } else if (
+        keccak256(abi.encodePacked((category))) ==
+        keccak256(abi.encodePacked(("charity")))
+    ) {
+        require(amount > 0, "No funds to withdraw");
+        amount = charityFunds[round];
+        charityFunds[round] = 0;
+
+        // Send funds to the charity address
+        payable(0x376e50f9036D29038b8aC9Bc12C2E9CF9418d451).transfer(amount);
+        return;
+    } else {
+        revert("Invalid category");
+    }
+
+}
+
 
     /*
  ______            __                                         __      ________                              __     __                            
@@ -462,7 +537,6 @@ contract UNKNOWN is
 
         id = uint64(_nextTokenId());
 
-        // Getting Random traits
         // Getting Random traits
         uint64 randBackground = uint64(_rarity(_rand(), "BACKGROUND", id));
         background = uint8(
@@ -692,6 +766,18 @@ contract UNKNOWN is
             gameState = GameState.Ended;
             emit PlayerWon(ownerOf(activeTokens[1]));
             Winners[currentGeneration] = ownerOf(activeTokens[1]);
+            rewards[ownerOf(activeTokens[1])] +=
+                (roundFunds[currentGeneration] * 4) /
+                10;
+            projectFunds[currentGeneration] +=
+                (roundFunds[currentGeneration] * 1) /
+                10;
+            teamFunds[currentGeneration] +=
+                (roundFunds[currentGeneration] * 3) /
+                10;
+            charityFunds[currentGeneration] +=
+                (roundFunds[currentGeneration] * 2) /
+                10;
         } else {
             updateExplosionTimer();
             getExplosionTime();

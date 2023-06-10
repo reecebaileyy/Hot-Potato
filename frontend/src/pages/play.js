@@ -9,6 +9,7 @@ import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useCo
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/BlackLogo.png'
 import TokenImage from '../../components/displayImage'
+import { set } from 'mongoose';
 
 
 export default function Play() {
@@ -31,11 +32,12 @@ export default function Play() {
   const [tokenId, setTokenId] = useState("");
   const [mintAmount, setMintAmount] = useState("");
   const [totalCost, setTotalCost] = useState(0);
-  const [value, setValue] = useState('');
   const argsArray = [1, 2, 3, 4, 5];
+  const [activeTokens, setActiveTokens] = useState(0);
+  const [potatoOwner, setPotatoOwner] = useState("");
+  const [_potatoTokenId, setPotatoTokenId] = useState(0);
+  const [remainingTime, setRemainingTime] = useState(null);
   const [getGameState, setGetGameState] = useState("Loading...");
-  const [previousGameState, setPreviousGameState] = useState(null);
-  const [playerData, setPlayerData] = useState(null);
   const [_roundMints, setRoundMints] = useState(0);
   const [round, setRound] = useState(0);
   const menuRef = useRef()
@@ -48,6 +50,7 @@ export default function Play() {
   // STORING USERS ADDRESS
   const { address } = useAccount()
   const { balance } = useBalance(address)
+  let _winner = false;
   /*
    ________ __     __ ________ __    __ ________      __    __  ______   ______  __    __  ______  
   |        \  \   |  \        \  \  |  \        \    |  \  |  \/      \ /      \|  \  /  \/      \ 
@@ -74,15 +77,13 @@ export default function Play() {
   
   */
 
-  useEffect(() => {
-    setPreviousGameState(getGameState);
-  }, [getGameState]);
-
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'GameStarted',
     listener(log) {
+      setRoundMints(0);
+      setActiveTokens(0);
       const message = "Heating up";
       console.log("Started");
       setGetGameState("Minting");
@@ -101,49 +102,74 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    abi: ABI,
+    eventName: 'MintingEnded',
+    listener(log) {
+      const message = "No more mints";
+      console.log("Minting Ended");
+      setGetGameState("Playing");
+      setEvents(prevEvents => [...prevEvents, message]);
+
+      fetch('/api/update-game-state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newState: "Playing" }),
+      })
+        // CACHE THIS DATA IN LOCAL STORAGE
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
+    },
+  })
+
+  useContractEvent({
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'GameResumed',
     async listener(log) {
-      const message = "Heating up";
+      const message = "Back to it";
       console.log("Resumed");
-  
-      let previousGameState = getPreviousGameState(); // assuming you have this function to get previous game state from local state
-  
+
+      let previousGameState = await getPreviousGameState();
+
       if (!previousGameState) {
         // Fetch the current game state
         const response = await fetch('/api/get-game-state');
         const data = await response.json();
-  
+        console.log(`Previous GameState Data: ${data}`)
+
         // Find the previous game state
-        previousGameState = Object.keys(data).find(key => data[key] === "Prev");
+        previousGameState = Object.keys(data).find(key => data === "previous");
+        console.log(`Previous Game State: ${previousGameState}`)
       }
-  
+
       if (previousGameState) {
+        console.log(`Previous Game State: ${previousGameState}`)
         // Update the game state in the database
         const updateResponse = await fetch('/api/update-game-state', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ newState: previousGameState, prevState: "True" }),
+          body: JSON.stringify({ newState: previousGameState }),
         });
         const updateData = await updateResponse.json();
         console.log(updateData);
-  
+
         // After the update, set the game state in the component state
         setGetGameState(previousGameState);
       } else {
         console.log("No previous game state found");
       }
-  
+
       // CACHE THIS DATA IN LOCAL STORAGE
-  
+
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
 
 
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'GamePaused',
     listener(log) {
@@ -165,18 +191,19 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'GameRestarted',
     listener(log) {
       const message = "Game Over";
       setGetGameState("Queued");
       setEvents(prevEvents => [...prevEvents, message]);
+      activeTokenStorage = 0;
 
       fetch('/api/update-game-state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newState: "Ended" }),
+        body: JSON.stringify({ newState: "Queued" }),
       })// CACHE THIS DATA IN LOCAL STORAGE
         .then(response => response.json())
         .then(data => console.log(data))
@@ -187,7 +214,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'FinalRoundStarted',
     listener(log) {
@@ -221,7 +248,7 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'PlayerWon',
     async listener(log) {
@@ -238,6 +265,19 @@ export default function Play() {
           },
           body: JSON.stringify({ address: address }),
         });
+
+        // Send a POST request to the API route to update the database for the gamestate
+        setGetGameState("Ended");
+        refetchWinner();
+
+        fetch('/api/update-game-state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newState: "Ended" }),
+        })// CACHE THIS DATA IN LOCAL STORAGE
+          .then(response => response.json())
+          .then(data => console.log(data))
+          .catch(error => console.error(error));
 
         // If the passing player is the connected address, fetch the latest data for this address
         if (player === address) {
@@ -259,7 +299,7 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'SuccessfulPass',
     async listener(log) {
@@ -277,8 +317,7 @@ export default function Play() {
           body: JSON.stringify({ address: address }),
         });
 
-        if (player === address) {
-          const response = await fetch(`/api/get-player-data/${address}`, {
+          const response2 = await fetch(`/api/get-player-data/${address}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -286,8 +325,9 @@ export default function Play() {
           });
 
           const data = await response.json();
+          console.log(`Successful pass data ${data}`);
           setPasses(data.passes);
-        }
+        
 
       } catch (error) {
         console.error('Error updating successful passes', error);
@@ -307,32 +347,18 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
         const amount = parseInt(log[0].args.amount);
-        setRoundMints(prevRoundMints => {
-          const newRoundMints = prevRoundMints + amount;
-          console.log(`Minted ${newRoundMints} potatoes this round`);
-          return newRoundMints;
-        });
+        setRoundMints(prevRoundMints => prevRoundMints + amount);
+        console.log(`${_roundMints} pairs of hands ready to handle the heat this round!`)
 
         const player = log[0].args.player.toString();
         const amountDisplay = String(log[0].args.amount); //Need this one
         setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
-
-        // CACHE THIS DATA IN LOCAL STORAGE
-
-        // // Send a POST request to the API route to update the database
-        // const response = await fetch('/api/update-mints', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify({ address: player, amount: String(amount) }),
-        // });
 
         const data = await response.json();
         console.log(data.message);
@@ -354,7 +380,7 @@ export default function Play() {
   ▄████▄ ▄███▄ ▀█████▀  ▀████▀███▄████  ████▄ ▀████▀███▄
   */
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
@@ -383,24 +409,49 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'UpdatedTimer',
     async listener(log) {
       try {
-        console.log(`updated timer ${log}`);
         const time = log[0].args.time.toString();
+        console.log(`time: ${time}`);
+        setRemainingTime(time);
+        localStorage.setItem('remainingTime', time);
         setEvents(prevEvents => [...prevEvents, `+${time}`]);
-
-        {/*  
-          Someohow store the time left from the contract without having to update database also count down from this time and pause when game is paused and resume when game is resumed
-        */}
-
       } catch (error) {
         console.error('Error updating timer', error);
-      }// CACHE THIS DATA IN LOCAL STORAGE
+      }
     },
   });
+
+  /*
+                              ▄▄                                                                                 
+        ██              ██    ██                        ███▀▀██▀▀███        ▀███                                 
+       ▄██▄             ██                              █▀   ██   ▀█          ██                                 
+      ▄█▀██▄    ▄██▀████████▀███ ▀██▀   ▀██▀  ▄▄█▀██         ██      ▄██▀██▄  ██  ▄██▀  ▄▄█▀██▀████████▄  ▄██▀███
+     ▄█  ▀██   ██▀  ██  ██    ██   ██   ▄█   ▄█▀   ██        ██     ██▀   ▀██ ██ ▄█    ▄█▀   ██ ██    ██  ██   ▀▀
+     ████████  ██       ██    ██    ██ ▄█    ██▀▀▀▀▀▀        ██     ██     ██ ██▄██    ██▀▀▀▀▀▀ ██    ██  ▀█████▄
+    █▀      ██ ██▄    ▄ ██    ██     ███     ██▄    ▄        ██     ██▄   ▄██ ██ ▀██▄  ██▄    ▄ ██    ██  █▄   ██
+  ▄███▄   ▄████▄█████▀  ▀████████▄    █       ▀█████▀      ▄████▄    ▀█████▀▄████▄ ██▄▄ ▀█████▀████  ████▄██████▀
+  */
+  useContractEvent({
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    abi: ABI,
+    eventName: 'HandsActivated',
+    async listener(log) {
+      try {
+        console.log(`Hands Activated, check ${log}`);
+        const amount = log[0].args.count;
+        setActiveTokens(amount);
+        console.log(`Active Tokens Total: ${activeTokens}`);
+        localStorage.setItem('activeTokens', amount);
+      } catch (error) {
+        console.error('Error updating timer', error);
+      }
+    },
+  });
+
 
   /*
                                    ▄▄                   ▄▄                      
@@ -414,8 +465,9 @@ export default function Play() {
                         ██                                                      
                       ▄████▄
   */
+  let activeTokenStorage;
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'PotatoExploded',
     listener(log) {
@@ -424,6 +476,7 @@ export default function Play() {
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
+          setActiveTokens(prevactiveTokens => prevactiveTokens - 1);
         } else {
           console.error('TokenId is not a BigInt or is not found in log args', log);
         }
@@ -445,7 +498,7 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     eventName: 'PotatoPassed',
     listener(log) {
@@ -454,7 +507,12 @@ export default function Play() {
         if (typeof log[0]?.args?.tokenIdFrom === 'bigint' && typeof log[0]?.args?.tokenIdTo === 'bigint') {
           const tokenIdFrom = log[0]?.args?.tokenIdFrom?.toString();
           const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
-          const yielder = log[0]?.args?.potatoYielder?.toString();
+          const yielder = log[0]?.args?.yielder?.toString();
+          console.log(`Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo}! ${yielder} now has the potato`)
+          setPotatoTokenId(tokenIdTo);
+          setPotatoOwner(yielder);
+          localStorage.setItem('_potatoTokenId', tokenIdTo);
+          localStorage.setItem('potatoOwner', yielder);
           setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo} ${yielder} now has the potato`]);
         } else {
           console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
@@ -481,17 +539,33 @@ export default function Play() {
   
   */
 
+
+
   // GET MINT PRICE
-  const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+  const { data: _getGameState } = useContractRead({
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    abi: ABI,
+    functionName: 'getGameState',
+  })
+
+  // GET MINT PRICE
+  const { data: getExplosionTime } = useContractRead({
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    abi: ABI,
+    functionName: 'getExplosionTime',
+  })
+
+  // GET MINT PRICE
+  const { data: _price, isLoading: loadingPrice, refetch: refetchPrice, loading: loadingExplosionTime } = useContractRead({
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: '_price',
   })
-  const price = parseInt(_price, 10);
+  const price = parseInt(_price, 10) / 10 ** 18;
 
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'getActiveTokenCount',
     args: [address],
@@ -500,15 +574,15 @@ export default function Play() {
 
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
-    functionName: '_maxsupply',
+    functionName: '_maxsupplyPerRound',
   })
   const maxSupply = parseInt(_maxsupply, 10);
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
@@ -517,53 +591,44 @@ export default function Play() {
 
   // GET POTATO HOLDER
   const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'getPotatoOwner',
   })
-  const potatoOwner = getPotatoOwner?.toString();
+  const _potatoOwner = getPotatoOwner?.toString();
 
   // GET POTATO TOKEN ID
-  const { data: getExplosionTime, isLoading: loadingExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
-    abi: ABI,
-    functionName: 'getExplosionTime',
-  })
-  const explosionTime = parseInt(getExplosionTime, 10);
-
-  // GET EXPLOSION TIME
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
-  const _potatoTokenId = parseInt(potatoTokenId, 10);
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
-  const activeTokens = parseInt(getActiveTokens, 10);
+  const _activeTokens = parseInt(getActiveTokens, 10);
 
   // GET CURRENT GENERATION
   const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'currentGeneration',
   })
   const _currentGeneration = parseInt(currentGeneration, 10);
 
   const { data: getRoundMints, isLoading: loadingGetRoundMints, refetch: refetchGetRoundMints } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
-    functionName: 'getRoundMints',
+    functionName: 'roundMints',
   })
 
-  // GET CURRENT GENERATION
+  // GET Winners 
   const { data: Winners, isLoadging: loadingWinners, refetch: refetchWinner } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'Winners',
     args: [_currentGeneration],
@@ -574,7 +639,7 @@ export default function Play() {
   argsArray.map(tokenId => <TokenImage key={tokenId} tokenId={tokenId} ABI={ABI} />)
 
   const { data: balanceOf, isLoading: loadingBalance, refetch: refetchBalanceOf } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'balanceOf',
     args: [address],
@@ -582,15 +647,22 @@ export default function Play() {
   const _balanceOf = parseInt(balanceOf, 10);
 
   const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: '_owner',
   })
 
   const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'getActiveTokenIds',
+  })
+  
+  const { data: hallOfFame = [], isLoading: loadingGetWinners, refetch: refetchGetWinners } = useContractRead({
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    abi: ABI,
+    functionName: 'hallOfFame',
+    args: [_currentGeneration],
   })
 
 
@@ -609,27 +681,37 @@ export default function Play() {
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'mintHand',
-    args: [mintAmount],
+    args: [mintAmount.toString()],
+    value: totalCost,
   })
   const { data: mintData, isSuccess, write: mint } = useContractWrite(config)
 
+
+
   // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
   })
   const { data: passData, isSuccess: Successful, write: pass } = useContractWrite(configPass)
 
+  // CLAIM REWARDS
+  const { config: withdrawWinnersFunds } = usePrepareContractWrite({
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    abi: ABI,
+    functionName: 'withdrawWinnersFunds',
+  })
+  const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(configPass)
 
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'checkExplosion',
   })
@@ -650,7 +732,7 @@ export default function Play() {
   */
   // START GAME
   const { config: startGame } = usePrepareContractWrite({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'startGame',
   })
@@ -658,7 +740,7 @@ export default function Play() {
 
   // END MINTING
   const { config: endMinting } = usePrepareContractWrite({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'endMinting',
   })
@@ -666,7 +748,7 @@ export default function Play() {
 
   // PAUSE GAME
   const { config: pauseGame } = usePrepareContractWrite({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'pauseGame',
   })
@@ -674,7 +756,7 @@ export default function Play() {
 
   // RESUME GAME
   const { config: resumeGame } = usePrepareContractWrite({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'resumeGame',
   })
@@ -682,7 +764,7 @@ export default function Play() {
 
   // RESTART GAME 
   const { config: restartGame } = usePrepareContractWrite({
-    address: '0x7D498CD6DCbAA8CE5d89924F0F1549bbA93F1D4D',
+    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
     abi: ABI,
     functionName: 'restartGame',
   })
@@ -702,13 +784,13 @@ export default function Play() {
                                                                                                
   */
 
-   async function getPreviousGameState() {
+  async function getPreviousGameState() {
     try {
       const response = await fetch('/api/get-previous-game-state');
       const data = await response.json();
-  
       if (data && data.previous) {
-        return data.previous;
+        console.log(`Previous game state found ${data.previous}`);
+        return data?.previous;
       } else {
         console.error("No previous game state found");
         return null;
@@ -717,7 +799,7 @@ export default function Play() {
       console.error(error);
       return null;
     }
-  }  
+  }
 
   function fetchGameStateAndMore() {
     // Fetch the game state
@@ -725,7 +807,6 @@ export default function Play() {
       .then(response => response.json())
       .then(data => {
         setGetGameState(data.current);
-        setPreviousGameState(data.previous);
       })
       .catch(error => console.error(error));
   }
@@ -786,6 +867,18 @@ export default function Play() {
     }
   }
 
+  const handleClaimReward = () => {
+    if (!address) {
+      alert("please connect to join the heat!!!")
+    } else if (address !== getWinner) {
+      alert("You are not the winner!");
+    } else {
+      _claimReward?.();
+    }
+  }
+
+
+
   const allActivetokenIds = () => {
     let activeIds = [];
     for (let i = 1; i < 1000; i++) {
@@ -795,20 +888,6 @@ export default function Play() {
     return activeIds;
   }
   const activeIds = allActivetokenIds();
-
-  const handleMint = () => {
-    if (!address) {
-      alert("please connect to join the heat!!!");
-    } else if (balance < totalCost) {
-      alert("Not enough funds in your wallet");
-    } else if (mintAmount > (maxSupply - _roundMints)) {
-      alert("This Game is Full, Please wait for the next round");
-    } else if (mintAmount == 0) {
-      alert("You need at least 1 hand to play");
-    } else {
-      mint?.();
-    }
-  };
 
   const handlePass = () => {
     if (!address) {
@@ -836,13 +915,55 @@ export default function Play() {
       const _tokenId = parseInt(inputValue);
       setTokenId(_tokenId);
     }
-    setValue(numericValue);
   }
+
+  const handleMint = () => {
+    if (!address) {
+      alert("Please connect to join the heat!!!");
+    } else if (balance < totalCost) {
+      alert("Not enough funds in your wallet");
+    } else if (mintAmount > (maxSupply - _roundMints)) {
+      alert("This Game is Full, Please wait for the next round");
+    } else if (mintAmount === 0) {
+      alert("You need at least 1 hand to play");
+    } else {
+      try {
+        console.log("Mint amount:", mintAmount);
+        console.log("Total cost:", totalCost);
+        mint?.();
+      } catch (error) {
+        console.log("Error:", error);
+      }
+    }
+  };
+
+  const handleInputChangeMint = (e) => {
+    const inputValue = e.target.value;
+    const numericValue = inputValue.replace(/[^0-9]/g, '');
+    if (numericValue !== inputValue) {
+      alert('Only numbers are allowed');
+    } else if (inputValue === "") {
+      setMintAmount("");
+      setTotalCost("0");
+    } else if (inputValue !== "") {
+      const newMintAmount = numericValue; // Keep newMintAmount as a string for UI
+      setMintAmount(newMintAmount);
+      const totalCostBigInt = BigInt(_price) * BigInt(newMintAmount);
+      console.log(`BigIntPrice ${BigInt(_price)}`);
+      console.log(`BigIntMintAmount ${BigInt(newMintAmount)}`);
+      setTotalCost(totalCostBigInt.toString()); // Convert back to string for UI
+    }
+  }
+
+
+
+
 
   const handlecheck = () => {
     if (!address) {
       alert("please connect to join the heat!!!");
-    } else if (explosionTime !== 0) {
+    } else if (parseInt(remainingTime, 10) !== 0) {
+      console.log(`Remaining time: ${remainingTime}`)
       alert("The potato has not exploded yet!");
     } else {
       check?.();
@@ -850,28 +971,8 @@ export default function Play() {
 
   };
 
-
-  const handleInputChangeMint = (e) => {
-    const inputValue = e.target.value;
-    const numericValue = inputValue.replace(/[^0-9]/g, '');
-    if (numericValue !== inputValue) {
-      alert('Only numbers are allowed');
-    }
-    else if (inputValue === "") {
-      setMintAmount("");
-      setTotalCost(0);
-    }
-    else if (inputValue !== "") {
-      const newMintAmount = parseInt(inputValue);
-      setMintAmount(newMintAmount);
-      setTotalCost(newMintAmount * 0.008);
-    }
-    setValue(numericValue);
-  }
-
   const fetchPlayerData = async () => {
     try {
-      console.log(address);
       const response = await fetch('/api/get-player-data', {
         method: 'POST',
         headers: {
@@ -889,6 +990,35 @@ export default function Play() {
     }
   };
 
+  const isWinner = async () => {
+    try {
+      console.log(`getWinners: ${hallOfFame[0]}`)
+      const _onlyDubs = hallOfFame[0]?.toString();
+      console.log(`Hall of Fame: ${_onlyDubs}`)
+      for (let i = 0; i < hallOfFame.length; i++) {
+        if (address !== hallOfFame[i]) {
+          _winner = true;
+          console.log(`winer is: ${_winner}`)
+        }
+        _winner = false;
+        console.log(`winer is: ${_winner}`)
+      }
+    } catch (error) {
+      console.log(`error: ${error}`)
+    }
+  };
+
+  const getRoundWon = async () => {
+    try {
+      for(let i = 0; i < currentGeneration; i++){
+        if(address === getWinners[i]){
+          _roundWon = true;
+        }
+      }
+    } catch (error) {
+      console.log(`error: ${error}`)
+    }
+  };
 
   /* 
    _______  ________ ________ _______  ________  ______  __    __ 
@@ -903,6 +1033,8 @@ export default function Play() {
                                                                  
   */
   // EVENT LISTENERS
+
+  // DARK MODE
   useEffect(() => {
     const localDarkMode = window.localStorage.getItem('darkMode');
     if (localDarkMode) {
@@ -910,16 +1042,6 @@ export default function Play() {
     }
 
     const intervalId = setInterval(() => {
-      // refetchGetActiveTokens();
-      // refetchCurrentGeneration();
-      // refetchBalanceOf();
-      // refetchWinner();
-      // refetchGetActiveTokenIds();
-      // refetchGetPotatoOwner();
-      // allActivetokenIds();
-      // refetchCurrentGeneration();
-      // setRound(currentRound);
-      // console.log(currentRound)
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
       console.log("A BLAZE PRODUCTION");
@@ -941,19 +1063,32 @@ export default function Play() {
     }
   }, [darkMode]);
 
-  useEffect(() => {
-    fetch('/api/get-game-state')
-      .then(response => response.json())
-      .then(data => {
-        setGetGameState(data.current);
-      })
-      .catch(error => console.error(error));
 
+  //GAME STATE
+  useEffect(() => {
+    setGetGameState(_getGameState);
+    console.log(`Game State: ${_getGameState}`);
     refetchGetRoundMints();
     const roundMints = parseInt(getRoundMints, 10);
     if (!isNaN(roundMints)) {
       setRoundMints(roundMints);
       console.log(`Mints: ${roundMints}`);
+    }
+
+    if (!isNaN(_potatoTokenId)) {
+      const localPotatoTokenId = localStorage.getItem('_potatoTokenId');
+      if (!localPotatoTokenId) {
+        const getPotatoTokenId = parseInt(potatoTokenId, 10);
+        console.log(`Potato Token ID: ${getPotatoTokenId}`)
+        setPotatoTokenId(getPotatoTokenId);
+      } else {
+        setPotatoTokenId(localPotatoTokenId);
+      }
+    }
+
+    if (!isNaN(potatoOwner)) {
+      console.log(`Potato Owner: ${_potatoOwner}`)
+      setPotatoOwner(_potatoOwner);
     }
 
     refetchCurrentGeneration();
@@ -962,9 +1097,41 @@ export default function Play() {
       setRound(currentRound);
       console.log(`Round: ${currentRound}`);
     }
-
+    setActiveTokens(_activeTokens);
+    isWinner();
     fetchPlayerData();
   }, [currentGeneration, getRoundMints, address]);
+
+  useEffect(() => {
+    // Retrieve remainingTime from localStorage when the component mounts
+    const time = localStorage.getItem('remainingTime');
+    if (time) {
+      setRemainingTime(time);
+    } else if (time == null) {
+      setRemainingTime(getExplosionTime);
+      console.log(`explosion: ${remainingTime}`)
+    }
+
+    let timer;
+
+    if (remainingTime > 0) {
+      timer = setInterval(() => {
+        setRemainingTime((prevTime) => {
+          if (prevTime > 0) {
+            const newTime = prevTime - 1;
+            localStorage.setItem('remainingTime', newTime.toString());  // Update time in localStorage
+            return newTime;
+          } else {
+            clearInterval(timer);
+            localStorage.removeItem('remainingTime');  // Clear time from localStorage
+            return 0;
+          }
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(timer);
+  }, [remainingTime]);
 
   /*
    __    __ ________ __       __ __             ______   ______   ______  
@@ -1043,7 +1210,7 @@ export default function Play() {
             <h2 className={`${darkMode ? 'text-xl font-bold mb-2 text-center' : "text-xl font-bold mb-2 text-center"}`}>
               Game State: {getGameState}
             </h2>
-            <p className={`${darkMode ? 'text-sm text-center' : "text-sm text-center"}`}>This is the current game state. It will be updated automatically.</p>
+            <h2 className={`${darkMode ? 'text-xl text-center' : "text-xl text-center"}`}>Round {_currentGeneration}</h2>
           </div>
           <div className={`w-full flex flex-col justify-center items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {!address ?
@@ -1052,6 +1219,11 @@ export default function Play() {
                   <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Connect First</h1>
                   <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Connect your wallet to view this page! Hope you join the fun soon...</h3>
                   <Image alt='Image' src={potato} width={200} height={200} />
+                  {_winner ?
+                    <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
+                    :
+                    null
+                  }
                 </>
               </> :
               getGameState == "Playing" || getGameState == "Final Round" ?
@@ -1061,17 +1233,30 @@ export default function Play() {
                     Successful Passes: {!passes ? "Loading..." : passes}
                   </p>
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                    Total Wins: {loadingWins ? "Loading..." : wins}
+                    Total Wins: {!wins ? "Loading..." : wins}
                   </p>
-
-                </>
+                  {_winner ?
+                    <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
+                    :
+                    null
+                  }
+                 </>
                 : getGameState == "Queued" ?
                   <>
                     <Image alt='Image' src={potato} width={200} height={200} className='self-center' />
-                  </>
+                    {_winner ?
+                      <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
+                      :
+                      null
+                    }                  </>
                   : getGameState == "Paused" ?
                     <>
                       <Image alt='Image' src={potato} width={200} height={200} />
+                      {_winner ?
+                        <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
+                        :
+                        null
+                      }                    
                     </>
                     : getGameState == "Minting" ?
                       <>
@@ -1084,13 +1269,24 @@ export default function Play() {
                           <Image alt='Image' src={potato} width={100} height={200} />
                           <Image alt='Image' src={potato} width={100} height={200} />
                         </div>
+                        {_winner ?
+                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
+                          :
+                          null
+                        }                      
                       </>
                       : getGameState == "Ended" &&
                       <>
                         <Image alt='Image' src={potato} width={200} height={200} />
+                        {_winner ?
+                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
+                          :
+                          null
+                        }                      
                       </>
             }
           </div>
+
           <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {getGameState == "Playing" || getGameState == "Final Round" ?
               <>
@@ -1106,9 +1302,8 @@ export default function Play() {
                     }
                   </span>
                 </p>
-
                 <h2 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
-                  {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${explosionTime}`}
+                  {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${remainingTime}`}
                 </h2>
                 <Image alt='Image' src={potato} width={200} height={200} />
                 <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
@@ -1188,7 +1383,7 @@ export default function Play() {
                           {loadingPrice ? (
                             <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: Loading...</p>
                           ) : (
-                            <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: {price} ETH</p>
+                            <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: {price} MATIC</p>
                           )}
                           <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>MAX PER WALLET: XXX</p>
                         </div>
@@ -1262,6 +1457,11 @@ export default function Play() {
                 : getGameState == "Queued" ?
                   <>
                     <Image alt='Image' src={potato} width={200} height={200} className='self-center' />
+                    {_winner ?
+                      <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
+                      :
+                      null
+                    }
                   </>
                   : getGameState == "Minting" ?
                     <>
@@ -1290,11 +1490,19 @@ export default function Play() {
                     : getGameState == "Paused" ?
                       <>
                         <Image alt='Image' src={potato} width={200} height={200} />
-                      </>
+                        {_winner ?
+                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
+                          :
+                          null
+                        }                      </>
                       : getGameState == "Ended" &&
                       <>
                         <Image alt='Image' src={potato} width={200} height={200} />
-                      </>
+                        {_winner ?
+                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
+                          :
+                          null
+                        }                      </>
             }
           </div>
 
