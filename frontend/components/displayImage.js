@@ -21,7 +21,7 @@ const TokenImage = ({ tokenId, ABI }) => {
   useEffect(() => {
     refetchImageString({ args: [tokenId] });
     refetchPotatoTokenId();
-  }, [tokenId, ABI, refetchImageString]);
+  }, [tokenId, ABI, refetchImageString, refetchPotatoTokenId]);
 
   if (isLoading) {
     return <div>Loading...</div>;
