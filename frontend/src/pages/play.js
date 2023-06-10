@@ -1084,7 +1084,7 @@ export default function Play() {
     setActiveTokens(_activeTokens);
     fetchPlayerData();
     console.log(`isWinner: ${allWinners}`);
-  }, [currentGeneration, getRoundMints, address]);
+  }, [currentGeneration, getRoundMints, address, _getGameState, getGameState, refetchGetRoundMints, _potatoTokenId, potatoTokenId, potatoOwner, _potatoOwner, refetchCurrentGeneration, _activeTokens, fetchPlayerData, allWinners, refetchGameState, refetchGetRoundMints]);
 
   useEffect(() => {
     // Retrieve remainingTime from localStorage when the component mounts
@@ -1115,8 +1115,7 @@ export default function Play() {
     }
 
     return () => clearInterval(timer);
-  }, [remainingTime]);
-
+  }, [remainingTime, getExplosionTime]);
   /*
    __    __ ________ __       __ __             ______   ______   ______  
   |  \  |  \        \  \     /  \  \           /      \ /      \ /      \ 

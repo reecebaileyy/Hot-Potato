@@ -6,7 +6,6 @@ import "erc721a/contracts/ERC721A.sol";
 import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
@@ -51,7 +50,6 @@ struct RequestStatus {
 contract UNKNOWN is
     ERC721A,
     ERC721AQueryable,
-    PaymentSplitter,
     ReentrancyGuard,
     VRFConsumerBaseV2,
     ConfirmedOwner
@@ -59,7 +57,6 @@ contract UNKNOWN is
     using Strings for uint256;
 
     MetadataHandler public metadataHandler;
-    PaymentSplitter public teamPaymentSplitter;
 
     address public _owner;
 
@@ -78,7 +75,7 @@ contract UNKNOWN is
     uint256 public potatoTokenId;
     uint256 public lastRequestId;
     uint32 public currentGeneration = 0;
-    uint256 public _price = 100000000000000000;
+    uint256 public _price = 0.01 ether;
     uint256 public _maxsupplyPerRound = 10000;
     uint256 public _maxperwallet = 3;
     uint256 public roundMints = 0;
@@ -97,7 +94,7 @@ contract UNKNOWN is
         0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
 
     mapping(uint256 => Hand) public hands;
-    mapping(address => uint256) public tokensMintedPerRound;
+    mapping(address => mapping(uint256 => uint256)) public tokensMintedPerRound;
     mapping(address => bool) private isPlayer;
     mapping(address => uint256) public successfulPasses;
     mapping(address => uint256) public failedPasses;
@@ -105,7 +102,6 @@ contract UNKNOWN is
     mapping(uint256 => RequestStatus) public statuses;
     mapping(address => uint256[]) public tokensOwnedByUser;
     mapping(GameState => string) private gameStateStrings;
-    mapping(uint256 => address) public Winners;
     mapping(address => uint256) public rewards;
     mapping(uint256 => uint256) public projectFunds;
     mapping(uint256 => uint256) public teamFunds;
@@ -123,6 +119,7 @@ contract UNKNOWN is
     uint256[] public activeTokens;
     uint256[] public requestIds;
     address[] public players;
+    address[] public winners;
 
     event GameStarted(string message);
     event MintingEnded(string message);
@@ -143,11 +140,8 @@ contract UNKNOWN is
     event PlayerWon(address indexed player);
     event PotatoMinted(uint32 amount, address indexed player);
 
-    constructor(
-        uint64 subscriptionId
-    )
+    constructor(uint64 subscriptionId)
         payable
-        PaymentSplitter(_payees, _shares)
         ERC721A("UNKNOWN", "UNKNOWN")
         VRFConsumerBaseV2(0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed)
         ConfirmedOwner(msg.sender)
@@ -185,7 +179,7 @@ contract UNKNOWN is
         require(gameState == GameState.Minting, "Game not minting");
         require(msg.value >= count * _price, "Must send at least 1 MATIC");
         require(
-            tokensMintedPerRound[msg.sender] + count <= _maxperwallet,
+            tokensMintedPerRound[msg.sender][currentGeneration] + count <= _maxperwallet,
             "Exceeded maximum tokens per round"
         );
         require(roundMints < _maxsupplyPerRound, "Max NFTs minted");
@@ -206,7 +200,7 @@ contract UNKNOWN is
         }
 
         roundMints += count;
-        tokensMintedPerRound[msg.sender] += count;
+        tokensMintedPerRound[msg.sender][currentGeneration] += count;
         roundFunds[currentGeneration] += msg.value;
     }
 
@@ -252,7 +246,7 @@ contract UNKNOWN is
         }
     }
 
-    function withdrawWinnersFunds() external nonReentrant{
+    function withdrawWinnersFunds() external nonReentrant {
         uint256 reward = rewards[msg.sender];
         require(reward > 0, "No reward to claim");
 
@@ -284,6 +278,10 @@ contract UNKNOWN is
         }
     }
 
+    function getAllWinners() public view returns (address[] memory) {
+        return winners;
+    }
+
     function checkExplosion() public {
         require(
             gameState == GameState.Playing || gameState == GameState.FinalRound,
@@ -309,9 +307,15 @@ contract UNKNOWN is
         return false;
     }
 
-    function getPlayerStats(
-        address player
-    ) public view returns (uint256, uint256, uint256) {
+    function getPlayerStats(address player)
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
         return (
             successfulPasses[player],
             failedPasses[player],
@@ -323,9 +327,12 @@ contract UNKNOWN is
         return activeTokens.length - 1;
     }
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view override(ERC721A) returns (string memory) {
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721A)
+        returns (string memory)
+    {
         require(
             _exists(tokenId),
             "ERC721Metadata: URI query for nonexistent token"
@@ -343,10 +350,6 @@ contract UNKNOWN is
                 hand.isActive,
                 hand.potato
             );
-    }
-
-    function getRoundMints() public view returns (uint256) {
-        return roundMints;
     }
 
     function getPotatoOwner() public view returns (address) {
@@ -390,8 +393,6 @@ contract UNKNOWN is
     function endMinting() external onlyOwner {
         require(gameState == GameState.Minting, "Game not minting");
         randomize();
-        emit HandsActivated(activeTokens.length);
-        emit MintingEnded("Minting has ended");
     }
 
     function pauseGame() external onlyOwner {
@@ -428,13 +429,6 @@ contract UNKNOWN is
             "Game not paused or ended"
         );
         gameState = GameState.Queued;
-
-        // Reset tokens minted by each user in the round
-        for (uint256 i = 1; i < activeTokens.length; i++) {
-            address tokenOwner = ownerOf(activeTokens[i]);
-            tokensMintedPerRound[tokenOwner] = 0;
-        }
-
         // Clear the activeTokens array and remove the potato token
         delete activeTokens;
         roundMints = 0;
@@ -458,61 +452,62 @@ contract UNKNOWN is
         metadataHandler = MetadataHandler(addy);
     }
 
-    function withdrawCategoryFunds(
-    uint256 round,
-    string memory category
-) external onlyOwner nonReentrant{
-    uint256 amount;
-    if (
-        keccak256(abi.encodePacked((category))) ==
-        keccak256(abi.encodePacked(("project")))
-    ) {
-        require(amount > 0, "No funds to withdraw");
-        amount = projectFunds[round];
-        projectFunds[round] = 0;
-        payable(msg.sender).transfer(amount);
-        return;
-    } else if (
-        keccak256(abi.encodePacked((category))) ==
-        keccak256(abi.encodePacked(("team")))
-    ) {
-        require(amount > 0, "No funds to withdraw");
-        amount = teamFunds[round];
-        teamFunds[round] = 0;
-        
-        // Addresses to which you want to send the funds
-        address nonPayableAddr1 = 0x41447b831CBbffb74883eFF27FC5AaA13BE3CA52;
-        address nonPayableAddr2 = 0x57b18277B530Fa0C1748C29F9b1887B7691FF701;
+    function withdrawCategoryFunds(uint256 round, string memory category)
+        external
+        onlyOwner
+        nonReentrant
+    {
+        uint256 amount;
+        if (
+            keccak256(abi.encodePacked((category))) ==
+            keccak256(abi.encodePacked(("project")))
+        ) {
+            amount = projectFunds[round];
+            require(amount > 0, "No funds to withdraw");
+            projectFunds[round] = 0;
+            payable(msg.sender).transfer(amount);
+            return;
+        } else if (
+            keccak256(abi.encodePacked((category))) ==
+            keccak256(abi.encodePacked(("team")))
+        ) {
+            amount = teamFunds[round];
+            require(amount > 0, "No funds to withdraw");
+            teamFunds[round] = 0;
 
-        // Convert them to payable addresses
-        address payable teamMember1 = payable(nonPayableAddr1);
-        address payable teamMember2 = payable(nonPayableAddr2);
-        
-        // Split the amount
-        uint256 halfAmount = amount / 2;
-        
-        // Send funds to the addresses
-        teamMember1.transfer(halfAmount);
-        teamMember2.transfer(halfAmount);
+            // Addresses to which you want to send the funds
+            address nonPayableAddr1 = 0x41447b831CBbffb74883eFF27FC5AaA13BE3CA52;
+            address nonPayableAddr2 = 0x57b18277B530Fa0C1748C29F9b1887B7691FF701;
 
-        return;
-    } else if (
-        keccak256(abi.encodePacked((category))) ==
-        keccak256(abi.encodePacked(("charity")))
-    ) {
-        require(amount > 0, "No funds to withdraw");
-        amount = charityFunds[round];
-        charityFunds[round] = 0;
+            // Convert them to payable addresses
+            address payable teamMember1 = payable(nonPayableAddr1);
+            address payable teamMember2 = payable(nonPayableAddr2);
 
-        // Send funds to the charity address
-        payable(0x376e50f9036D29038b8aC9Bc12C2E9CF9418d451).transfer(amount);
-        return;
-    } else {
-        revert("Invalid category");
+            // Split the amount
+            uint256 halfAmount = amount / 2;
+
+            // Send funds to the addresses
+            teamMember1.transfer(halfAmount);
+            teamMember2.transfer(halfAmount);
+
+            return;
+        } else if (
+            keccak256(abi.encodePacked((category))) ==
+            keccak256(abi.encodePacked(("charity")))
+        ) {
+            amount = charityFunds[round];
+            require(amount > 0, "No funds to withdraw");
+            charityFunds[round] = 0;
+
+            // Send funds to the charity address
+            payable(0x376e50f9036D29038b8aC9Bc12C2E9CF9418d451).transfer(
+                amount
+            );
+            return;
+        } else {
+            revert("Invalid category");
+        }
     }
-
-}
-
 
     /*
  ______            __                                         __      ________                              __     __                            
@@ -618,10 +613,10 @@ contract UNKNOWN is
         return requestId;
     }
 
-    function fulfillRandomWords(
-        uint256 requestId,
-        uint256[] memory randomWords
-    ) internal override {
+    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords)
+        internal
+        override
+    {
         require(statuses[requestId].exists, "request not found");
         statuses[requestId].fulfilled = true;
         statuses[requestId].randomWord = randomWords;
@@ -642,8 +637,9 @@ contract UNKNOWN is
 
         gameState = GameState.Playing;
         updateExplosionTimer();
-        getExplosionTime();
-        emit UpdatedTimer(_secondsLeft);
+        emit UpdatedTimer(EXPLOSION_TIME - block.timestamp);
+        emit MintingEnded("Minting has ended");
+        emit HandsActivated(activeTokens.length);
         emit PotatoPassed(0, potatoTokenId, ownerOf(potatoTokenId));
     }
 
@@ -765,7 +761,7 @@ contract UNKNOWN is
         } else if (activeAddresses < 2) {
             gameState = GameState.Ended;
             emit PlayerWon(ownerOf(activeTokens[1]));
-            Winners[currentGeneration] = ownerOf(activeTokens[1]);
+            winners.push(ownerOf(activeTokens[1]));
             rewards[ownerOf(activeTokens[1])] +=
                 (roundFunds[currentGeneration] * 4) /
                 10;
@@ -780,8 +776,7 @@ contract UNKNOWN is
                 10;
         } else {
             updateExplosionTimer();
-            getExplosionTime();
-            emit UpdatedTimer(_secondsLeft);
+            emit UpdatedTimer(EXPLOSION_TIME - block.timestamp);
             // calculate the index based on the current activeTokens.length
             if (indexToAssign == 0 && activeTokens.length > 1) {
                 indexToAssign = 1;
@@ -790,14 +785,15 @@ contract UNKNOWN is
         }
 
         updateExplosionTimer();
-        getExplosionTime();
-        emit UpdatedTimer(_secondsLeft);
+        emit UpdatedTimer(EXPLOSION_TIME - block.timestamp);
         _isExplosionInProgress = false;
     }
 
-    function _indexOfTokenInActiveTokens(
-        uint256 tokenId
-    ) internal view returns (uint256) {
+    function _indexOfTokenInActiveTokens(uint256 tokenId)
+        internal
+        view
+        returns (uint256)
+    {
         require(activeTokens.length > 1, "Not enough active tokens");
         for (uint256 i = 1; i < activeTokens.length; i++) {
             if (activeTokens[i] == tokenId) {
@@ -812,10 +808,6 @@ contract UNKNOWN is
         activeTokens[index] = activeTokens[activeTokens.length - 1];
         activeTokens.pop();
     }
-
-    // TODO: Implement logic for determining the winners and distributing rewards
-    uint256[] private _shares = [100];
-    address[] private _payees = [0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F];
 
     function _startTokenId() internal view virtual override returns (uint256) {
         return 1;
