@@ -9,7 +9,6 @@ import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useCo
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/BlackLogo.png'
 import TokenImage from '../../components/displayImage'
-import { set } from 'mongoose';
 
 
 export default function Play() {
@@ -36,6 +35,7 @@ export default function Play() {
   const [activeTokens, setActiveTokens] = useState(0);
   const [potatoOwner, setPotatoOwner] = useState("");
   const [_potatoTokenId, setPotatoTokenId] = useState(0);
+  const [roundWinner, setRoundWinner] = ("");
   const [remainingTime, setRemainingTime] = useState(null);
   const [getGameState, setGetGameState] = useState("Loading...");
   const [_roundMints, setRoundMints] = useState(0);
@@ -78,7 +78,7 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'GameStarted',
     listener(log) {
@@ -102,7 +102,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'MintingEnded',
     listener(log) {
@@ -124,7 +124,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'GameResumed',
     async listener(log) {
@@ -169,7 +169,7 @@ export default function Play() {
 
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'GamePaused',
     listener(log) {
@@ -191,7 +191,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'GameRestarted',
     listener(log) {
@@ -214,7 +214,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'FinalRoundStarted',
     listener(log) {
@@ -248,13 +248,15 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'PlayerWon',
     async listener(log) {
       try {
         console.log(`Player ${log} won!`)
         const player = log[0].args.player.toString();
+        setRoundWinner(player);
+        console.log(`Player ${player} won!`)
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
 
         // Send a POST request to the API route to update the database
@@ -299,7 +301,7 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'SuccessfulPass',
     async listener(log) {
@@ -347,7 +349,7 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
@@ -379,7 +381,7 @@ export default function Play() {
   ▄████▄ ▄███▄ ▀█████▀  ▀████▀███▄████  ████▄ ▀████▀███▄
   */
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
@@ -408,7 +410,7 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'UpdatedTimer',
     async listener(log) {
@@ -435,7 +437,7 @@ export default function Play() {
   ▄███▄   ▄████▄█████▀  ▀████████▄    █       ▀█████▀      ▄████▄    ▀█████▀▄████▄ ██▄▄ ▀█████▀████  ████▄██████▀
   */
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'HandsActivated',
     async listener(log) {
@@ -466,7 +468,7 @@ export default function Play() {
   */
   let activeTokenStorage;
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'PotatoExploded',
     listener(log) {
@@ -497,7 +499,7 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     eventName: 'PotatoPassed',
     listener(log) {
@@ -542,21 +544,21 @@ export default function Play() {
 
   // GET MINT PRICE
   const { data: _getGameState, refetch: refetchGameState } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'getGameState',
   })
 
   // GET MINT PRICE
   const { data: getExplosionTime } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'getExplosionTime',
   })
 
   // GET MINT PRICE
   const { data: _price, isLoading: loadingPrice, refetch: refetchPrice, loading: loadingExplosionTime } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: '_price',
   })
@@ -564,7 +566,7 @@ export default function Play() {
 
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'getActiveTokenCount',
     args: [address],
@@ -573,7 +575,7 @@ export default function Play() {
 
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: '_maxsupplyPerRound',
   })
@@ -581,7 +583,7 @@ export default function Play() {
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
@@ -590,7 +592,7 @@ export default function Play() {
 
   // GET POTATO HOLDER
   const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'getPotatoOwner',
   })
@@ -598,14 +600,14 @@ export default function Play() {
 
   // GET POTATO TOKEN ID
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
@@ -613,32 +615,24 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'currentGeneration',
   })
   const _currentGeneration = parseInt(currentGeneration, 10);
 
   const { data: getRoundMints, isLoading: loadingGetRoundMints, refetch: refetchGetRoundMints } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'roundMints',
   })
 
-  // GET Winners 
-  const { data: Winners, isLoadging: loadingWinners, refetch: refetchWinner } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
-    abi: ABI,
-    functionName: 'Winners',
-    args: [_currentGeneration],
-  })
-  const winner = Winners?.toString();
 
   // GET IMAGES
   argsArray.map(tokenId => <TokenImage key={tokenId} tokenId={tokenId} ABI={ABI} />)
 
   const { data: balanceOf, isLoading: loadingBalance, refetch: refetchBalanceOf } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'balanceOf',
     args: [address],
@@ -646,23 +640,32 @@ export default function Play() {
   const _balanceOf = parseInt(balanceOf, 10);
 
   const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: '_owner',
   })
 
   const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'getActiveTokenIds',
   })
 
-  const { data: hallOfFame = [], isLoading: loadingGetWinners, refetch: refetchGetWinners } = useContractRead({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+  const { data: allWinners, isLoading: loadingWinners, refetch: refetchWinner } = useContractRead({
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
-    functionName: 'hallOfFame',
-    args: [_currentGeneration],
+    functionName: 'getAllWinners',
   })
+  const isWinner = allWinners?.includes(address)
+
+  const { data: rewards, isLoading: loadingRewards, refetch: refetchRewards } = useContractRead({
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
+    abi: ABI,
+    functionName: 'rewards',
+    args: [address],
+  })
+  const _rewards = parseInt(rewards, 10);
+
 
 
   /*
@@ -680,7 +683,7 @@ export default function Play() {
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount.toString()],
@@ -692,7 +695,7 @@ export default function Play() {
 
   // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
@@ -701,16 +704,16 @@ export default function Play() {
 
   // CLAIM REWARDS
   const { config: withdrawWinnersFunds } = usePrepareContractWrite({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'withdrawWinnersFunds',
   })
-  const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(configPass)
+  const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(withdrawWinnersFunds)
 
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'checkExplosion',
   })
@@ -731,7 +734,7 @@ export default function Play() {
   */
   // START GAME
   const { config: startGame } = usePrepareContractWrite({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'startGame',
   })
@@ -739,7 +742,7 @@ export default function Play() {
 
   // END MINTING
   const { config: endMinting } = usePrepareContractWrite({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'endMinting',
   })
@@ -747,7 +750,7 @@ export default function Play() {
 
   // PAUSE GAME
   const { config: pauseGame } = usePrepareContractWrite({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'pauseGame',
   })
@@ -755,7 +758,7 @@ export default function Play() {
 
   // RESUME GAME
   const { config: resumeGame } = usePrepareContractWrite({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'resumeGame',
   })
@@ -763,7 +766,7 @@ export default function Play() {
 
   // RESTART GAME 
   const { config: restartGame } = usePrepareContractWrite({
-    address: '0x98bbdaAc7054531602275a0b315419840f9afABe',
+    address: '0xc27115A0EC01ccfe5E92a3EC6CA0B6b6a5D7FC2F',
     abi: ABI,
     functionName: 'restartGame',
   })
@@ -869,10 +872,8 @@ export default function Play() {
   const handleClaimReward = () => {
     if (!address) {
       alert("please connect to join the heat!!!")
-    } else if (address !== getWinner) {
-      alert("You are not the winner!");
     } else {
-      _claimReward?.();
+      claimRewards?.();
     }
   }
 
@@ -988,24 +989,7 @@ export default function Play() {
       console.error('Error fetching player data', error);
     }
   };
-
-  const isWinner = async () => {
-    try {
-      console.log(`getWinners: ${hallOfFame[0]}`)
-      const _onlyDubs = hallOfFame[0]?.toString();
-      console.log(`Hall of Fame: ${_onlyDubs}`)
-      for (let i = 0; i < hallOfFame.length; i++) {
-        if (address !== hallOfFame[i]) {
-          _winner = true;
-          console.log(`winer is: ${_winner}`)
-        }
-        _winner = false;
-        console.log(`winer is: ${_winner}`)
-      }
-    } catch (error) {
-      console.log(`error: ${error}`)
-    }
-  };
+  
 
   const getRoundWon = async () => {
     try {
@@ -1067,7 +1051,7 @@ export default function Play() {
   useEffect(() => {
     refetchGameState();
     setGetGameState(_getGameState);
-    console.log(`Game State: ${_getGameState}`);
+    console.log(`Game State: ${getGameState}`);
     refetchGetRoundMints();
     const roundMints = parseInt(getRoundMints, 10);
     if (!isNaN(roundMints)) {
@@ -1098,8 +1082,8 @@ export default function Play() {
       console.log(`Round: ${currentRound}`);
     }
     setActiveTokens(_activeTokens);
-    isWinner();
     fetchPlayerData();
+    console.log(`isWinner: ${allWinners}`);
   }, [currentGeneration, getRoundMints, address]);
 
   useEffect(() => {
@@ -1228,10 +1212,9 @@ export default function Play() {
                   <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Connect First</h1>
                   <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Connect your wallet to view this page! Hope you join the fun soon...</h3>
                   <Image alt='Image' src={potato} width={200} height={200} />
-                  {_winner ?
-                    <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
-                    :
-                    null
+                  {isWinner && _rewards != 0 &&
+                    <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
+                   
                   }
                 </>
               </> :
@@ -1244,27 +1227,23 @@ export default function Play() {
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
                     Total Wins: {!wins ? "Loading..." : wins}
                   </p>
-                  {_winner ?
-                    <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
-                    :
-                    null
+                  {isWinner && _rewards != 0 &&
+                    <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
+                    
                   }
                 </>
                 : getGameState == "Queued" ?
                   <>
                     <Image alt='Image' src={potato} width={200} height={200} className='self-center' />
-                    {_winner ?
-                      <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
-                      :
-                      null
-                    }                  </>
+                    {isWinner && _rewards != 0 &&
+                      <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
+                    }                  
+                  </>
                   : getGameState == "Paused" ?
                     <>
                       <Image alt='Image' src={potato} width={200} height={200} />
-                      {_winner ?
-                        <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
-                        :
-                        null
+                      {isWinner && _rewards != 0 &&
+                        <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
                       }
                     </>
                     : getGameState == "Minting" ?
@@ -1278,19 +1257,16 @@ export default function Play() {
                           <Image alt='Image' src={potato} width={100} height={200} />
                           <Image alt='Image' src={potato} width={100} height={200} />
                         </div>
-                        {_winner ?
-                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
-                          :
-                          null
+                        {isWinner && _rewards != 0 &&
+                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
                         }
                       </>
                       : getGameState == "Ended" &&
                       <>
                         <Image alt='Image' src={potato} width={200} height={200} />
-                        {_winner ?
-                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
-                          :
-                          null
+                        {isWinner && _rewards != 0 &&
+                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
+                          
                         }
                       </>
             }
@@ -1370,11 +1346,11 @@ export default function Play() {
                           Loading...
                         </h1>) : (
                         <Link
-                          href={`https://mumbai.polygonscan.com/address/${winner}`}
+                          href={`https://mumbai.polygonscan.com/address/${roundWinner}`}
                           target='_blank'
                           className={`text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text animate-pulse ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}
                         >
-                          {winner}
+                          {roundWinner}
                         </Link>
                       )
                       }
@@ -1466,10 +1442,8 @@ export default function Play() {
                 : getGameState == "Queued" ?
                   <>
                     <Image alt='Image' src={potato} width={200} height={200} className='self-center' />
-                    {_winner ?
-                      <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
-                      :
-                      null
+                    {isWinner && _rewards != 0 &&
+                      <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
                     }
                   </>
                   : getGameState == "Minting" ?
@@ -1499,18 +1473,14 @@ export default function Play() {
                     : getGameState == "Paused" ?
                       <>
                         <Image alt='Image' src={potato} width={200} height={200} />
-                        {_winner ?
-                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
-                          :
-                          null
+                        {isWinner && _rewards != 0 &&
+                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
                         }                      </>
                       : getGameState == "Ended" &&
                       <>
                         <Image alt='Image' src={potato} width={200} height={200} />
-                        {_winner ?
-                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={fetchGameStateAndMore}>Claim Rewards</button>
-                          :
-                          null
+                        {isWinner && _rewards != 0 &&
+                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
                         }                      </>
             }
           </div>
