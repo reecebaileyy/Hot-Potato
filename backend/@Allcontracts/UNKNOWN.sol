@@ -99,6 +99,7 @@ contract UNKNOWN is
     mapping(address => uint256) public successfulPasses;
     mapping(address => uint256) public failedPasses;
     mapping(address => uint256) public totalWins;
+    mapping(uint256 => address) public hallOfFame;
     mapping(uint256 => RequestStatus) public statuses;
     mapping(address => uint256[]) public tokensOwnedByUser;
     mapping(GameState => string) private gameStateStrings;
@@ -684,7 +685,7 @@ contract UNKNOWN is
         return 0;
     }
 
-    function _isTokenActive(uint256 tokenId) internal view returns (bool) {
+    function _isTokenActive(uint256 tokenId) public view returns (bool) {
         for (uint256 i = 1; i < activeTokens.length; i++) {
             if (activeTokens[i] == tokenId) {
                 return true;
@@ -762,6 +763,8 @@ contract UNKNOWN is
             gameState = GameState.Ended;
             emit PlayerWon(ownerOf(activeTokens[1]));
             winners.push(ownerOf(activeTokens[1]));
+            hallOfFame[currentGeneration] = ownerOf(activeTokens[1]);
+            totalWins[ownerOf(activeTokens[1])] += 1;
             rewards[ownerOf(activeTokens[1])] +=
                 (roundFunds[currentGeneration] * 4) /
                 10;
