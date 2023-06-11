@@ -478,7 +478,7 @@ export default function Play() {
     functionName: 'getExplosionTime',
     enabled: true,
   })
-  const explosionTime = !isNaN(parseInt(getExplosionTime, 10)) ? parseInt(getExplosionTime, 10) : null;
+  const explosionTime = parseInt(getExplosionTime, 10);
 
 
   // GET MINT PRICE
@@ -1178,7 +1178,7 @@ export default function Play() {
   useEffect(() => {
     const fetchExplosionTime = async () => {
       try {
-        refetchGetExplosionTime();
+        await refetchGetExplosionTime();
         if (!isNaN(explosionTime) && explosionTime > 0) {
           setRemainingTime(explosionTime);
           console.log(`Explosion Time: ${remainingTime}`);
