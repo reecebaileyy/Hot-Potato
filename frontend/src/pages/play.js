@@ -30,12 +30,11 @@ export default function Play() {
   const [isOpen, setIsOpen] = useState(false)
   const [events, setEvents] = useState([]);
   const [tokenId, setTokenId] = useState("");
-  const [maxMintAmount, setMaxMintAmount] = useState(0);
   const [mintAmount, setMintAmount] = useState("");
   const [totalCost, setTotalCost] = useState(0);
   const argsArray = [1, 2, 3, 4, 5];
-  const [activeTokens, setActiveTokens] = useState(0);
   const [potatoOwner, setPotatoOwner] = useState("");
+  const [mintPromise, setMintPromise] = useState(null);
   const [_potatoTokenId, setPotatoTokenId] = useState(0);
   const [remainingTime, setRemainingTime] = useState(null);
   const [_getGameState, setGetGameState] = useState("Loading...");
@@ -81,7 +80,6 @@ export default function Play() {
     eventName: 'GameStarted',
     listener(log) {
       setRoundMints(0);
-      setActiveTokens(0);
       refetchGameState();
       refetchMaxSupply();
       refetchGetRoundMints();
@@ -266,32 +264,52 @@ export default function Play() {
     ██       ██▄   ▄██ ██  ██   ██   ██   ██▄   ▄██     █  ▀██▀   ██   ██   ██    ██   ██   
   ▄████▄      ▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀    ▄███▄ ▀▀  ▄████▄████▄████  ████▄ ▀████
   */
-  let mintResolve, mintReject;
   useContractEvent({
     address: '0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
+        console.log("A");
         const amount = parseInt(log[0].args.amount);
+        console.log("b");
         setRoundMints(prevRoundMints => prevRoundMints + amount);
+        console.log("c");
         refetchGetRoundMints();
+        console.log("d");
         const player = log[0].args.player.toString();
+        console.log("e");
         const amountDisplay = String(log[0].args.amount); //Need this one
+        console.log("f");
         setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
+        console.log("g");
 
-        if (address === player) {
+
+        if (address == player) {
           // Resolve our promise
+          console.log("h");
           refetchGetActiveTokenCount();
-          mintResolve();
+          console.log("i");
+          console.log('Minted successfully', mintPromise);
+          setMintPromise(true);
+          if (mintPromise) {
+            console.log("k");
+            mintPromise.resolve();
+            console.log("l");
+          }
         } else {
-          mintReject();
+          if (mintPromise) {
+            mintPromise.reject(new Error('Minting failed for this player'));
+          }
         }
 
         const data = await response.json();
 
       } catch (error) {
         console.error('Error updating mints', error);
+        if (mintPromise) {
+          mintPromise.reject(error);
+        }
       }
     },
   });
@@ -337,6 +355,7 @@ export default function Play() {
     async listener(log) {
       try {
         const time = log[0].args.time.toString();
+        refetchGetExplosionTime();
         setRemainingTime(explosionTime);
         localStorage.setItem('remainingTime', time);
         setEvents(prevEvents => [...prevEvents, `+${time}`]);
@@ -345,32 +364,6 @@ export default function Play() {
       }
     },
   });
-
-  /*
-                              ▄▄                                                                                 
-        ██              ██    ██                        ███▀▀██▀▀███        ▀███                                 
-       ▄██▄             ██                              █▀   ██   ▀█          ██                                 
-      ▄█▀██▄    ▄██▀████████▀███ ▀██▀   ▀██▀  ▄▄█▀██         ██      ▄██▀██▄  ██  ▄██▀  ▄▄█▀██▀████████▄  ▄██▀███
-     ▄█  ▀██   ██▀  ██  ██    ██   ██   ▄█   ▄█▀   ██        ██     ██▀   ▀██ ██ ▄█    ▄█▀   ██ ██    ██  ██   ▀▀
-     ████████  ██       ██    ██    ██ ▄█    ██▀▀▀▀▀▀        ██     ██     ██ ██▄██    ██▀▀▀▀▀▀ ██    ██  ▀█████▄
-    █▀      ██ ██▄    ▄ ██    ██     ███     ██▄    ▄        ██     ██▄   ▄██ ██ ▀██▄  ██▄    ▄ ██    ██  █▄   ██
-  ▄███▄   ▄████▄█████▀  ▀████████▄    █       ▀█████▀      ▄████▄    ▀█████▀▄████▄ ██▄▄ ▀█████▀████  ████▄██████▀
-  */
-  useContractEvent({
-    address: '0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303',
-    abi: ABI,
-    eventName: 'HandsActivated',
-    async listener(log) {
-      try {
-        const amount = log[0].args.count;
-        setActiveTokens(amount);
-        localStorage.setItem('activeTokens', amount);
-      } catch (error) {
-        console.error('Error updating timer', error);
-      }
-    },
-  });
-
 
   /*
                                    ▄▄                   ▄▄                      
@@ -399,7 +392,6 @@ export default function Play() {
           refetchGetActiveTokenCount();
           refetchUserHasPotatoToken();
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
-          setActiveTokens(prevactiveTokens => prevactiveTokens - 1);
         } else {
           console.error('TokenId is not a BigInt or is not found in log args', log);
         }
@@ -618,6 +610,14 @@ export default function Play() {
   })
   const totalWins = parseInt(_totalWins, 10);
 
+  const { data: getImageString, isLoading: loadingGetImageString, refetch: refetchImageString } = useContractRead({
+    address: '0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303',
+    abi: ABI,
+    functionName: 'getImageString',
+    args: [tokenId],
+    enabled: true
+  });
+
 
   const { data: _successfulPasses, isLoading: loadingSuccessfulPasses, refetch: refetchSuccessfulPasses } = useContractRead({
     address: '0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303',
@@ -661,9 +661,9 @@ export default function Play() {
   })
 
   const { data: userBalance, isError, isLoading } = useBalance({
-    address: '0xA0Cf798816D4b9b9866b5330EEa46a18382f251e',
+    address: address,
   })
-  const balance = parseInt(userBalance, 10);
+  const balance = userBalance ? BigInt(userBalance.value) : 0;
 
 
 
@@ -689,7 +689,7 @@ export default function Play() {
     args: [mintAmount.toString()],
     value: totalCost,
   })
-  const { data: mintData, isSuccess, write: mint } = useContractWrite(config)
+  const { data: mintData, write: mint } = useContractWrite(config)
 
 
 
@@ -700,7 +700,7 @@ export default function Play() {
     functionName: 'passPotato',
     args: [tokenId],
   })
-  const { data: passData, isSuccess: Successful, write: pass } = useContractWrite(configPass)
+  const { data: passData, isSuccess: Successful, write: pass, error: errorPassing } = useContractWrite(configPass)
 
   // CLAIM REWARDS
   const { config: withdrawWinnersFunds } = usePrepareContractWrite({
@@ -1005,14 +1005,12 @@ export default function Play() {
     } else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
       maxPerWalletToast();
     } else {
-      mint?.();
-      const resolveMint = new Promise((resolve => setTimeout(resolve, 10000)));
+      const mintPromise = mint?.();
       toast.promise(
-        resolveMint,
+        mintPromise,
         {
           pending: 'Minting...',
-          success: 'Mint Successful!',
-          error: 'An error occurred while minting!'
+          // We've moved the success and error handlers into the useContractWrite hook
         }
       );
     }
@@ -1122,7 +1120,6 @@ export default function Play() {
 
   //On Mount
   useEffect(() => {
-    setMaxMintAmount(maxPerWallet);
     refetchPotatoTokenId();
     refetchGameState();
     refetchGetActiveTokenCount();
@@ -1134,6 +1131,7 @@ export default function Play() {
     refetchTotalWins();
     refetchCurrentGeneration();
     refetchSuccessfulPasses();
+    refetchImageString();
     refetchMaxSupply();
     refetchPrice();
     setRemainingTime(explosionTime);
@@ -1178,7 +1176,7 @@ export default function Play() {
   useEffect(() => {
     const fetchExplosionTime = async () => {
       try {
-        await refetchGetExplosionTime();
+        refetchGetExplosionTime();
         if (!isNaN(explosionTime) && explosionTime > 0) {
           setRemainingTime(explosionTime);
           console.log(`Explosion Time: ${remainingTime}`);
@@ -1190,7 +1188,7 @@ export default function Play() {
 
     fetchExplosionTime();
   }, []);
-  
+
   useEffect(() => {
     let timer;
     if (remainingTime > 0) {
@@ -1206,7 +1204,7 @@ export default function Play() {
         });
       }, 1000);
     }
-  
+
     return () => clearInterval(timer);
   }, [remainingTime]);
   /*
@@ -1394,7 +1392,7 @@ export default function Play() {
                   </span>
                 </p>
                 <h2 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
-                  {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${remainingTime === 0 ? "0" : remainingTime}`}
+                {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${isNaN(remainingTime) || remainingTime === 0 ? "0" : remainingTime}`}
                 </h2>
                 <Image alt='Image' src={potato} width={200} height={200} />
                 <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
@@ -1419,7 +1417,7 @@ export default function Play() {
                     <Link href="https://mumbai.polygonscan.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
                       Discord
                     </Link>
-                    <Link href="https://twitter.com" className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                    <Link href="https://mumbai.polygonscan.com/address/0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303" className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
                     <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} href="https://app.gitbook.com">Twitter</Link>
                   </div>
                 </>
@@ -1434,7 +1432,7 @@ export default function Play() {
                     ) : (
                       <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Active Tokens Remaing</p>)
                     }
-                    <Link href="https://mumbai.polygonscan.com/" target='_blank' className='underline'>
+                    <Link href="https://mumbai.polygonscan.com/address/0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303" target='_blank' className='underline'>
                       Smart Contract
                     </Link>
                   </>
@@ -1506,7 +1504,7 @@ export default function Play() {
                             </p1>
                           </>
                         }
-                        <Link href="https://mumbai.polygonscan.com/" target='_blank' className='underline'>
+                        <Link href="https://mumbai.polygonscan.com/address/0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303" target='_blank' className='underline'>
                           Smart Contract
                         </Link>
                       </>
@@ -1562,11 +1560,11 @@ export default function Play() {
                     <>
                       <Image alt='Image' src={potato} width={200} height={200} />
                       <h3 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>
-                        I have 
+                        I have
                         <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>
                           {loadingActiveTokenCount ? ' Loading...' : isNaN(activeTokensCount) || activeTokensCount === 0 ? ` 0` : ` ${activeTokensCount} `}
                         </span>
-                        {loadingActiveTokenCount ? '' : isNaN(activeTokensCount) || activeTokensCount === 1  ? ' pair' : ' pairs'} of hands to handle the heat this round
+                        {loadingActiveTokenCount ? '' : isNaN(activeTokensCount) || activeTokensCount === 1 ? ' pair' : ' pairs'} of hands to handle the heat this round
                       </h3>
 
                       <p className={`text-sm text-center ${darkMode ? 'text-white' : 'text-black'}`}>Pass the heat to your friends and family!!</p>
@@ -1603,6 +1601,7 @@ export default function Play() {
             ref={divRef}
             className={`hide-scrollbar w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}
           >
+
             <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4">
               {events.map((event, index) => (
                 <div key={index} className={darkMode ? 'text-white' : 'text-black'}>
@@ -1618,7 +1617,7 @@ export default function Play() {
               <h1>Loading...</h1>
             </div>
           ) : (
-            getGameState === 'Playing' || getGameState === 'Final Round' || getGameState === 'Paused' ? (
+            getGameState === 'Playing' || getGameState === 'Minting' || getGameState === 'Final Round' || getGameState === 'Paused' ? (
               <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md`}>
                 <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Active Tokens:</h1>
                 <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
