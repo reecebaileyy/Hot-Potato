@@ -1033,9 +1033,10 @@ export default function Play() {
   }
 
   const handlecheck = () => {
+    refetchGetExplosionTime();
     if (!address) {
       noAddressToast();
-    } else if (remainingTime !== 0) {
+    } else if (remainingTime != 0) {
       hasMoreTimeToast();
     } else {
       check?.();
