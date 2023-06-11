@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import Image from 'next/image'
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Web3Button } from '@web3modal/react'
 import ABI from '../abi/UNKNOWN.json'
 import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent } from 'wagmi'
