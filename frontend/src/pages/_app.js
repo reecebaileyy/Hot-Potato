@@ -1,14 +1,12 @@
 import '@/styles/globals.css'
 import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
 import { Web3Modal } from '@web3modal/react'
-import { createPublicClient, webSocket } from 'viem'
+import { useState } from 'react'
+import { createWalletClient, createPublicClient, custom, webSocket } from 'viem'
 import { configureChains, createConfig, WagmiConfig } from 'wagmi'
 import {polygon, polygonMumbai } from 'wagmi/chains'
 
-
-
 export default function App({ Component, pageProps }) {
-
   const chains = [polygon, polygonMumbai]
   const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
   const transport = webSocket("wss://polygon-mumbai.g.alchemy.com/v2/Y9oQY9HN4-YlSw-3PUMpfNRfiLvyntba");
@@ -23,20 +21,45 @@ export default function App({ Component, pageProps }) {
     }),
     publicClient: createPublicClient({chain: polygonMumbai, transport})
   })
+
+  // Initialize an EthereumClient using the wagmiConfig.
   const ethereumClient = new EthereumClient(wagmiConfig, chains)
-  
+
+  // Create a state for the client.
+  const [client, setClient] = useState(null);
+
+  // Handle the connect event.
+  const handleConnect = async (provider) => {
+    if (provider) {
+      // Create a new Viem client using the user's provider.
+      const userClient = createWalletClient({
+        chain: polygonMumbai,
+        transport: custom(provider)
+      })
+      console.log(`userClient, ${userClient}`)
+      
+      // Set the new client.
+      setClient(userClient)
+    }
+  }
+
+  // Handle the disconnect event.
+  const handleDisconnect = () => {
+    // Reset the client when the user disconnects their wallet.
+    setClient(null)
+  }
 
   return (
     <>
       <WagmiConfig config={wagmiConfig}>
-      <Component {...pageProps} />
+      <Component {...pageProps} client={client}/>
       </WagmiConfig>
 
       <Web3Modal
         projectId={projectId}
         ethereumClient={ethereumClient}
         themeVariables={{
-            '--w3m-font-family': 'DarumadropOne, sans-serif', //LEFT OFF
+            '--w3m-font-family': 'DarumadropOne, sans-serif',
             '--w3m-accent-color': '#FFFFFF',
             '--w3m-accent-fill-color': '#000000',
             '--w3m-background-color': '#000000',
@@ -47,6 +70,8 @@ export default function App({ Component, pageProps }) {
             '--w3m-text-xsmall-regular-size': '.8rem',
             '--w3m-font-weight': '400',
           }}
+        onConnect={handleConnect}
+        onDisconnect={handleDisconnect}
       />
     </>
   )

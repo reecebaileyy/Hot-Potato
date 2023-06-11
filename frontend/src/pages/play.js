@@ -49,7 +49,6 @@ export default function Play() {
 
   // STORING USERS ADDRESS
   const { address } = useAccount()
-  const { balance } = useBalance(address)
   /*
    ________ __     __ ________ __    __ ________      __    __  ______   ______  __    __  ______  
   |        \  \   |  \        \  \  |  \        \    |  \  |  \/      \ /      \|  \  /  \/      \ 
@@ -84,20 +83,14 @@ export default function Play() {
       setRoundMints(0);
       setActiveTokens(0);
       refetchGameState();
+      refetchMaxSupply();
+      refetchPrice();
+      refetchCurrentGeneration();
       const message = "Heating up";
       console.log("Started");
       setGetGameState("Minting");
       setEvents(prevEvents => [...prevEvents, message]);
 
-      fetch('/api/update-game-state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newState: "Minting" }),
-      })
-        // CACHE THIS DATA IN LOCAL STORAGE
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error(error));
     },
   })
 
@@ -112,16 +105,6 @@ export default function Play() {
       refetchPotatoTokenId();
       refetchGameState();
       setEvents(prevEvents => [...prevEvents, message]);
-
-      fetch('/api/update-game-state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newState: "Playing" }),
-      })
-        // CACHE THIS DATA IN LOCAL STORAGE
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error(error));
     },
   })
 
@@ -133,39 +116,7 @@ export default function Play() {
       const message = "Back to it";
       console.log("Resumed");
       refetchGameState();
-      let previousGameState = await getPreviousGameState();
       refetchPotatoTokenId();
-
-      if (!previousGameState) {
-        // Fetch the current game state
-        const response = await fetch('/api/get-game-state');
-        const data = await response.json();
-        console.log(`Previous GameState Data: ${data}`)
-
-        // Find the previous game state
-        previousGameState = Object.keys(data).find(key => data === "previous");
-        console.log(`Previous Game State: ${previousGameState}`)
-      }
-
-      if (previousGameState) {
-        console.log(`Previous Game State: ${previousGameState}`)
-        // Update the game state in the database
-        const updateResponse = await fetch('/api/update-game-state', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ newState: previousGameState }),
-        });
-        const updateData = await updateResponse.json();
-        console.log(updateData);
-
-        // After the update, set the game state in the component state
-        setGetGameState(previousGameState);
-      } else {
-        console.log("No previous game state found");
-      }
-
-      // CACHE THIS DATA IN LOCAL STORAGE
-
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -182,15 +133,6 @@ export default function Play() {
       setGetGameState("Paused");
       refetchGameState();
       setEvents(prevEvents => [...prevEvents, message]);
-
-      fetch('/api/update-game-state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newState: "Paused" }),
-      })// CACHE THIS DATA IN LOCAL STORAGE
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error(error));
     },
   })
 
@@ -202,18 +144,8 @@ export default function Play() {
       const message = "Game Over";
       setGetGameState("Queued");
       refetchGameState();
-      setEvents(prevEvents => [...prevEvents, message]);
-
-      fetch('/api/update-game-state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newState: "Queued" }),
-      })// CACHE THIS DATA IN LOCAL STORAGE
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error(error));
-
       setRoundMints(0);
+      setEvents(prevEvents => [...prevEvents, message]);
     },
   })
 
@@ -227,15 +159,6 @@ export default function Play() {
       setGetGameState("Final Round");
       refetchGameState();
       setEvents(prevEvents => [...prevEvents, message]);
-
-      fetch('/api/update-game-state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newState: "Final Round" }),
-      })// CACHE THIS DATA IN LOCAL STORAGE
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error(error));
     },
   })
 
@@ -261,6 +184,10 @@ export default function Play() {
       try {
         console.log(`Player ${log} won!`)
         const player = log[0]?.args?.player?.toString();
+        refetchGameState();
+        refetchHallOfFame();
+        refetchWinner();
+        refetchRewards();
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
 
         // Send a POST request to the API route to update the database
@@ -274,28 +201,11 @@ export default function Play() {
 
         // Send a POST request to the API route to update the database for the gamestate
         setGetGameState("Ended");
-        refetchWinner();
-
-        fetch('/api/update-game-state', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ newState: "Ended" }),
-        })// CACHE THIS DATA IN LOCAL STORAGE
-          .then(response => response.json())
-          .then(data => console.log(data))
-          .catch(error => console.error(error));
 
         // If the passing player is the connected address, fetch the latest data for this address
         if (player === address) {
-          const response = await fetch(`/api/get-player-data/${address}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          const data = await response.json();
-          setWins(data.wins);
+          refetchTotalWins();
+          toast.success("You won! 🎉 Don't forget to claim your rewards!");
         }
 
       } catch (error) {
@@ -317,6 +227,7 @@ export default function Play() {
 
         if (address === player) {
           toast.success("Pass Successful!");
+          refetchSuccessfulPasses();
         }
 
         // Send a POST request to the API route to update the database
@@ -365,14 +276,15 @@ export default function Play() {
       try {
         const amount = parseInt(log[0].args.amount);
         setRoundMints(prevRoundMints => prevRoundMints + amount);
-
+        refetchGetRoundMints();
         const player = log[0].args.player.toString();
         const amountDisplay = String(log[0].args.amount); //Need this one
         setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
 
         if (address === player) {
           // Resolve our promise
-          mintResolve(); 
+          refetchGetActiveTokenCount();
+          mintResolve();
         } else {
           mintReject();
         }
@@ -594,7 +506,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getActiveTokenCount',
     args: [address],
-    enabled: true,
+    enabled: false,
   })
   const activeTokensCount = parseInt(getActiveTokenCount, 10);
 
@@ -660,6 +572,7 @@ export default function Play() {
     functionName: 'roundMints',
     enabled: false,
   })
+  const totalMints = parseInt(getRoundMints, 10);
 
 
   // GET IMAGES
@@ -678,8 +591,9 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: '_owner',
-    enabled: false,
+    enabled: true,
   })
+  const _ownerAddress = _owner?.toString();
 
   const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
@@ -704,6 +618,25 @@ export default function Play() {
     enabled: false,
   })
   const _rewards = parseInt(rewards, 10);
+
+  const { data: _totalWins, isLoading: loadingTotalWins, refetch: refetchTotalWins } = useContractRead({
+    address: '0xEACe984A234124f43876138c3FFD275809A95252',
+    abi: ABI,
+    functionName: 'totalWins',
+    args: [address],
+    enabled: false,
+  })
+  const totalWins = parseInt(_totalWins, 10);
+
+
+  const { data: _successfulPasses, isLoading: loadingSuccessfulPasses, refetch: refetchSuccessfulPasses } = useContractRead({
+    address: '0xEACe984A234124f43876138c3FFD275809A95252',
+    abi: ABI,
+    functionName: 'successfulPasses',
+    args: [address],
+    enabled: false,
+  })
+  const successfulPasses = parseInt(_totalWins, 10);
 
   const { data: hallOfFame, isLoading: loadingHGallOfFame, refetch: refetchHallOfFame } = useContractRead({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
@@ -737,6 +670,11 @@ export default function Play() {
     enabled: false,
   })
 
+  const { data: userBalance, isError, isLoading } = useBalance({
+    address: '0xA0Cf798816D4b9b9866b5330EEa46a18382f251e',
+  })
+  const balance = parseInt(userBalance, 10);
+
 
 
 
@@ -760,7 +698,6 @@ export default function Play() {
     functionName: 'mintHand',
     args: [mintAmount.toString()],
     value: totalCost,
-    enabled: false,
   })
   const { data: mintData, isSuccess, write: mint } = useContractWrite(config)
 
@@ -772,7 +709,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
-    enabled: false,
   })
   const { data: passData, isSuccess: Successful, write: pass } = useContractWrite(configPass)
 
@@ -781,7 +717,6 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'withdrawWinnersFunds',
-    enabled: false,
   })
   const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(withdrawWinnersFunds)
 
@@ -791,7 +726,6 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'checkExplosion',
-    enabled: false,
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -813,7 +747,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'startGame',
-    enabled: false,
+    enabled: false
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
 
@@ -822,7 +756,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'endMinting',
-    enabled: false,
+    enabled: false
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
 
@@ -831,7 +765,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'pauseGame',
-    enabled: false,
+    enabled: false
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
 
@@ -840,7 +774,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'resumeGame',
-    enabled: false,
+    enabled: false
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
 
@@ -849,7 +783,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'restartGame',
-    enabled: false,
+    enabled: false
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
@@ -865,71 +799,71 @@ export default function Play() {
   */
 
   function noAddressToast() {
-    toast("Please Connect to Interact")
+    toast.info("Please Connect to Interact")
   }
 
   function startToast() {
-    toast("Must Restart Game to Start Again")
+    toast.error("Must Restart Game to Start Again")
   }
 
   function endToast() {
-    toast("Minting Already Ended")
+    toast.error("Minting Already Ended")
   }
 
   function pauseToast() {
-    toast("Game Already Paused")
+    toast.error("Game Already Paused")
   }
 
   function resumeToast() {
-    toast("Game Already Resumed")
+    toast.error("Game Already Resumed")
   }
 
   function restartToast() {
-    toast("Game Already Restarted")
+    toast.error("Game Already Restarted")
   }
 
   function onlyNumbersToast() {
-    toast("Only Numbers Allowed")
+    toast.info("Only Numbers Allowed")
   }
 
   function cannotPassToast() {
-    toast("The Game Has not started yet")
+    toast.error("The Game Has not started yet")
   }
 
   function ownThePotatoToast() {
-    toast("You have to own the Potato to pass it")
+    toast.error("You have to own the Potato to pass it")
   }
 
   function noEnoughFundsToast() {
-    toast("You do not have enough funds to mint")
+    toast.error("You do not have enough funds to mint")
   }
 
   function cannotPassToSelfToast() {
-    toast("You cannot pass the Potato to yourself")
+    toast.error("You cannot pass the Potato to yourself")
   }
 
   function gameFullToast() {
-    toast("The Round is already Full")
+    toast.error("The Round is already Full")
   }
 
   function tokenInactiveToast() {
-    toast("The token you tried to pass to is inactive")
+    toast.error("The token you tried to pass to is inactive")
   }
 
   function maxPerWalletToast() {
-    toast(`You can only mint ${maxPerWallet} Potato per round`);
+    toast.error(`You can only mint ${maxPerWallet} Potato per round`);
   }
 
   function mintOneToast() {
-    toast("Mint at least 1 to play");
+    toast.info("Mint at least 1 to play");
   }
 
   function hasMoreTimeToast() {
-    toast("There is still time left to pass the Potato");
+    toast.warn("There is still time left to pass the Potato");
   }
 
   function noRewardsToast() {
-    toast("You have no rewards to claim");
+    toast.warn("You have no rewards to claim");
   }
 
 
@@ -1008,6 +942,7 @@ export default function Play() {
     }
     else {
       claimRewards?.();
+      refetchRewards();
     }
   }
 
@@ -1077,22 +1012,20 @@ export default function Play() {
     if (!address) {
       noAddressToast();
     } else if (balance < totalCost) {
+      console.log(`balance, totalCost: ${balance}, ${totalCost}`);
       noEnoughFundsToast();
     } else if (mintAmount > (maxSupply - _roundMints)) {
       gameFullToast();
     } else if (mintAmount === 0) {
       mintOneToast();
-    } else if ((activeTokensCount + parseInt(mintAmount)) > maxPerWallet) {
-      console.log("Active tokens:", activeTokensCount);
-      console.log("Mint amount:", mintAmount);
+    } else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
       maxPerWalletToast();
     } else {
-      console.log("Mint amount:", mintAmount);
-      console.log("Total cost:", totalCost);
+      console.log(`balance, totalCost: ${balance?.formatted}, ${totalCost}`);
       mint?.();
       const resolveMint = new Promise((resolve => setTimeout(resolve, 10000)));
-      toast.promise(     
-        resolveMint, 
+      toast.promise(
+        resolveMint,
         {
           pending: 'Minting...',
           success: 'Mint Successful!',
@@ -1233,8 +1166,17 @@ export default function Play() {
     refetchGetRoundMints();
     refetchGetActiveTokens();
     refetchUserHasPotatoToken();
-    console.log(`activeTokensCount: ${activeTokensCount}`);
-    console.log(`_activeTokens: ${_activeTokens}`);
+    refetchHallOfFame();
+    refetchTotalWins();
+    refetchCurrentGeneration();
+    refetchSuccessfulPasses();
+    refetchMaxSupply();
+    refetchPrice();
+    if (address == _ownerAddress) {
+      refetchowner();
+    }
+    console.log(`owner: ${_ownerAddress}`);
+    console.log(`address: ${address}`);
     const roundMints = parseInt(getRoundMints, 10);
     if (!isNaN(roundMints)) {
       setRoundMints(roundMints);
@@ -1253,7 +1195,7 @@ export default function Play() {
 
 
   //GAME STATE
-  useEffect(() => {    
+  useEffect(() => {
 
     if (!isNaN(_potatoTokenId)) {
       const localPotatoTokenId = localStorage.getItem('_potatoTokenId');
@@ -1416,10 +1358,10 @@ export default function Play() {
                 <>
                   <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Statistics:</h2>
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                    Successful Passes: {!passes ? "Loading..." : passes}
+                    Successful Passes: {!successfulPasses ? "Loading..." : passes}
                   </p>
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                    Total Wins: {!wins ? "Loading..." : wins}
+                    Total Wins: {!totalWins ? "Loading..." : wins}
                   </p>
                   {isWinner && _rewards != 0 &&
                     <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
@@ -1556,7 +1498,7 @@ export default function Play() {
                         {loadingCurrentGeneration ? (
                           <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</h3>
                         ) : (
-                          <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Round {round}</h3>
+                          <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Round {_currentGeneration}</h3>
                         )}
 
                         {loadingPrice ? (
@@ -1584,11 +1526,11 @@ export default function Play() {
                             <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                               onClick={handleMint}
                             >Join Round!</button>
-                            <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
+                            <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{totalMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
                           </>
                           :
                           <>
-                            <p className={`text-3xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_roundMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
+                            <p className={`text-3xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{totalMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
                             <p1 className={`text-2xl md:text-xl lg:text-3xl text-center font-bold ${darkMode ? 'text-white' : 'text-black'}`}>
                               Connect first to join the fun!
                             </p1>
@@ -1615,6 +1557,8 @@ export default function Play() {
                   <h1 className={`text-xl font-bold mb-2 underline ${darkMode ? 'text-white' : 'text-black'}`}>Your Tokens:</h1>
                   {loadingActiveTokenCount ? (
                     <h2 className="text-center font-bold mb-2">Loading Active Token(s)...</h2>
+                  ) : isNaN(activeTokensCount) || activeTokensCount === 0 ? (
+                    <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Active Token(s): 0</h2>
                   ) : (
                     <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Active Token(s): {activeTokensCount}</h2>
                   )}
@@ -1648,12 +1592,13 @@ export default function Play() {
                     <>
                       <Image alt='Image' src={potato} width={200} height={200} />
                       <h3 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>
-                        I have
+                        I have 
                         <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>
-                          {loadingActiveTokenCount ? 'Loading...' : ` ${activeTokensCount} `}
+                          {loadingActiveTokenCount ? ' Loading...' : isNaN(activeTokensCount) || activeTokensCount === 0 ? ` 0` : ` ${activeTokensCount} `}
                         </span>
-                        {loadingActiveTokenCount ? '' : activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round
+                        {loadingActiveTokenCount ? '' : isNaN(activeTokensCount) || activeTokensCount === 1  ? ' pair' : ' pairs'} of hands to handle the heat this round
                       </h3>
+
                       <p className={`text-sm text-center ${darkMode ? 'text-white' : 'text-black'}`}>Pass the heat to your friends and family!!</p>
                       <div className="grid grid-rows-2 place-items-center justify-center items center">
                         <button
@@ -1719,7 +1664,7 @@ export default function Play() {
 
 
 
-          {address == _owner &&
+          {address === _ownerAddress &&
             <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-xl overflow-x-auto`}>
               <div className="p-4 grid grid-cols-1 md:grid-cols-3 sm:grid-cols-3 gap-4">
                 <button
