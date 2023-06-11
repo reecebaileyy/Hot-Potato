@@ -1431,7 +1431,7 @@ export default function Play() {
                 ) : (
                   <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Hands Remaining</p>)
                 }
-                <Link href="https://mumbai.polygonscan.com/" target='_blank' className="underline">
+                <Link href="https://mumbai.polygonscan.com/address/0x9826FdE8E13C4Dec926A0CB2FC537DD6828343d0" target='_blank' className="underline">
                   Smart Contract
                 </Link>
               </>
