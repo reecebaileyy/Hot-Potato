@@ -149,21 +149,34 @@ contract InventoryManager {
     } else if (part == Part.hand_type) {
         if (1 <= id && id <= 3) {
             sig = "getHand1()";
-        } else if(3 < id && id <= 5) {
+        } else if(3 < id && id <= 7) {
             sig = "getHand2()";
-        } else if(5 < id && id <= 8) {
+        } else if(7 < id && id <= 11) {
             sig = "getHand3()";
-        } else if (8 < id && id <= 11) {
+        } else if (11 < id && id <= 15) {
             sig = "getHand4()";
-        } else if (11 < id && id <= 14) {
+        } else if (15 < id && id <= 17) {
             sig = "getBubbleGum()";
-        } else if (14 < id && id <= 17) {
+        } else if (17 < id && id <= 18) {
+            sig = "getBlueSlime()";
+        } else if (18 < id && id <= 19) {
             sig = "getGreenSlime()";
-        } else if (17 < id && id <= 20) {
-            sig = "getVitiligo()";
-        }
-         else {
-            revert("Invalid Background Id");
+        } else if (19 < id && id <= 21) {
+            sig = "getVitalago()";
+        } else if (21 < id && id <= 23) {
+            sig = "getGreenGoblin()";
+        } else if (23 < id && id <= 24) {
+            sig = "getBrownGoblin()";
+        } else if (24 < id && id <= 25) {
+            sig = "getYellowGoblin()";
+        } else if (25 < id && id <= 27) {
+            sig = "getSully()";
+        } else if (27 < id && id <= 29) {
+            sig = "getTiger()";
+        } else if(29 < id && id <= 30) {
+            sig = "getSnowTiger()";
+        } else {
+            revert("Invalid Hand Id");
         }
     } else if (part == Part.potato) {
         sig = "getPotato()";
@@ -294,40 +307,51 @@ function wrapTag(string memory uri) internal pure returns (string memory) {
             }
             return id == 18 ? "Purple" : id == 19 ? "Purple" : "Purple";
         }
+         return "Error: Id not found";
     }
 
     function getHandName(uint8 id) public pure returns (string memory) {
-        if (id <= 20) {
-            if (id < 10) {
-                if (id < 5) {
-                    if (id < 3) {
-                        return id == 1 ? "White" : "White";
-                    }
-                    return id == 3 ? "White" : "Tan";
+    if (id <= 30) {
+        if (id < 10) {
+            if (id < 5) {
+                if (id < 3) {
+                    return id == 1 ? "White" : "White";
                 }
-                if (id < 7)
-                    return id == 5 ? "Tan" : "Brown";
-                return
-                    id == 7 ? "Brown" : id == 8 ? "Brown" : "Black";
+                return id == 3 ? "White" : "Tan";
             }
-            if (id <= 15) {
-                if (id < 13) {
-                    return
-                        id == 10 ? "Black" : id == 11
-                            ? "Black"
-                            : "Bubble Gum";
-                }
-                return
-                    id == 13 ? "Bubble Gum" : id == 14
-                        ? "Bubble Gum"
-                        : "Green Slime";
+            if (id < 7) {
+                return id == 5 ? "Tan" : "Tan";
             }
-            if (id < 18) {
-                return id == 16 ? "Green Slime" : "Green Slime";
-            }
-            return id == 18 ? "Vitiligo" : id == 19 ? "Vitiligo" : "Vitiligo";
+            return id == 7 ? "Tan" : id == 8 ? "Brown" : "Brown";
         }
-    }
+        if (id <= 15) {
+            if (id < 13) {
+                return id == 10 ? "Brown" : id == 11 ? "Brown" : "Black";
+            }
+            return id == 13 ? "Black" : id == 14 ? "Black" : "Black";
+        }
+        if (id <= 20) {
+            if (id < 18) {
+                return id == 16 ? "Bubble Gum" : "Bubble Gum";
+            }
+            return id == 18 ? "Blue Slime" : id == 19 ? "Green Slime" : "Vitiligo";
+        }
+        if (id <= 25) {
+            if (id < 23) {
+                return id == 21 ? "Vitiligo" : "Green Goblin";
+            }
+            return id == 23 ? "Green Goblin" : id == 24 ? "Brown Goblin" : "Yellow Goblin";
+        }
+        if (id <= 30) {
+            if (id < 28) {
+                return id == 26 ? "Sully" : id == 27 ? "Sully" : "Tiger";
+            }
+            return id == 28 ? "Tiger" : id == 29 ? "Tiger" : "Snow Tiger";
+        }
+    } 
+        return "Error: Id not found";
+}
+
 
 }
 

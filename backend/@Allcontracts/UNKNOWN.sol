@@ -546,10 +546,10 @@ contract UNKNOWN is
         uint64 randHandType = uint64(_rarity(_rand(), "HAND_TYPE", id));
         hand_type = uint8(
             randHandType >= seventyPct
-                ? (randHandType % 3) + 18 //Legendary 18-20
+                ? (randHandType % 5) + 26 //Legendary 26-30
                 : randHandType >= fortyPct
-                ? (randHandType % 6) + 12 //Rare 12-17
-                : (randHandType % 11) + 1 //Common 1-11
+                ? (randHandType % 10) + 16 //Rare 16-25
+                : (randHandType % 15) + 1 //Common 1-15
         );
 
         _safeMint(msg.sender, 1);
