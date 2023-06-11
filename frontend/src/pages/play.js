@@ -38,9 +38,8 @@ export default function Play() {
   const [potatoOwner, setPotatoOwner] = useState("");
   const [_potatoTokenId, setPotatoTokenId] = useState(0);
   const [remainingTime, setRemainingTime] = useState(null);
-  const [getGameState, setGetGameState] = useState("Loading...");
+  const [_getGameState, setGetGameState] = useState("Loading...");
   const [_roundMints, setRoundMints] = useState(0);
-  const [round, setRound] = useState(0);
   const menuRef = useRef()
   const divRef = useRef(null);
   const [passes, setPasses] = useState(0);
@@ -402,7 +401,7 @@ export default function Play() {
         console.log(`new round ${log[0]?.args?.round}`);
         const currentRound = String(log[0]?.args?.round);
         console.log(`round: ${currentRound}`);
-        setRound(currentRound);
+        refetchCurrentGeneration();
       } catch (error) {
         console.error('Error updating mints', error);
       }// CACHE THIS DATA IN LOCAL STORAGE
@@ -556,7 +555,7 @@ export default function Play() {
 
 
   // GET MINT PRICE
-  const { data: _getGameState, refetch: refetchGameState } = useContractRead({
+  const { data: getGameState, refetch: refetchGameState } = useContractRead({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'getGameState',
@@ -587,7 +586,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getActiveTokenCount',
     args: [address],
-    enabled: false,
+    enabled: true,
   })
   const activeTokensCount = parseInt(getActiveTokenCount, 10);
 
@@ -1221,8 +1220,15 @@ export default function Play() {
   useEffect(() => {
     setMaxMintAmount(maxPerWallet);
     refetchPotatoTokenId();
-    localStorage.setItem('maxMintAmount', maxMintAmount);
-  }, [maxMintAmount, maxPerWallet, refetchPotatoTokenId]);
+    refetchGameState();
+    refetchGetActiveTokenCount();
+    refetchGetRoundMints();
+    console.log(activeTokensCount);
+    const roundMints = parseInt(getRoundMints, 10);
+    if (!isNaN(roundMints)) {
+      setRoundMints(roundMints);
+    }
+  }, []);
 
   useEffect(() => {
     if (roundWinner === undefined) {
@@ -1236,14 +1242,7 @@ export default function Play() {
 
 
   //GAME STATE
-  useEffect(() => {
-    refetchGameState();
-    setGetGameState(_getGameState);
-    refetchGetRoundMints();
-    const roundMints = parseInt(getRoundMints, 10);
-    if (!isNaN(roundMints)) {
-      setRoundMints(roundMints);
-    }
+  useEffect(() => {    
 
     if (!isNaN(_potatoTokenId)) {
       const localPotatoTokenId = localStorage.getItem('_potatoTokenId');
@@ -1256,18 +1255,7 @@ export default function Play() {
       }
     }
 
-    if (!isNaN(potatoOwner)) {
-      setPotatoOwner(_potatoOwner);
-    }
-
-    refetchCurrentGeneration();
-    const currentRound = parseInt(currentGeneration, 10);
-    if (!isNaN(currentRound)) {
-      setRound(currentRound);
-    }
-    setActiveTokens(_activeTokens);
-    // refetchHallOfFame();
-  }, [currentGeneration, getRoundMints, roundWinner, address, _getGameState, getGameState, _potatoTokenId, potatoTokenId, potatoOwner, _potatoOwner, refetchCurrentGeneration, _activeTokens, allWinners, refetchGameState, refetchGetRoundMints]);
+  }, [_potatoTokenId, potatoTokenId]);
 
   useEffect(() => {
     // Retrieve remainingTime from localStorage when the component mounts
@@ -1493,7 +1481,7 @@ export default function Play() {
                 {loadingActiveTokens ? (
                   <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
                 ) : (
-                  <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokens} Hands Remaining</p>)
+                  <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokensCount} Hands Remaining</p>)
                 }
                 <Link href="https://mumbai.polygonscan.com/" target='_blank' className="underline">
                   Smart Contract
