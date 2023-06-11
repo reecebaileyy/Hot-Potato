@@ -109,6 +109,7 @@ export default function Play() {
       const message = "No more mints";
       console.log("Minting Ended");
       setGetGameState("Playing");
+      refetchPotatoTokenId();
       setEvents(prevEvents => [...prevEvents, message]);
 
       fetch('/api/update-game-state', {
@@ -132,6 +133,7 @@ export default function Play() {
       console.log("Resumed");
 
       let previousGameState = await getPreviousGameState();
+      refetchPotatoTokenId();
 
       if (!previousGameState) {
         // Fetch the current game state
@@ -219,6 +221,7 @@ export default function Play() {
     eventName: 'FinalRoundStarted',
     listener(log) {
       const message = "HOT HANDZ";
+      refetchPotatoTokenId();
       setGetGameState("Final Round");
       setEvents(prevEvents => [...prevEvents, message]);
 
@@ -306,6 +309,7 @@ export default function Play() {
       try {
         console.log(`Successful pass by ${log}`);
         const player = log[0].args.player.toString();
+        refetchPotatoTokenId();
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
 
         if (address === player) {
@@ -484,6 +488,7 @@ export default function Play() {
         console.log(`potato exploded ${log}`)
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
+          refetchGetExplosionTime();
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
           setActiveTokens(prevactiveTokens => prevactiveTokens - 1);
         } else {
@@ -558,7 +563,7 @@ export default function Play() {
   })
 
   // GET MINT PRICE
-  const { data: getExplosionTime } = useContractRead({
+  const { data: getExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
     address: '0xb0E03c61298881D05E2Db639Dd5Bb2b553a76316',
     abi: ABI,
     functionName: 'getExplosionTime',
@@ -613,6 +618,8 @@ export default function Play() {
     abi: ABI,
     functionName: 'potatoTokenId',
   })
+
+  const _potato_token = parseInt(potatoTokenId, 10)
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
@@ -1185,8 +1192,10 @@ export default function Play() {
   //On Mount
   useEffect(() => {
     setMaxMintAmount(maxPerWallet);
+    refetchGetExplosionTime();
+    refetchPotatoTokenId();
     localStorage.setItem('maxMintAmount', maxMintAmount);
-  }, [maxMintAmount, maxPerWallet]);
+  }, [maxMintAmount, maxPerWallet, refetchGetExplosionTime, refetchPotatoTokenId]);
 
   useEffect(() => {
     if (roundWinner === undefined) {
@@ -1435,7 +1444,7 @@ export default function Play() {
             {getGameState == "Playing" || getGameState == "Final Round" ?
               <>
                 <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>
-                  {loadingPotatoTokenId ? "Loading..." : `Token #${_potatoTokenId} has the potato`}
+                  {loadingPotatoTokenId ? "Loading..." : `Token #${_potato_token} has the potato`}
                 </h1>
                 <p className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
                   <span>
