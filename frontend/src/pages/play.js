@@ -1035,7 +1035,7 @@ export default function Play() {
   const handlecheck = () => {
     if (!address) {
       noAddressToast();
-    } else if (parseInt(remainingTime, 10) !== 0) {
+    } else if (remainingTime !== 0) {
       hasMoreTimeToast();
     } else {
       check?.();
