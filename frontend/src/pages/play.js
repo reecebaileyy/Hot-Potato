@@ -1128,6 +1128,7 @@ export default function Play() {
     refetchCurrentGeneration();
     refetchSuccessfulPasses();
     refetchMaxSupply();
+    refetchGetExplosionTime();
     refetchPrice();
     if (address == _ownerAddress) {
       refetchowner();
@@ -1377,7 +1378,7 @@ export default function Play() {
                   </span>
                 </p>
                 <h2 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
-                  {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${remainingTime}`}
+                  {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${explosionTime}`}
                 </h2>
                 <Image alt='Image' src={potato} width={200} height={200} />
                 <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
