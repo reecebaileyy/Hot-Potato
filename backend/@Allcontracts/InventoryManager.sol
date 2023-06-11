@@ -163,16 +163,22 @@ contract InventoryManager {
             sig = "getGreenSlime()";
         } else if (19 < id && id <= 21) {
             sig = "getVitalago()";
-        } else if (21 < id && id <= 23) {
+        } else if (21 < id && id <= 22) {
             sig = "getGreenGoblin()";
+        } else if (22 < id && id <= 23) {
+            sig = "getZombie()";
         } else if (23 < id && id <= 24) {
             sig = "getBrownGoblin()";
         } else if (24 < id && id <= 25) {
             sig = "getYellowGoblin()";
-        } else if (25 < id && id <= 27) {
+        } else if (25 < id && id <= 26) {
             sig = "getSully()";
-        } else if (27 < id && id <= 29) {
+        } else if (26 < id && id <= 27) {
+            sig = "getLego()";
+        } else if (27 < id && id <= 28) {
             sig = "getTiger()";
+        } else if (28 < id && id <= 29) {
+            sig = "getSkeleton()";
         } else if(29 < id && id <= 30) {
             sig = "getSnowTiger()";
         } else {
@@ -340,13 +346,13 @@ function wrapTag(string memory uri) internal pure returns (string memory) {
             if (id < 23) {
                 return id == 21 ? "Vitiligo" : "Green Goblin";
             }
-            return id == 23 ? "Green Goblin" : id == 24 ? "Brown Goblin" : "Yellow Goblin";
+            return id == 23 ? "Zombie" : id == 24 ? "Brown Goblin" : "Yellow Goblin";
         }
         if (id <= 30) {
             if (id < 28) {
-                return id == 26 ? "Sully" : id == 27 ? "Sully" : "Tiger";
+                return id == 26 ? "Sully" : "Lego";
             }
-            return id == 28 ? "Tiger" : id == 29 ? "Tiger" : "Snow Tiger";
+            return id == 28 ? "Tiger" : id == 29 ? "Skeleton" : "Snow Tiger";
         }
     } 
         return "Error: Id not found";
