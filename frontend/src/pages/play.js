@@ -182,7 +182,6 @@ export default function Play() {
     eventName: 'PlayerWon',
     async listener(log) {
       try {
-        console.log(`Player ${log} won!`)
         const player = log[0]?.args?.player?.toString();
         refetchGameState();
         refetchHallOfFame();
@@ -220,7 +219,6 @@ export default function Play() {
     eventName: 'SuccessfulPass',
     async listener(log) {
       try {
-        console.log(`Successful pass by ${log}`);
         const player = log[0].args.player.toString();
         refetchPotatoTokenId();
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
@@ -247,7 +245,6 @@ export default function Play() {
         });
 
         const data = await response.json();
-        console.log(`Successful pass data ${data}`);
         setPasses(data.passes);
 
 
@@ -290,7 +287,6 @@ export default function Play() {
         }
 
         const data = await response.json();
-        console.log(data.message);
 
       } catch (error) {
         console.error('Error updating mints', error);
@@ -313,10 +309,6 @@ export default function Play() {
     eventName: 'NewRound',
     async listener(log) {
       try {
-        console.log(log);
-        console.log(`new round ${log[0]?.args?.round}`);
-        const currentRound = String(log[0]?.args?.round);
-        console.log(`round: ${currentRound}`);
         refetchCurrentGeneration();
       } catch (error) {
         console.error('Error updating mints', error);
@@ -343,7 +335,6 @@ export default function Play() {
     async listener(log) {
       try {
         const time = log[0].args.time.toString();
-        console.log(`time: ${time}`);
         setRemainingTime(time);
         localStorage.setItem('remainingTime', time);
         setEvents(prevEvents => [...prevEvents, `+${time}`]);
@@ -369,10 +360,8 @@ export default function Play() {
     eventName: 'HandsActivated',
     async listener(log) {
       try {
-        console.log(`Hands Activated, check ${log}`);
         const amount = log[0].args.count;
         setActiveTokens(amount);
-        console.log(`Active Tokens Total: ${activeTokens}`);
         localStorage.setItem('activeTokens', amount);
       } catch (error) {
         console.error('Error updating timer', error);
@@ -399,7 +388,6 @@ export default function Play() {
     eventName: 'PotatoExploded',
     listener(log) {
       try {
-        console.log(`potato exploded ${log}`)
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
           refetchGetExplosionTime();
@@ -435,12 +423,10 @@ export default function Play() {
     eventName: 'PotatoPassed',
     listener(log) {
       try {
-        console.log(`potato passed ${log}`)
         if (typeof log[0]?.args?.tokenIdFrom === 'bigint' && typeof log[0]?.args?.tokenIdTo === 'bigint') {
           const tokenIdFrom = log[0]?.args?.tokenIdFrom?.toString();
           const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
           const yielder = log[0]?.args?.yielder?.toString();
-          console.log(`Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo}! ${yielder} now has the potato`)
           setPotatoTokenId(tokenIdTo);
           setPotatoOwner(yielder);
           refetchUserHasPotatoToken();
@@ -1007,7 +993,6 @@ export default function Play() {
     if (!address) {
       noAddressToast();
     } else if (balance < totalCost) {
-      console.log(`balance, totalCost: ${balance}, ${totalCost}`);
       noEnoughFundsToast();
     } else if (mintAmount > (maxSupply - _roundMints)) {
       gameFullToast();
@@ -1016,7 +1001,6 @@ export default function Play() {
     } else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
       maxPerWalletToast();
     } else {
-      console.log(`balance, totalCost: ${balance?.formatted}, ${totalCost}`);
       mint?.();
       const resolveMint = new Promise((resolve => setTimeout(resolve, 10000)));
       toast.promise(
@@ -1042,8 +1026,6 @@ export default function Play() {
       const newMintAmount = numericValue; // Keep newMintAmount as a string for UI
       setMintAmount(newMintAmount);
       const totalCostBigInt = BigInt(_price) * BigInt(newMintAmount);
-      console.log(`BigIntPrice ${BigInt(_price)}`);
-      console.log(`BigIntMintAmount ${BigInt(newMintAmount)}`);
       setTotalCost(totalCostBigInt.toString()); // Convert back to string for UI
     }
   }
@@ -1052,7 +1034,6 @@ export default function Play() {
     if (!address) {
       noAddressToast();
     } else if (parseInt(remainingTime, 10) !== 0) {
-      console.log(`Remaining time: ${remainingTime}`)
       hasMoreTimeToast();
     } else {
       check?.();
@@ -1071,30 +1052,11 @@ export default function Play() {
       });
 
       const data = await response.json();
-      console.log(data);
 
     } catch (error) {
       console.error('Error fetching player data', error);
     }
   }, [address]);
-
-
-  async function getPreviousGameState() {
-    try {
-      const response = await fetch('/api/get-previous-game-state');
-      const data = await response.json();
-      if (data && data.previous) {
-        console.log(`Previous game state found ${data.previous}`);
-        return data?.previous;
-      } else {
-        console.error("No previous game state found");
-        return null;
-      }
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
-  }
 
   function fetchGameStateAndMore() {
     // Fetch the game state
@@ -1170,8 +1132,6 @@ export default function Play() {
     if (address == _ownerAddress) {
       refetchowner();
     }
-    console.log(`owner: ${_ownerAddress}`);
-    console.log(`address: ${address}`);
     const roundMints = parseInt(getRoundMints, 10);
     if (!isNaN(roundMints)) {
       setRoundMints(roundMints);
@@ -1181,7 +1141,6 @@ export default function Play() {
   useEffect(() => {
     if (roundWinner === undefined) {
       refetchHallOfFame();
-      console.log("Hall of Fame refetched");
     }
     if (roundWinner === null) {
       refetchHallOfFame();
@@ -1196,7 +1155,6 @@ export default function Play() {
       const localPotatoTokenId = localStorage.getItem('_potatoTokenId');
       if (!localPotatoTokenId) {
         const getPotatoTokenId = parseInt(potatoTokenId, 10);
-        console.log(`Potato Token ID: ${getPotatoTokenId}`)
         setPotatoTokenId(getPotatoTokenId);
       } else {
         setPotatoTokenId(localPotatoTokenId);
