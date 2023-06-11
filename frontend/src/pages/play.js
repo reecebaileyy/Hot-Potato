@@ -229,7 +229,7 @@ export default function Play() {
         }
 
         // Send a POST request to the API route to update the database
-        const response = await fetch('/api/update-passes', {
+        await fetch('/api/update-passes', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1036,7 +1036,7 @@ export default function Play() {
     refetchGetExplosionTime();
     if (!address) {
       noAddressToast();
-    } else if (remainingTime != 0) {
+    } else if (explosionTime != 0) {
       hasMoreTimeToast();
     } else {
       check?.();
@@ -1157,6 +1157,12 @@ export default function Play() {
     }
   }, [roundWinner, refetchHallOfFame]);
 
+  useEffect(() => {
+    refetchGetActiveTokenCount();
+    refetchUserHasPotatoToken();
+  }, [address]);
+
+
 
   //GAME STATE
   useEffect(() => {
@@ -1177,22 +1183,27 @@ export default function Play() {
   useEffect(() => {
     const fetchExplosionTime = async () => {
       try {
-        refetchGetExplosionTime();
-        if (!isNaN(explosionTime) && explosionTime > 0) {
-          setRemainingTime(explosionTime);
-          console.log(`Explosion Time: ${remainingTime}`);
-        }
+        await refetchGetExplosionTime();
+        setRemainingTime(parseInt(getExplosionTime, 10));
+        console.log(`remainingTime: ${remainingTime}`);
+        console.log(`Explosion Time: ${getExplosionTime}`);
       } catch (error) {
         console.error("Error fetching explosion time:", error);
       }
     };
+    if (getExplosionTime) {
+      fetchExplosionTime();
+    }
+  }, [getExplosionTime]);
+  
 
-    fetchExplosionTime();
-  }, []);
+  useEffect(() => {
+    console.log(`remainingTime: ${remainingTime}`);
+  }, [remainingTime]);
 
   useEffect(() => {
     let timer;
-    if (remainingTime > 0) {
+    if (remainingTime && remainingTime > 0) {
       timer = setInterval(() => {
         setRemainingTime((prevTime) => {
           if (prevTime > 0) {
@@ -1393,8 +1404,7 @@ export default function Play() {
                   </span>
                 </p>
                 <h2 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
-                {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${isNaN(remainingTime) || remainingTime === 0 ? "0" : remainingTime}`}
-                </h2>
+                Remaining Time: {loadingExplosionTime ? "Loading..." : remainingTime}                </h2>
                 <Image alt='Image' src={potato} width={200} height={200} />
                 <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                   onClick={handlecheck}>

@@ -5,6 +5,7 @@ export default async function handler(req, res) {
     const { address } = req.body;
 
     try {
+        console.log("address: ", address)
         const existingPlayer = await prisma.Leaderboard.findUnique({
             where: { address: address },
         });
@@ -18,6 +19,7 @@ export default async function handler(req, res) {
                     },
                 },
             });
+            console.log("Completed updateMany")
 
         } else {
             await prisma.Leaderboard.create({
