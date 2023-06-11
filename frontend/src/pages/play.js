@@ -84,7 +84,9 @@ export default function Play() {
       setActiveTokens(0);
       refetchGameState();
       refetchMaxSupply();
+      refetchGetRoundMints();
       refetchPrice();
+      refetchGetActiveTokenCount();
       refetchCurrentGeneration();
       const message = "Heating up";
       console.log("Started");
@@ -335,7 +337,7 @@ export default function Play() {
     async listener(log) {
       try {
         const time = log[0].args.time.toString();
-        setRemainingTime(time);
+        setRemainingTime(explosionTime);
         localStorage.setItem('remainingTime', time);
         setEvents(prevEvents => [...prevEvents, `+${time}`]);
       } catch (error) {
@@ -391,6 +393,7 @@ export default function Play() {
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
           refetchGetExplosionTime();
+          setRemainingTime(explosionTime);
           refetchGetActiveTokens();
           refetchPotatoTokenId();
           refetchGetActiveTokenCount();
@@ -469,13 +472,14 @@ export default function Play() {
   })
 
   // GET MINT PRICE
-  const { data: getExplosionTime, isLoading: loadingExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
+  const { data: getExplosionTime, isLoading: loadingExplosionTime, error: loadingError, refetch: refetchGetExplosionTime } = useContractRead({
     address: '0x9826FdE8E13C4Dec926A0CB2FC537DD6828343d0',
     abi: ABI,
     functionName: 'getExplosionTime',
-    enabled: false,
+    enabled: true,
   })
-  const explosionTime = parseInt(getExplosionTime, 10);
+  const explosionTime = !isNaN(parseInt(getExplosionTime, 10)) ? parseInt(getExplosionTime, 10) : null;
+
 
   // GET MINT PRICE
   const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
@@ -1058,6 +1062,8 @@ export default function Play() {
     }
   }, [address]);
 
+
+
   function fetchGameStateAndMore() {
     // Fetch the game state
     fetch('/api/get-game-state')
@@ -1120,6 +1126,7 @@ export default function Play() {
     refetchPotatoTokenId();
     refetchGameState();
     refetchGetActiveTokenCount();
+    refetchGetExplosionTime();
     refetchGetRoundMints();
     refetchGetActiveTokens();
     refetchUserHasPotatoToken();
@@ -1128,11 +1135,13 @@ export default function Play() {
     refetchCurrentGeneration();
     refetchSuccessfulPasses();
     refetchMaxSupply();
-    refetchGetExplosionTime();
     refetchPrice();
+    setRemainingTime(explosionTime);
     if (address == _ownerAddress) {
       refetchowner();
     }
+    console.log(`owner: ${_ownerAddress}`);
+    console.log(`address: ${address}`);
     const roundMints = parseInt(getRoundMints, 10);
     if (!isNaN(roundMints)) {
       setRoundMints(roundMints);
@@ -1142,6 +1151,7 @@ export default function Play() {
   useEffect(() => {
     if (roundWinner === undefined) {
       refetchHallOfFame();
+      console.log("Hall of Fame refetched");
     }
     if (roundWinner === null) {
       refetchHallOfFame();
@@ -1156,6 +1166,7 @@ export default function Play() {
       const localPotatoTokenId = localStorage.getItem('_potatoTokenId');
       if (!localPotatoTokenId) {
         const getPotatoTokenId = parseInt(potatoTokenId, 10);
+        console.log(`Potato Token ID: ${getPotatoTokenId}`)
         setPotatoTokenId(getPotatoTokenId);
       } else {
         setPotatoTokenId(localPotatoTokenId);
@@ -1165,34 +1176,39 @@ export default function Play() {
   }, [_potatoTokenId, potatoTokenId]);
 
   useEffect(() => {
-    // Retrieve remainingTime from localStorage when the component mounts
-    const time = localStorage.getItem('remainingTime');
-    if (time) {
-      setRemainingTime(time);
-    } else if (time == null) {
-      setRemainingTime(explosionTime);
-    }
+    const fetchExplosionTime = async () => {
+      try {
+        refetchGetExplosionTime();
+        if (!isNaN(explosionTime) && explosionTime > 0) {
+          setRemainingTime(explosionTime);
+          console.log(`Explosion Time: ${remainingTime}`);
+        }
+      } catch (error) {
+        console.error("Error fetching explosion time:", error);
+      }
+    };
 
+    fetchExplosionTime();
+  }, []);
+  
+  useEffect(() => {
     let timer;
-
     if (remainingTime > 0) {
       timer = setInterval(() => {
         setRemainingTime((prevTime) => {
           if (prevTime > 0) {
             const newTime = prevTime - 1;
-            localStorage.setItem('remainingTime', newTime.toString());  // Update time in localStorage
             return newTime;
           } else {
             clearInterval(timer);
-            localStorage.removeItem('remainingTime');  // Clear time from localStorage
             return 0;
           }
         });
       }, 1000);
     }
-
+  
     return () => clearInterval(timer);
-  }, [remainingTime, explosionTime]);
+  }, [remainingTime]);
   /*
    __    __ ________ __       __ __             ______   ______   ______  
   |  \  |  \        \  \     /  \  \           /      \ /      \ /      \ 
@@ -1378,7 +1394,7 @@ export default function Play() {
                   </span>
                 </p>
                 <h2 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
-                  {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${explosionTime}`}
+                  {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${remainingTime === 0 ? "0" : remainingTime}`}
                 </h2>
                 <Image alt='Image' src={potato} width={200} height={200} />
                 <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
