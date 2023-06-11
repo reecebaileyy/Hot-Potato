@@ -35,6 +35,7 @@ export default function Play() {
   const argsArray = [1, 2, 3, 4, 5];
   const [potatoOwner, setPotatoOwner] = useState("");
   const [mintPromise, setMintPromise] = useState(null);
+  const [passPromise, setPassPromise] = useState(null);
   const [_potatoTokenId, setPotatoTokenId] = useState(0);
   const [remainingTime, setRemainingTime] = useState(null);
   const [_getGameState, setGetGameState] = useState("Loading...");
@@ -202,7 +203,7 @@ export default function Play() {
         setGetGameState("Ended");
 
         // If the passing player is the connected address, fetch the latest data for this address
-        if (player === address) {
+        if (player == address) {
           refetchTotalWins();
           toast.success("You won! 🎉 Don't forget to claim your rewards!");
         }
@@ -223,9 +224,17 @@ export default function Play() {
         refetchPotatoTokenId();
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
 
-        if (address === player) {
+        if (address == player) {
           toast.success("Pass Successful!");
           refetchSuccessfulPasses();
+          setPassPromise(true);
+          if (passPromise) {
+            passPromise.resolve();
+          }
+        } else {
+          if (passPromise) {
+            passPromise.reject(new Error('Passing failed'));
+          }
         }
 
         // Send a POST request to the API route to update the database
@@ -270,36 +279,25 @@ export default function Play() {
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
-        console.log("A");
         const amount = parseInt(log[0].args.amount);
-        console.log("b");
         setRoundMints(prevRoundMints => prevRoundMints + amount);
-        console.log("c");
         refetchGetRoundMints();
-        console.log("d");
         const player = log[0].args.player.toString();
-        console.log("e");
         const amountDisplay = String(log[0].args.amount); //Need this one
-        console.log("f");
         setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
-        console.log("g");
 
 
         if (address == player) {
           // Resolve our promise
-          console.log("h");
           refetchGetActiveTokenCount();
-          console.log("i");
           console.log('Minted successfully', mintPromise);
           setMintPromise(true);
           if (mintPromise) {
-            console.log("k");
             mintPromise.resolve();
-            console.log("l");
           }
         } else {
           if (mintPromise) {
-            mintPromise.reject(new Error('Minting failed for this player'));
+            mintPromise.reject(new Error('Minting failed'));
           }
         }
 
@@ -606,7 +604,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'totalWins',
     args: [address],
-    enabled: false,
+    enabled: true,
   })
   const totalWins = parseInt(_totalWins, 10);
 
@@ -624,9 +622,9 @@ export default function Play() {
     abi: ABI,
     functionName: 'successfulPasses',
     args: [address],
-    enabled: false,
+    enabled: true,
   })
-  const successfulPasses = parseInt(_totalWins, 10);
+  const successfulPasses = parseInt(_successfulPasses, 10);
 
   const { data: hallOfFame, isLoading: loadingHGallOfFame, refetch: refetchHallOfFame } = useContractRead({
     address: '0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303',
@@ -649,7 +647,7 @@ export default function Play() {
     abi: ABI,
     functionName: '_isTokenActive',
     args: [tokenId],
-    enabled: false,
+    enabled: true,
   })
 
   const { data: ownerOf, isLoading: loadingOwnerOf, refetch: refetchOwnerOf } = useContractRead({
@@ -941,42 +939,7 @@ export default function Play() {
   }
   const activeIds = allActivetokenIds();
 
-  const handlePass = () => {
-    if (!address) {
-      noAddressToast();
-    } else if (getGameState !== "Playing" && getGameState !== "Final Round") {
-      cannotPassToast();
-    } else if (!userHasPotatoToken) {
-      ownThePotatoToast();
-    } else if (!isTokenActive) {
-      tokenInactiveToast();
-    } else if (address == ownerOf) {
-      cannotPassToSelfToast();
-    } else {
-      toast.promise(
-        pass?.(), // Assuming this returns a promise
-        {
-          pending: {
-            render() {
-              return 'Passing...'
-            },
-            icon: false
-          },
-          success: {
-            render() {
-              return 'Pass Successful!'
-            },
-            icon: '🟢',
-          },
-          error: {
-            render({ data }) {
-              return `Passing failed! Error: ${data.message}`
-            }
-          }
-        }
-      );
-    }
-  };
+
 
   const handleInputChangeToken = (e) => {
     const inputValue = e.target.value;
@@ -993,6 +956,28 @@ export default function Play() {
     }
   }
 
+  const handlePass = () => {
+    if (!address) {
+      noAddressToast();
+    } else if (getGameState !== "Playing" && getGameState !== "Final Round") {
+      cannotPassToast();
+    } else if (!userHasPotatoToken) {
+      ownThePotatoToast();
+    } else if (!isTokenActive) {
+      tokenInactiveToast();
+    } else if (address == ownerOf) {
+      cannotPassToSelfToast();
+    } else {
+      const passPromise = pass?.();
+      toast.promise(
+        passPromise,
+        {
+          pending: 'Minting...',
+          // We've moved the success and error handlers into the useContractWrite hook
+        }
+      );
+    }
+  };
   const handleMint = () => {
     if (!address) {
       noAddressToast();
@@ -1135,6 +1120,7 @@ export default function Play() {
     refetchImageString();
     refetchMaxSupply();
     refetchPrice();
+    refetchWinner();
     setRemainingTime(explosionTime);
     if (address == _ownerAddress) {
       refetchowner();
@@ -1160,6 +1146,10 @@ export default function Play() {
   useEffect(() => {
     refetchGetActiveTokenCount();
     refetchUserHasPotatoToken();
+    refetchSuccessfulPasses();
+    refetchTotalWins();
+    console.log(`totalWins: ${totalWins}`);
+    console.log(`successfulPasses: ${successfulPasses}`);
   }, [address]);
 
 
@@ -1195,7 +1185,7 @@ export default function Play() {
       fetchExplosionTime();
     }
   }, [getExplosionTime]);
-  
+
 
   useEffect(() => {
     console.log(`remainingTime: ${remainingTime}`);
@@ -1338,10 +1328,10 @@ export default function Play() {
                 <>
                   <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Statistics:</h2>
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                    Successful Passes: {!successfulPasses ? "Loading..." : passes}
+                    Successful Passes: {loadingSuccessfulPasses ? "Loading..." : successfulPasses}
                   </p>
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                    Total Wins: {!totalWins ? "Loading..." : wins}
+                    Total Wins: {loadingTotalWins ? "Loading..." : totalWins}
                   </p>
                   {isWinner && _rewards != 0 &&
                     <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
@@ -1404,7 +1394,7 @@ export default function Play() {
                   </span>
                 </p>
                 <h2 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
-                {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${isNaN(remainingTime) || remainingTime === 0 ? "0" : remainingTime}`}
+                  {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${isNaN(remainingTime) || remainingTime === 0 ? "0" : remainingTime}`}
                 </h2>
                 <Image alt='Image' src={potato} width={200} height={200} />
                 <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
@@ -1455,7 +1445,7 @@ export default function Play() {
                       <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Thank you for participating. See you in the next game!</h3>
                       <Image alt='Image' src={potato} width={200} height={200} />
                       <h2 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>And congratulations to our Winner:</h2>
-                      {roundWinner === undefined ? (
+                      {loadingHGallOfFame ? (
                         <h1
                           className={`text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text animate-pulse ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}
                         >
