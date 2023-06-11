@@ -563,13 +563,8 @@ export default function Play() {
   })
 
   // GET MINT PRICE
-<<<<<<< HEAD
-  const { data: getExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
-    address: '0xb0E03c61298881D05E2Db639Dd5Bb2b553a76316',
-=======
   const { data: getExplosionTime } = useContractRead({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
->>>>>>> parent of b604c05 (Added more hand Pics and updated the smart contract)
     abi: ABI,
     functionName: 'getExplosionTime',
   })
@@ -1197,10 +1192,9 @@ export default function Play() {
   //On Mount
   useEffect(() => {
     setMaxMintAmount(maxPerWallet);
-    refetchGetExplosionTime();
     refetchPotatoTokenId();
     localStorage.setItem('maxMintAmount', maxMintAmount);
-  }, [maxMintAmount, maxPerWallet, refetchGetExplosionTime, refetchPotatoTokenId]);
+  }, [maxMintAmount, maxPerWallet, refetchPotatoTokenId]);
 
   useEffect(() => {
     if (roundWinner === undefined) {
