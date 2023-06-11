@@ -1097,7 +1097,7 @@ export default function Play() {
 
   };
 
-  const fetchPlayerData = async () => {
+  const fetchPlayerData = useCallback(async () => {
     try {
       const response = await fetch('/api/get-player-data', {
         method: 'POST',
@@ -1113,7 +1113,7 @@ export default function Play() {
     } catch (error) {
       console.error('Error fetching player data', error);
     }
-  };
+  }, [address]);
 
 
   async function getPreviousGameState() {
@@ -1240,7 +1240,7 @@ export default function Play() {
     }
     setActiveTokens(_activeTokens);
     // refetchHallOfFame();
-  }, [currentGeneration, getRoundMints, roundWinner, address, _getGameState, getGameState, _potatoTokenId, potatoTokenId, potatoOwner, _potatoOwner, refetchCurrentGeneration, _activeTokens, fetchPlayerData, allWinners, refetchGameState, refetchGetRoundMints]);
+  }, [currentGeneration, getRoundMints, roundWinner, address, _getGameState, getGameState, _potatoTokenId, potatoTokenId, potatoOwner, _potatoOwner, refetchCurrentGeneration, _activeTokens, allWinners, refetchGameState, refetchGetRoundMints]);
 
   useEffect(() => {
     // Retrieve remainingTime from localStorage when the component mounts
