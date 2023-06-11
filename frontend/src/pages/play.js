@@ -747,7 +747,6 @@ export default function Play() {
     address: '0x9826FdE8E13C4Dec926A0CB2FC537DD6828343d0',
     abi: ABI,
     functionName: 'startGame',
-    enabled: false
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
 
@@ -756,7 +755,6 @@ export default function Play() {
     address: '0x9826FdE8E13C4Dec926A0CB2FC537DD6828343d0',
     abi: ABI,
     functionName: 'endMinting',
-    enabled: false
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
 
@@ -765,7 +763,6 @@ export default function Play() {
     address: '0x9826FdE8E13C4Dec926A0CB2FC537DD6828343d0',
     abi: ABI,
     functionName: 'pauseGame',
-    enabled: false
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
 
@@ -774,7 +771,6 @@ export default function Play() {
     address: '0x9826FdE8E13C4Dec926A0CB2FC537DD6828343d0',
     abi: ABI,
     functionName: 'resumeGame',
-    enabled: false
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
 
@@ -783,7 +779,6 @@ export default function Play() {
     address: '0x9826FdE8E13C4Dec926A0CB2FC537DD6828343d0',
     abi: ABI,
     functionName: 'restartGame',
-    enabled: false
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
