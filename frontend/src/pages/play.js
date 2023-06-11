@@ -83,6 +83,7 @@ export default function Play() {
     listener(log) {
       setRoundMints(0);
       setActiveTokens(0);
+      refetchGameState();
       const message = "Heating up";
       console.log("Started");
       setGetGameState("Minting");
@@ -109,6 +110,7 @@ export default function Play() {
       console.log("Minting Ended");
       setGetGameState("Playing");
       refetchPotatoTokenId();
+      refetchGameState();
       setEvents(prevEvents => [...prevEvents, message]);
 
       fetch('/api/update-game-state', {
@@ -130,7 +132,7 @@ export default function Play() {
     async listener(log) {
       const message = "Back to it";
       console.log("Resumed");
-
+      refetchGameState();
       let previousGameState = await getPreviousGameState();
       refetchPotatoTokenId();
 
@@ -178,6 +180,7 @@ export default function Play() {
       const message = "Cooling off";
       console.log("Paused");
       setGetGameState("Paused");
+      refetchGameState();
       setEvents(prevEvents => [...prevEvents, message]);
 
       fetch('/api/update-game-state', {
@@ -198,8 +201,8 @@ export default function Play() {
     listener(log) {
       const message = "Game Over";
       setGetGameState("Queued");
+      refetchGameState();
       setEvents(prevEvents => [...prevEvents, message]);
-      activeTokenStorage = 0;
 
       fetch('/api/update-game-state', {
         method: 'POST',
@@ -222,6 +225,7 @@ export default function Play() {
       const message = "HOT HANDZ";
       refetchPotatoTokenId();
       setGetGameState("Final Round");
+      refetchGameState();
       setEvents(prevEvents => [...prevEvents, message]);
 
       fetch('/api/update-game-state', {
@@ -477,7 +481,6 @@ export default function Play() {
                         ██                                                      
                       ▄████▄
   */
-  let activeTokenStorage;
   useContractEvent({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
@@ -488,6 +491,10 @@ export default function Play() {
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
           refetchGetExplosionTime();
+          refetchGetActiveTokens();
+          refetchPotatoTokenId();
+          refetchGetActiveTokenCount();
+          refetchUserHasPotatoToken();
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
           setActiveTokens(prevactiveTokens => prevactiveTokens - 1);
         } else {
@@ -524,6 +531,7 @@ export default function Play() {
           console.log(`Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo}! ${yielder} now has the potato`)
           setPotatoTokenId(tokenIdTo);
           setPotatoOwner(yielder);
+          refetchUserHasPotatoToken();
           localStorage.setItem('_potatoTokenId', tokenIdTo);
           localStorage.setItem('potatoOwner', yielder);
           setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo} ${yielder} now has the potato`]);
@@ -555,7 +563,7 @@ export default function Play() {
 
 
   // GET MINT PRICE
-  const { data: getGameState, refetch: refetchGameState } = useContractRead({
+  const { data: getGameState, refetch: refetchGameState, isLoading: loadingGetGameState } = useContractRead({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'getGameState',
@@ -563,7 +571,7 @@ export default function Play() {
   })
 
   // GET MINT PRICE
-  const { data: getExplosionTime } = useContractRead({
+  const { data: getExplosionTime, isLoading: loadingExplosionTime, refetch: refetchGetExplosionTime } = useContractRead({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'getExplosionTime',
@@ -572,7 +580,7 @@ export default function Play() {
   const explosionTime = parseInt(getExplosionTime, 10);
 
   // GET MINT PRICE
-  const { data: _price, isLoading: loadingPrice, refetch: refetchPrice, loading: loadingExplosionTime } = useContractRead({
+  const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: '_price',
@@ -1223,7 +1231,10 @@ export default function Play() {
     refetchGameState();
     refetchGetActiveTokenCount();
     refetchGetRoundMints();
-    console.log(activeTokensCount);
+    refetchGetActiveTokens();
+    refetchUserHasPotatoToken();
+    console.log(`activeTokensCount: ${activeTokensCount}`);
+    console.log(`_activeTokens: ${_activeTokens}`);
     const roundMints = parseInt(getRoundMints, 10);
     if (!isNaN(roundMints)) {
       setRoundMints(roundMints);
@@ -1481,7 +1492,7 @@ export default function Play() {
                 {loadingActiveTokens ? (
                   <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
                 ) : (
-                  <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{activeTokensCount} Hands Remaining</p>)
+                  <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Hands Remaining</p>)
                 }
                 <Link href="https://mumbai.polygonscan.com/" target='_blank' className="underline">
                   Smart Contract
