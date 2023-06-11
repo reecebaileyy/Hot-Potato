@@ -560,6 +560,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'getGameState',
+    enabled: false,
   })
 
   // GET MINT PRICE
@@ -567,6 +568,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'getExplosionTime',
+    enabled: false,
   })
   const explosionTime = parseInt(getExplosionTime, 10);
 
@@ -575,6 +577,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: '_price',
+    enabled: false,
   })
   const price = parseInt(_price, 10) / 10 ** 18;
 
@@ -584,6 +587,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getActiveTokenCount',
     args: [address],
+    enabled: false,
   })
   const activeTokensCount = parseInt(getActiveTokenCount, 10);
 
@@ -592,6 +596,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: '_maxsupplyPerRound',
+    enabled: false,
   })
   const maxSupply = parseInt(_maxsupply, 10);
 
@@ -601,6 +606,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
+    enabled: false,
   })
   const hasPotatoToken = userHasPotatoToken?.toString();
 
@@ -609,6 +615,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'getPotatoOwner',
+    enabled: false,
   })
   const _potatoOwner = getPotatoOwner?.toString();
 
@@ -617,6 +624,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'potatoTokenId',
+    enabled: false,
   })
 
   const _potato_token = parseInt(potatoTokenId, 10)
@@ -626,6 +634,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'getActiveTokens',
+    enabled: false,
   })
   const _activeTokens = parseInt(getActiveTokens, 10);
 
@@ -634,6 +643,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'currentGeneration',
+    enabled: false,
   })
   const _currentGeneration = parseInt(currentGeneration, 10);
 
@@ -641,6 +651,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'roundMints',
+    enabled: false,
   })
 
 
@@ -652,6 +663,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'balanceOf',
     args: [address],
+    enabled: false,
   })
   const _balanceOf = parseInt(balanceOf, 10);
 
@@ -659,18 +671,21 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: '_owner',
+    enabled: false,
   })
 
   const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'getActiveTokenIds',
+    enabled: false,
   })
 
   const { data: allWinners, isLoading: loadingWinners, refetch: refetchWinner } = useContractRead({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'getAllWinners',
+    enabled: false,
   })
   const isWinner = allWinners?.includes(address)
 
@@ -679,6 +694,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'rewards',
     args: [address],
+    enabled: false,
   })
   const _rewards = parseInt(rewards, 10);
 
@@ -686,7 +702,8 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'hallOfFame',
-    args: [_currentGeneration]
+    args: [_currentGeneration],
+    enabled: false,
   })
   const roundWinner = hallOfFame?.toString();
 
@@ -701,14 +718,16 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: '_isTokenActive',
-    args: [tokenId]
+    args: [tokenId],
+    enabled: false,
   })
 
   const { data: ownerOf, isLoading: loadingOwnerOf, refetch: refetchOwnerOf } = useContractRead({
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'ownerOf',
-    args: [tokenId]
+    args: [tokenId],
+    enabled: false,
   })
 
 
@@ -734,6 +753,7 @@ export default function Play() {
     functionName: 'mintHand',
     args: [mintAmount.toString()],
     value: totalCost,
+    enabled: false,
   })
   const { data: mintData, isSuccess, write: mint } = useContractWrite(config)
 
@@ -745,6 +765,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
+    enabled: false,
   })
   const { data: passData, isSuccess: Successful, write: pass } = useContractWrite(configPass)
 
@@ -753,6 +774,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'withdrawWinnersFunds',
+    enabled: false,
   })
   const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(withdrawWinnersFunds)
 
@@ -762,6 +784,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'checkExplosion',
+    enabled: false,
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -783,6 +806,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'startGame',
+    enabled: false,
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
 
@@ -791,6 +815,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'endMinting',
+    enabled: false,
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
 
@@ -799,6 +824,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'pauseGame',
+    enabled: false,
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
 
@@ -807,6 +833,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'resumeGame',
+    enabled: false,
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
 
@@ -815,6 +842,7 @@ export default function Play() {
     address: '0xEACe984A234124f43876138c3FFD275809A95252',
     abi: ABI,
     functionName: 'restartGame',
+    enabled: false,
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
