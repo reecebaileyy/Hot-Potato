@@ -39,6 +39,24 @@ contract InventoryManager {
             );
     }
 
+    function getSVGInterface(
+        uint8 background_,
+        uint8 hand_type_,
+        bool hasPotato_,
+        uint8 potato_
+    ) external view returns (string memory) {
+        return
+            string(
+                abi.encodePacked(
+                    header,
+                    get(Part.background, background_),
+                    get(Part.hand_type, hand_type_),
+                    hasPotato_ ? get(Part.potato, potato_) : "",
+                    footer
+                )
+            );
+    }
+
 
     constructor() {
         manager = msg.sender;

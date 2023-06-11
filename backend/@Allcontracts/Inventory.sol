@@ -98,18 +98,16 @@ contract Hands {
     }
 
     function getSkeleton() public pure returns (string memory) {
-        return skeleton;
+        return skeleton; //29
     }
 
     function getLego() public pure returns (string memory) {
-        return lego;
+        return lego; //27
     }
 
     function getZombie() public pure returns (string memory) {
-        return zombie;
+        return zombie; //23
     }
-
-
 }
 
 contract Potato {

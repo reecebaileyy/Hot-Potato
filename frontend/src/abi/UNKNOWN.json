@@ -1000,6 +1000,25 @@
 	{
 		"inputs": [
 			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "getImageString",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address",
 				"name": "player",
 				"type": "address"
@@ -1053,6 +1072,40 @@
 				"internalType": "address",
 				"name": "",
 				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "handImages",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "background",
+				"type": "uint8"
+			},
+			{
+				"internalType": "uint8",
+				"name": "hand_type",
+				"type": "uint8"
+			},
+			{
+				"internalType": "uint8",
+				"name": "hasPotato",
+				"type": "uint8"
+			},
+			{
+				"internalType": "uint256",
+				"name": "potato",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -1473,7 +1526,7 @@
 				"type": "address"
 			}
 		],
-		"name": "setMetadataHandler",
+		"name": "setInventoryManager",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"

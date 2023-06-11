@@ -21,6 +21,13 @@ interface MetadataHandler {
         bool isActive_,
         uint8 potato_
     ) external view returns (string memory);
+
+    function getSVGInterface(
+        uint8 background_,
+        uint8 hand_type_,
+        bool hasPotato_,
+        uint8 potato_
+    ) external view returns (string memory);
 }
 
 struct Hand {
@@ -30,6 +37,13 @@ struct Hand {
     uint8 background;
     uint8 hand_type;
     uint8 potato;
+}
+
+struct HandImage {
+    uint8 background;
+    uint8 hand_type;
+    uint8 hasPotato;
+    uint potato;
 }
 
 enum GameState {
@@ -94,6 +108,7 @@ contract UNKNOWN is
         0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
 
     mapping(uint256 => Hand) public hands;
+    mapping(uint256 => HandImage) public handImages;
     mapping(address => mapping(uint256 => uint256)) public tokensMintedPerRound;
     mapping(address => bool) private isPlayer;
     mapping(address => uint256) public successfulPasses;
@@ -141,7 +156,9 @@ contract UNKNOWN is
     event PlayerWon(address indexed player);
     event PotatoMinted(uint32 amount, address indexed player);
 
-    constructor(uint64 subscriptionId)
+    constructor(
+        uint64 subscriptionId
+    )
         payable
         ERC721A("UNKNOWN", "UNKNOWN")
         VRFConsumerBaseV2(0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed)
@@ -180,7 +197,8 @@ contract UNKNOWN is
         require(gameState == GameState.Minting, "Game not minting");
         require(msg.value >= count * _price, "Must send at least 1 MATIC");
         require(
-            tokensMintedPerRound[msg.sender][currentGeneration] + count <= _maxperwallet,
+            tokensMintedPerRound[msg.sender][currentGeneration] + count <=
+                _maxperwallet,
             "Exceeded maximum tokens per round"
         );
         require(roundMints < _maxsupplyPerRound, "Max NFTs minted");
@@ -308,15 +326,9 @@ contract UNKNOWN is
         return false;
     }
 
-    function getPlayerStats(address player)
-        public
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    function getPlayerStats(
+        address player
+    ) public view returns (uint256, uint256, uint256) {
         return (
             successfulPasses[player],
             failedPasses[player],
@@ -328,12 +340,9 @@ contract UNKNOWN is
         return activeTokens.length - 1;
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721A)
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721A) returns (string memory) {
         require(
             _exists(tokenId),
             "ERC721Metadata: URI query for nonexistent token"
@@ -355,6 +364,21 @@ contract UNKNOWN is
 
     function getPotatoOwner() public view returns (address) {
         return ownerOf(potatoTokenId);
+    }
+
+    function getImageString(
+        uint256 tokenId
+    ) public view returns (string memory) {
+        require(_exists(tokenId), "Not a valid pair of hands");
+
+        Hand memory hand = hands[tokenId];
+
+        return metadataHandler.getSVGInterface(
+                hand.background,
+                hand.hand_type,
+                hand.hasPotato,
+                hand.potato
+            );
     }
 
     function getActiveTokenIds() public view returns (uint256[] memory) {
@@ -449,15 +473,14 @@ contract UNKNOWN is
         emit GameRestarted("The game has restarted");
     }
 
-    function setMetadataHandler(address addy) external onlyOwner {
+    function setInventoryManager(address addy) external onlyOwner {
         metadataHandler = MetadataHandler(addy);
     }
 
-    function withdrawCategoryFunds(uint256 round, string memory category)
-        external
-        onlyOwner
-        nonReentrant
-    {
+    function withdrawCategoryFunds(
+        uint256 round,
+        string memory category
+    ) external onlyOwner nonReentrant {
         uint256 amount;
         if (
             keccak256(abi.encodePacked((category))) ==
@@ -614,10 +637,10 @@ contract UNKNOWN is
         return requestId;
     }
 
-    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords)
-        internal
-        override
-    {
+    function fulfillRandomWords(
+        uint256 requestId,
+        uint256[] memory randomWords
+    ) internal override {
         require(statuses[requestId].exists, "request not found");
         statuses[requestId].fulfilled = true;
         statuses[requestId].randomWord = randomWords;
@@ -792,11 +815,9 @@ contract UNKNOWN is
         _isExplosionInProgress = false;
     }
 
-    function _indexOfTokenInActiveTokens(uint256 tokenId)
-        internal
-        view
-        returns (uint256)
-    {
+    function _indexOfTokenInActiveTokens(
+        uint256 tokenId
+    ) internal view returns (uint256) {
         require(activeTokens.length > 1, "Not enough active tokens");
         for (uint256 i = 1; i < activeTokens.length; i++) {
             if (activeTokens[i] == tokenId) {
