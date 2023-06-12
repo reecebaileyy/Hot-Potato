@@ -464,7 +464,7 @@ export default function Play() {
     address: '0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303',
     abi: ABI,
     functionName: 'getGameState',
-    enabled: false,
+    enabled: true,
   })
 
   // GET MINT PRICE

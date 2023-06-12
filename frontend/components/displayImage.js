@@ -54,7 +54,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
     refetchImageString();
     refetchGetActiveTokens();
     refetchPotatoTokenId();
-  }, [_activeTokens, shouldRefresh]);
+  }, [_activeTokens, shouldRefresh, refetchPotatoTokenId, refetchGetActiveTokens, refetchImageString]);
 
 
   if (isLoading) {
