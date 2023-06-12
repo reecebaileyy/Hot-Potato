@@ -9,7 +9,7 @@ import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useCo
 import potato from '../../public/assets/images/potato.png'
 import hot from '../../public/assets/images/hot.png'
 import potatoBlink from '../../public/assets/images/potatoBlink.gif'
-import blacklogo from '../../public/assets/images/BlackLogo.png'
+import blacklogo from '../../public/assets/images/Logo.png'
 import TokenImage from '../../components/displayImage'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
@@ -1373,9 +1373,9 @@ export default function Play() {
                         <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>mint now or cry later?</p>
                         <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Got Heat?</p>
                         <div className='flex flex-row justify-center'>
-                          <Image alt='Image' src={hot} width={100} height={200} />
-                          <Image alt='Image' src={potato} width={100} height={200} />
-                          <Image alt='Image' src={hot} width={100} height={200} />
+                          <Image alt='Image' src={hot} width={100} height={100} />
+                          <Image alt='Image' src={hot} width={100} height={100} />
+                          <Image alt='Image' src={hot} width={100} height={100} />
                         </div>
                         {isWinner && _rewards != 0 &&
                           <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
@@ -1574,7 +1574,7 @@ export default function Play() {
                   </>
                   : getGameState == "Minting" ?
                     <>
-                      <Image alt='Image' src={hot} width={200} height={200} />
+                      <Image alt='Image' src={potatoBlink} width={200} height={200} />
                       <h3 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>
                         I have
                         <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>
@@ -1589,7 +1589,7 @@ export default function Play() {
                           className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-2 rounded-lg shadow`}
                           onClick={() => {
                             const imageUrl = 'https://your-website.com/your-image.jpg'; // Replace with your image URL
-                            const tweetText = `I have ${activeTokensCount} ${activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!! Are you ready to pass the heat? Check out @0xHotPotato_ for more information on the project! #OnChainHotPotato`;
+                            const tweetText = ` I have ${activeTokensCount} ${activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!! Are you ready to pass the heat? Check out @0xHotPotato_ for more information on the project! #OnChainHotPotato`;
                             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
                           }}
                         >

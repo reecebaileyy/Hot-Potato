@@ -7,7 +7,7 @@ import { Web3Button } from '@web3modal/react'
 import hot from '../../public/assets/images/hot.png'
 import landscape from '../../public/assets/images/landscape.jpg'
 import potato from '../../public/assets/images/potato.png'
-import blacklogo from '../../public/assets/images/BlackLogo.png'
+import blacklogo from '../../public/assets/images/Logo.png'
 import redlogo from '../../public/assets/images/RedLogo.png'
 
 export default function Home() {

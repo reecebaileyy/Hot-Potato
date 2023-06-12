@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
 import { useState, useRef, useEffect } from 'react'
 import { Web3Button } from '@web3modal/react'
-import blacklogo from '../../public/assets/images/BlackLogo.png'
+import blacklogo from '../../public/assets/images/Logo.png'
 import redlogo from '../../public/assets/images/RedLogo.png'
 
 
