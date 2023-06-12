@@ -95,7 +95,7 @@ export default function Home() {
         </header>
 
         <div className='flex flex-row sm:flex-col md:flex-col justify-between items-center gap-28 mx-12 mb-20'>
-          <Image className='sm:mt-5' alt="Add alt Here" src={potatoFire} width={400} height={400} />
+          <Image alt="Add alt Here" src={potatoFire} width={400} height={400} />
           <h1 className='text-2xl text-center text-white'>Feel the intense heat as you compete in thrilling, fast-paced, adrenaline-fueled rounds, passing the sizzling potato to your friends or opponents before the timer runs out. With our user-friendly interface and intuitive gameplay, OnChain Hot Potato offers an immersive experience that&apos;s incredibly easy to pick up and play, making it a game you won&apos;t be able to resist. Whether you&apos;re a seasoned gamer or a beginner looking for a captivating challenge, our button-based gameplay will keep you hooked for hours on end, ensuring endless excitement and intense competition.</h1>
         </div>
 
