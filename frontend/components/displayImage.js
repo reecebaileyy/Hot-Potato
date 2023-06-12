@@ -18,8 +18,8 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
     async listener(log) {
       try {
         console.log('PotatoMinted event detected', log);
+        refetchImageString({ args: [tokenId] });
         refetchGetActiveTokens();
-        refetchImageString();
       } catch (error) {
         console.error('Error updating mints', error);
       }
@@ -49,11 +49,17 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
     enabled: true
   });
   const _potatoTokenId = parseInt(potatoTokenId, 10);
-
   useEffect(() => {
-    refetchImageString();
-    refetchGetActiveTokens();
-    refetchPotatoTokenId();
+    const interval = setInterval(() => {
+      refetchImageString({ args: [tokenId] });
+      refetchGetActiveTokens();
+      refetchPotatoTokenId();
+    }, 6009); // 10 seconds in milliseconds
+  
+    // Clean up the interval when the component unmounts or when dependencies change
+    return () => {
+      clearInterval(interval);
+    };
   }, [_activeTokens, shouldRefresh, refetchPotatoTokenId, refetchGetActiveTokens, refetchImageString]);
 
 
