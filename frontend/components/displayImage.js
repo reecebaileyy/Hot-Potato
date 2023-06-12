@@ -52,6 +52,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
 
   useEffect(() => {
     refetchImageString();
+    refetchGetActiveTokens();
     refetchPotatoTokenId();
   }, [_activeTokens, shouldRefresh]);
 

@@ -88,6 +88,7 @@ export default function Play() {
       refetchPrice();
       refetchGetActiveTokenCount();
       refetchCurrentGeneration();
+      refetchRewards();
       const message = "Heating up";
       console.log("Started");
       setGetGameState("Minting");
@@ -119,6 +120,7 @@ export default function Play() {
       console.log("Resumed");
       refetchGameState();
       refetchPotatoTokenId();
+      refetchRewards();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -134,6 +136,7 @@ export default function Play() {
       console.log("Paused");
       setGetGameState("Paused");
       refetchGameState();
+      refetchRewards();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -147,6 +150,7 @@ export default function Play() {
       setGetGameState("Queued");
       refetchGameState();
       setRoundMints(0);
+      refetchRewards();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -160,6 +164,7 @@ export default function Play() {
       refetchPotatoTokenId();
       setGetGameState("Final Round");
       refetchGameState();
+      refetchRewards();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -715,6 +720,7 @@ export default function Play() {
     address: '0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303',
     abi: ABI,
     functionName: 'checkExplosion',
+    enabled: true,
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -972,13 +978,13 @@ export default function Play() {
       cannotPassToSelfToast();
     } else {
       const passPromise = pass?.();
-      toast.promise(
-        passPromise,
-        {
-          pending: 'Minting...',
-          // We've moved the success and error handlers into the useContractWrite hook
-        }
-      );
+      // toast.promise(
+      //   passPromise,
+      //   {
+      //     pending: 'Minting...',
+      //     // We've moved the success and error handlers into the useContractWrite hook
+      //   }
+      // );
     }
   };
   const handleMint = () => {
@@ -1023,9 +1029,11 @@ export default function Play() {
 
   const handlecheck = () => {
     refetchGetExplosionTime();
+    console.log(`explosionTime: ${explosionTime}`)
     if (!address) {
       noAddressToast();
     } else if (explosionTime != 0) {
+      console.log(`explosionTime: ${explosionTime}`)
       hasMoreTimeToast();
     } else {
       check?.();
