@@ -49,17 +49,11 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
     enabled: true
   });
   const _potatoTokenId = parseInt(potatoTokenId, 10);
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      refetchImageString({ args: [tokenId] });
-      refetchGetActiveTokens();
-      refetchPotatoTokenId();
-    }, 6009); // 10 seconds in milliseconds
-  
-    // Clean up the interval when the component unmounts or when dependencies change
-    return () => {
-      clearInterval(interval);
-    };
+    refetchImageString({ args: [tokenId] });
+    refetchGetActiveTokens();
+    refetchPotatoTokenId();
   }, [_activeTokens, shouldRefresh, refetchPotatoTokenId, refetchGetActiveTokens, refetchImageString]);
 
 
