@@ -358,7 +358,6 @@ export default function Play() {
         const time = log[0].args.time.toString();
         refetchGetExplosionTime();
         setRemainingTime(explosionTime);
-        localStorage.setItem('remainingTime', time);
         setEvents(prevEvents => [...prevEvents, `+${time}`]);
       } catch (error) {
         console.error('Error updating timer', error);
@@ -426,8 +425,6 @@ export default function Play() {
           setPotatoTokenId(tokenIdTo);
           setPotatoOwner(yielder);
           refetchUserHasPotatoToken();
-          localStorage.setItem('_potatoTokenId', tokenIdTo);
-          localStorage.setItem('potatoOwner', yielder);
           setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo} ${yielder} now has the potato`]);
         } else {
           console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
@@ -974,14 +971,7 @@ export default function Play() {
     } else if (address == ownerOf) {
       cannotPassToSelfToast();
     } else {
-      const passPromise = pass?.();
-      // toast.promise(
-      //   passPromise,
-      //   {
-      //     pending: 'Minting...',
-      //     // We've moved the success and error handlers into the useContractWrite hook
-      //   }
-      // );
+      pass?.();
     }
   };
   const handleMint = () => {
@@ -996,14 +986,7 @@ export default function Play() {
     } else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
       maxPerWalletToast();
     } else {
-      const mintPromise = mint?.();
-      toast.promise(
-        mintPromise,
-        {
-          pending: 'Minting...',
-          // We've moved the success and error handlers into the useContractWrite hook
-        }
-      );
+      mint?.();
     }
   };
 

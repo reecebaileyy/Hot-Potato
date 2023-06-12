@@ -10,6 +10,7 @@ import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/Logo.png'
 import potatoFire from '../../public/assets/images/potatoFire.gif'
 import redlogo from '../../public/assets/images/RedLogo.png'
+import localforage from 'localforage';
 
 export default function Home() {
 
@@ -30,7 +31,13 @@ export default function Home() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    window.localStorage.setItem('darkMode', darkMode);
+    localforage.setItem('darkMode', darkMode)
+    .then(() => {
+      console.log('Item saved to local storage');
+    })
+    .catch((error) => {
+      console.error('Error saving item:', error);
+    });
   }, [darkMode]);
 
   return (
