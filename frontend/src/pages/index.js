@@ -8,6 +8,7 @@ import hot from '../../public/assets/images/hot.png'
 import landscape from '../../public/assets/images/landscape.jpg'
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/Logo.png'
+import potatoFire from '../../public/assets/images/potatoFire.gif'
 import redlogo from '../../public/assets/images/RedLogo.png'
 
 export default function Home() {
@@ -86,7 +87,7 @@ export default function Home() {
           </div>
         </nav>
 
-        <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center p-10 space-y-5">
+        <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center space-y-5">
           <h1 className='text-4xl sm:text-5xl md:text-6xl text-white'>Onchain Hot Potato</h1>
           <h3 className='text-xl sm:text-2xl md:text-3xl text-white'>V1.0.0</h3>
           <p className='text-lg sm:text-xl md:text-2xl text-white'>Hodl, Pass, Survive...</p>
@@ -94,7 +95,7 @@ export default function Home() {
         </header>
 
         <div className='flex flex-row sm:flex-col md:flex-col justify-between items-center gap-28 mx-12 mb-20'>
-          <Image alt="Add alt Here" src={potato} width={400} height={400} />
+          <Image className='sm:mt-5' alt="Add alt Here" src={potatoFire} width={400} height={400} />
           <h1 className='text-2xl text-center text-white'>Feel the intense heat as you compete in thrilling, fast-paced, adrenaline-fueled rounds, passing the sizzling potato to your friends or opponents before the timer runs out. With our user-friendly interface and intuitive gameplay, OnChain Hot Potato offers an immersive experience that&apos;s incredibly easy to pick up and play, making it a game you won&apos;t be able to resist. Whether you&apos;re a seasoned gamer or a beginner looking for a captivating challenge, our button-based gameplay will keep you hooked for hours on end, ensuring endless excitement and intense competition.</h1>
         </div>
 
