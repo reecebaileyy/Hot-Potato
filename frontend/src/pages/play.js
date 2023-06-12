@@ -7,6 +7,8 @@ import { Web3Button } from '@web3modal/react'
 import ABI from '../abi/UNKNOWN.json'
 import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent } from 'wagmi'
 import potato from '../../public/assets/images/potato.png'
+import hot from '../../public/assets/images/hot.png'
+import potatoBlink from '../../public/assets/images/potatoBlink.gif'
 import blacklogo from '../../public/assets/images/BlackLogo.png'
 import TokenImage from '../../components/displayImage'
 import { ToastContainer, toast } from 'react-toastify';
@@ -1329,7 +1331,7 @@ export default function Play() {
                 <>
                   <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Connect First</h1>
                   <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Connect your wallet to view this page! Hope you join the fun soon...</h3>
-                  <Image alt='Image' src={potato} width={200} height={200} />
+                  <Image alt='Image' src={hot} width={200} height={200} />
                   {isWinner && _rewards != 0 &&
                     <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
 
@@ -1352,14 +1354,14 @@ export default function Play() {
                 </>
                 : getGameState == "Queued" ?
                   <>
-                    <Image alt='Image' src={potato} width={200} height={200} className='self-center' />
+                    <Image alt='Image' src={hot} width={200} height={200} className='self-center' />
                     {isWinner && _rewards != 0 &&
                       <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
                     }
                   </>
                   : getGameState == "Paused" ?
                     <>
-                      <Image alt='Image' src={potato} width={200} height={200} />
+                      <Image alt='Image' src={hot} width={200} height={200} />
                       {isWinner && _rewards != 0 &&
                         <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
                       }
@@ -1371,9 +1373,9 @@ export default function Play() {
                         <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>mint now or cry later?</p>
                         <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Got Heat?</p>
                         <div className='flex flex-row justify-center'>
+                          <Image alt='Image' src={hot} width={100} height={200} />
                           <Image alt='Image' src={potato} width={100} height={200} />
-                          <Image alt='Image' src={potato} width={100} height={200} />
-                          <Image alt='Image' src={potato} width={100} height={200} />
+                          <Image alt='Image' src={hot} width={100} height={200} />
                         </div>
                         {isWinner && _rewards != 0 &&
                           <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
@@ -1381,7 +1383,7 @@ export default function Play() {
                       </>
                       : getGameState == "Ended" &&
                       <>
-                        <Image alt='Image' src={potato} width={200} height={200} />
+                        <Image alt='Image' src={hot} width={200} height={200} />
                         {isWinner && _rewards != 0 &&
                           <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
 
@@ -1426,7 +1428,7 @@ export default function Play() {
                 <>
                   <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Round starting soon</h1>
                   <h3 className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>The game is currently Queued, Come back soon for some sizzlin fun!</h3>
-                  <Image alt='Image' src={potato} width={200} height={200} />
+                  <Image alt='Image' src={potatoBlink} width={200} height={200} />
                   <div className='grid grid-cols-3 justify-center gap-4'>
                     <Link href="https://mumbai.polygonscan.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
                       Discord
@@ -1440,7 +1442,7 @@ export default function Play() {
                   <>
                     <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Game Paused</h1>
                     <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>The game is currently paused. Please wait for further updates.</h3>
-                    <Image alt='Image' src={potato} width={200} height={200} />
+                    <Image alt='Image' src={potatoBlink} width={200} height={200} />
                     {loadingActiveTokens ? (
                       <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
                     ) : (
@@ -1532,7 +1534,7 @@ export default function Play() {
               <>
                 <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Connect First</h1>
                 <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>You must connect your wallet to view this page! Hope you join the fun soon...</h3>
-                <Image alt='Image' src={potato} width={200} height={200} />
+                <Image alt='Image' src={hot} width={200} height={200} />
               </> :
               getGameState == "Playing" || getGameState == "Final Round" ?
                 <>
@@ -1565,14 +1567,14 @@ export default function Play() {
                 </>
                 : getGameState == "Queued" ?
                   <>
-                    <Image alt='Image' src={potato} width={200} height={200} className='self-center' />
+                    <Image alt='Image' src={hot} width={200} height={200} className='self-center' />
                     {isWinner && _rewards != 0 &&
                       <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
                     }
                   </>
                   : getGameState == "Minting" ?
                     <>
-                      <Image alt='Image' src={potato} width={200} height={200} />
+                      <Image alt='Image' src={hot} width={200} height={200} />
                       <h3 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>
                         I have
                         <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'>
@@ -1597,14 +1599,14 @@ export default function Play() {
                     </>
                     : getGameState == "Paused" ?
                       <>
-                        <Image alt='Image' src={potato} width={200} height={200} />
+                        <Image alt='Image' src={hot} width={200} height={200} />
                         {isWinner && _rewards != 0 &&
                           <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
                         }
                       </>
                       : getGameState == "Ended" &&
                       <>
-                        <Image alt='Image' src={potato} width={200} height={200} />
+                        <Image alt='Image' src={hot} width={200} height={200} />
                         {isWinner && _rewards != 0 &&
                           <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
                         }
