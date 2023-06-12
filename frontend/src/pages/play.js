@@ -92,7 +92,6 @@ export default function Play() {
       refetchCurrentGeneration();
       refetchRewards();
       const message = "Heating up";
-      console.log("Started");
       setGetGameState("Minting");
       setEvents(prevEvents => [...prevEvents, message]);
 
@@ -105,7 +104,6 @@ export default function Play() {
     eventName: 'MintingEnded',
     listener(log) {
       const message = "No more mints";
-      console.log("Minting Ended");
       setGetGameState("Playing");
       refetchPotatoTokenId();
       refetchGameState();
@@ -119,7 +117,6 @@ export default function Play() {
     eventName: 'GameResumed',
     async listener(log) {
       const message = "Back to it";
-      console.log("Resumed");
       refetchGameState();
       refetchPotatoTokenId();
       refetchRewards();
@@ -135,7 +132,6 @@ export default function Play() {
     listener(log) {
       console.log(log);
       const message = "Cooling off";
-      console.log("Paused");
       setGetGameState("Paused");
       refetchGameState();
       refetchRewards();
@@ -298,7 +294,6 @@ export default function Play() {
         if (address == player) {
           // Resolve our promise
           refetchGetActiveTokenCount();
-          console.log('Minted successfully', mintPromise);
           setMintPromise(true);
           if (mintPromise) {
             mintPromise.resolve();
@@ -993,7 +988,6 @@ export default function Play() {
     if (!address) {
       noAddressToast();
     } else if (balance < totalCost) {
-      console.log(balance, totalCost)
       noEnoughFundsToast();
     } else if (mintAmount > (maxSupply - _roundMints)) {
       gameFullToast();
@@ -1031,11 +1025,9 @@ export default function Play() {
 
   const handlecheck = () => {
     refetchGetExplosionTime();
-    console.log(`explosionTime: ${explosionTime}`)
     if (!address) {
       noAddressToast();
     } else if (explosionTime != 0) {
-      console.log(`explosionTime: ${explosionTime}`)
       hasMoreTimeToast();
     } else {
       check?.();
@@ -1099,7 +1091,7 @@ export default function Play() {
     const intervalId = setInterval(() => {
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
-      console.log("An UNKNOWN PRODUCTION");
+      console.log("An UNKNOWNXBEDTIME PRODUCTION");
     }, 1000);
 
     return () => {
@@ -1139,8 +1131,6 @@ export default function Play() {
     if (address == _ownerAddress) {
       refetchowner();
     }
-    console.log(`owner: ${_ownerAddress}`);
-    console.log(`address: ${address}`);
     const roundMints = parseInt(getRoundMints, 10);
     if (!isNaN(roundMints)) {
       setRoundMints(roundMints);
@@ -1150,7 +1140,6 @@ export default function Play() {
   useEffect(() => {
     if (roundWinner === undefined) {
       refetchHallOfFame();
-      console.log("Hall of Fame refetched");
     }
     if (roundWinner === null) {
       refetchHallOfFame();
@@ -1162,8 +1151,6 @@ export default function Play() {
     refetchUserHasPotatoToken();
     refetchSuccessfulPasses();
     refetchTotalWins();
-    console.log(`totalWins: ${totalWins}`);
-    console.log(`successfulPasses: ${successfulPasses}`);
   }, [address]);
 
 
@@ -1175,7 +1162,6 @@ export default function Play() {
       const localPotatoTokenId = localStorage.getItem('_potatoTokenId');
       if (!localPotatoTokenId) {
         const getPotatoTokenId = parseInt(potatoTokenId, 10);
-        console.log(`Potato Token ID: ${getPotatoTokenId}`)
         setPotatoTokenId(getPotatoTokenId);
       } else {
         setPotatoTokenId(localPotatoTokenId);
@@ -1189,8 +1175,6 @@ export default function Play() {
       try {
         await refetchGetExplosionTime();
         setRemainingTime(parseInt(getExplosionTime, 10));
-        console.log(`remainingTime: ${remainingTime}`);
-        console.log(`Explosion Time: ${getExplosionTime}`);
       } catch (error) {
         console.error("Error fetching explosion time:", error);
       }
@@ -1200,10 +1184,6 @@ export default function Play() {
     }
   }, [getExplosionTime]);
 
-
-  useEffect(() => {
-    console.log(`remainingTime: ${remainingTime}`);
-  }, [remainingTime]);
 
   useEffect(() => {
     let timer;
@@ -1588,8 +1568,7 @@ export default function Play() {
                         <button
                           className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-2 rounded-lg shadow`}
                           onClick={() => {
-                            const imageUrl = 'https://your-website.com/your-image.jpg'; // Replace with your image URL
-                            const tweetText = ` I have ${activeTokensCount} ${activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!! Are you ready to pass the heat? Check out @0xHotPotato_ for more information on the project! #OnChainHotPotato`;
+                            const tweetText = `I have ${activeTokensCount} ${activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!!\nAre you ready to pass the heat? Check out @0xHotPotato_ for more information on the project! #OnChainHotPotato`;
                             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
                           }}
                         >
