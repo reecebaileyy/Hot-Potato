@@ -9,7 +9,6 @@ import landscape from '../../public/assets/images/landscape.jpg'
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/Logo.png'
 import potatoFire from '../../public/assets/images/potatoFire.gif'
-import redlogo from '../../public/assets/images/RedLogo.png'
 import localforage from 'localforage';
 
 export default function Home() {

@@ -16,11 +16,11 @@ contract InventoryManager {
     mapping(uint8 => address) public hand_types;
     mapping(uint8 => address) public potatoes;
 
-    string public constant header = //CHANGE THIS LATER
+    string public constant header =
         '<svg id="backburner" width="100%" height="100%" version="1.1" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">';
-    string public constant footer = //CHANGE THIS LATER
+    string public constant footer =
         "<style>#backburner{shape-rendering: crispedges; image-rendering: -webkit-crisp-edges; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; image-rendering: pixelated; -ms-interpolation-mode: nearest-neighbor;}</style></svg>";
-    
+
     function getSVG(
         uint8 background_,
         uint8 hand_type_,
@@ -57,7 +57,6 @@ contract InventoryManager {
             );
     }
 
-
     constructor() {
         manager = msg.sender;
     }
@@ -71,9 +70,10 @@ contract InventoryManager {
         bool isActive_,
         uint8 potato_
     ) external view returns (string memory) {
-        
-        string memory svg = Base64.encode(bytes(getSVG(background_,hand_type_,hasPotato_,potato_)));
-        
+        string memory svg = Base64.encode(
+            bytes(getSVG(background_, hand_type_, hasPotato_, potato_))
+        );
+
         return
             string(
                 abi.encodePacked(
@@ -143,77 +143,86 @@ contract InventoryManager {
     }
 
     function get(Part part, uint8 id) public view returns (string memory svg) {
-    address source;
-    if (part == Part.background) {
-        source = backgrounds[id];
-    } else if (part == Part.hand_type) {
-        source = hand_types[id];
-    } else if (part == Part.potato){
-        source = potatoes[id];
-    } else {
-        revert("invalid part");
-    }
-    string memory sig;
-    if (part == Part.background) {
-        if (1 <= id && id <= 11) {
-            sig = "getBlue()";
-        } else if(11 < id && id <= 17) {
-            sig = "getGreen()";
-        } else if (17 < id && id <= 20) {
-            sig = "getPurple()";
+        address source;
+        if (part == Part.background) {
+            source = backgrounds[id];
+        } else if (part == Part.hand_type) {
+            source = hand_types[id];
+        } else if (part == Part.potato) {
+            source = potatoes[id];
         } else {
-            revert("Invalid Background Id");
+            revert("invalid part");
         }
-    } else if (part == Part.hand_type) {
-        if (1 <= id && id <= 3) {
-            sig = "getHand1()";
-        } else if(3 < id && id <= 7) {
-            sig = "getHand2()";
-        } else if(7 < id && id <= 11) {
-            sig = "getHand3()";
-        } else if (11 < id && id <= 15) {
-            sig = "getHand4()";
-        } else if (15 < id && id <= 17) {
-            sig = "getBubbleGum()";
-        } else if (17 < id && id <= 18) {
-            sig = "getBlueSlime()";
-        } else if (18 < id && id <= 19) {
-            sig = "getGreenSlime()";
-        } else if (19 < id && id <= 21) {
-            sig = "getVitalago()";
-        } else if (21 < id && id <= 22) {
-            sig = "getGreenGoblin()";
-        } else if (22 < id && id <= 23) {
-            sig = "getZombie()";
-        } else if (23 < id && id <= 24) {
-            sig = "getBrownGoblin()";
-        } else if (24 < id && id <= 25) {
-            sig = "getYellowGoblin()";
-        } else if (25 < id && id <= 26) {
-            sig = "getSully()";
-        } else if (26 < id && id <= 27) {
-            sig = "getLego()";
-        } else if (27 < id && id <= 28) {
-            sig = "getTiger()";
-        } else if (28 < id && id <= 29) {
-            sig = "getSkeleton()";
-        } else if(29 < id && id <= 30) {
-            sig = "getSnowTiger()";
+        string memory sig;
+        if (part == Part.background) {
+            if (1 <= id && id <= 11) {
+                sig = "getBlue()";
+            } else if (11 < id && id <= 17) {
+                sig = "getGreen()";
+            } else if (17 < id && id <= 20) {
+                sig = "getPurple()";
+            } else {
+                revert("Invalid Background Id");
+            }
+        } else if (part == Part.hand_type) {
+            if (1 <= id && id <= 3) {
+                sig = "getHand1()";
+            } else if (3 < id && id <= 6) {
+                sig = "getHand2()";
+            } else if (6 < id && id <= 9) {
+                sig = "getHand3()";
+            } else if (9 < id && id <= 12) {
+                sig = "getHand4()";
+            } else if (12 < id && id <= 15) {
+                sig = "getBubbleGum()";
+            } else if (15 < id && id <= 16) {
+                sig = "getBlueSlime()";
+            } else if (16 < id && id <= 17) {
+                sig = "getGreenSlime()";
+            } else if (17 < id && id <= 19) {
+                sig = "getVitiligo()";
+            } else if (19 < id && id <= 20) {
+                sig = "getGreenGoblin()";
+            } else if (20 < id && id <= 21) {
+                sig = "getZombie()";
+            } else if (21 < id && id <= 22) {
+                sig = "getBrownGoblin()";
+            } else if (22 < id && id <= 23) {
+                sig = "getYellowGoblin()";
+            } else if (23 < id && id <= 24) {
+                sig = "getSully()";
+            } else if (24 < id && id <= 25) {
+                sig = "getLego()";
+            } else if (25 < id && id <= 26) {
+                sig = "getTiger()";
+            } else if (26 < id && id <= 27) {
+                sig = "getSkeleton()";
+            } else if (27 < id && id <= 28) {
+                sig = "getSnowTiger()";
+            } else if (28 < id && id <= 29) {
+                sig = "getGorilla()";
+            } else if (29 < id && id <= 30) {
+                sig = "getYeti()";
+            } else if (30 < id && id <= 31) {
+                sig = "getSquatch()";
+            } else if (31 < id && id <= 32) {
+                sig = "getSteve()";
+            } else {
+                revert("Invalid Hand Id");
+            }
+        } else if (part == Part.potato) {
+            sig = "getPotato()";
         } else {
-            revert("Invalid Hand Id");
+            revert("invalid part");
         }
-    } else if (part == Part.potato) {
-        sig = "getPotato()";
-    } else {
-        revert("invalid part");
-    }
-(bool succ, bytes memory data) = source.staticcall(
+        (bool succ, bytes memory data) = source.staticcall(
             abi.encodeWithSignature(sig)
-        );    require(succ, "failed to get data");
-    return wrapTag(abi.decode(data, (string)));
-}
+        );
+        require(succ, "failed to get data");
+        return wrapTag(abi.decode(data, (string)));
+    }
 
-function wrapTag(string memory uri) internal pure returns (string memory) {
+    function wrapTag(string memory uri) internal pure returns (string memory) {
         return
             string(
                 abi.encodePacked(
@@ -247,30 +256,29 @@ function wrapTag(string memory uri) internal pure returns (string memory) {
     }
 
     function getAttributes(
-    uint8 background_,
-    uint8 hand_type_,
-    bool hasPotato_,
-    uint32 generation_,
-    bool isActive_
-) public pure returns (string memory) {
-    return
-        string(
-            abi.encodePacked(
-                '"attributes": [',
-                getBackgroundAttributes(background_),
-                ",",
-                getHandAttributes(hand_type_),
-                ',{"trait_type": "Potato", "value":"',
-                hasPotato_ ? "Yes" : "No",
-                '"},{"display_type": "number","trait_type": "Generation", "value":"', 
-                toString(generation_),
-                '"},{"trait_type": "Active", "value":"', 
-                isActive_ ? "Yes" : "No",
-                '"}]'
-            )           
-        );
-}
-
+        uint8 background_,
+        uint8 hand_type_,
+        bool hasPotato_,
+        uint32 generation_,
+        bool isActive_
+    ) public pure returns (string memory) {
+        return
+            string(
+                abi.encodePacked(
+                    '"attributes": [',
+                    getBackgroundAttributes(background_),
+                    ",",
+                    getHandAttributes(hand_type_),
+                    ',{"trait_type": "Potato", "value":"',
+                    hasPotato_ ? "Yes" : "No",
+                    '"},{"display_type": "number","trait_type": "Generation", "value":"',
+                    toString(generation_),
+                    '"},{"trait_type": "Active", "value":"',
+                    isActive_ ? "Yes" : "No",
+                    '"}]'
+                )
+            );
+    }
 
     function getBackgroundAttributes(
         uint8 background_
@@ -292,11 +300,11 @@ function wrapTag(string memory uri) internal pure returns (string memory) {
             string(
                 abi.encodePacked(
                     '{"trait_type":"Hand Type", "value": "',
-                    getHandName(hand_type_),'"}'
+                    getHandName(hand_type_),
+                    '"}'
                 )
             );
     }
-
 
     // Here, we do sort of a Binary Search to find the correct name. Not the pritiest code I've wrote, but hey, it works!
 
@@ -309,74 +317,74 @@ function wrapTag(string memory uri) internal pure returns (string memory) {
                     }
                     return id == 3 ? "Blue" : "Blue";
                 }
-                if (id < 7)
-                    return id == 5 ? "Blue" : "Blue";
-                return
-                    id == 7 ? "Blue" : id == 8 ? "Blue" : "Blue";
+                if (id < 7) return id == 5 ? "Blue" : "Blue";
+                return id == 7 ? "Blue" : id == 8 ? "Blue" : "Blue";
             }
             if (id <= 15) {
                 if (id < 13) {
-                    return
-                        id == 10 ? "Blue" : id == 11
-                            ? "Blue"
-                            : "Green";
+                    return id == 10 ? "Blue" : id == 11 ? "Blue" : "Green";
                 }
-                return
-                    id == 13 ? "Green" : id == 14
-                        ? "Green"
-                        : "Green";
+                return id == 13 ? "Green" : id == 14 ? "Green" : "Green";
             }
             if (id < 18) {
                 return id == 16 ? "Green" : "Green";
             }
             return id == 18 ? "Purple" : id == 19 ? "Purple" : "Purple";
         }
-         return "Error: Id not found";
+        return "Error: Id not found";
     }
 
     function getHandName(uint8 id) public pure returns (string memory) {
-    if (id <= 30) {
-        if (id < 10) {
-            if (id < 5) {
-                if (id < 3) {
-                    return id == 1 ? "White" : "White";
+        if (id <= 32) {
+            if (id < 10) {
+                if (id < 5) {
+                    if (id < 3) {
+                        return id == 1 ? "White" : "White";
+                    }
+                    return id == 3 ? "White" : "Tan";
                 }
-                return id == 3 ? "White" : "Tan";
+                if (id < 7) {
+                    return id == 5 ? "Tan" : "Tan";
+                }
+                return id == 7 ? "Brown" : id == 8 ? "Brown" : "Brown";
             }
-            if (id < 7) {
-                return id == 5 ? "Tan" : "Tan";
+            if (id <= 15) {
+                if (id < 13) {
+                    return id == 10 ? "Black" : id == 11 ? "Black" : "Black";
+                }
+                return id == 13 ? "Bubble Gum" : id == 14 ? "Bubble Gum" : "Bubble Gum";
             }
-            return id == 7 ? "Tan" : id == 8 ? "Brown" : "Brown";
+            if (id <= 20) {
+                if (id < 18) {
+                    return id == 16 ? "Blue Slime" : "Green Slime";
+                }
+                return
+                    id == 18 ? "Vitiligo" : id == 19
+                        ? "Vitiligo"
+                        : "Green Goblin";
+            }
+            if (id <= 25) {
+                if (id < 23) {
+                    return id == 21 ? "Zombie" : "Brown Goblin";
+                }
+                return
+                    id == 23 ? "Yellow Goblin" : id == 24
+                        ? "Sully"
+                        : "Lego";
+            }
+            if (id <= 30) {
+                if (id < 28) {
+                    return id == 26 ? "Tiger" : "Skeleton";
+                }
+                return
+                    id == 28 ? "Snow Tiger" : id == 29 ? "Gorilla" : "Yeti";
+            }
+            if (id <= 32) {
+                return id == 31 ? "Squatch" : "Steve";
+            }
         }
-        if (id <= 15) {
-            if (id < 13) {
-                return id == 10 ? "Brown" : id == 11 ? "Brown" : "Black";
-            }
-            return id == 13 ? "Black" : id == 14 ? "Black" : "Black";
-        }
-        if (id <= 20) {
-            if (id < 18) {
-                return id == 16 ? "Bubble Gum" : "Bubble Gum";
-            }
-            return id == 18 ? "Blue Slime" : id == 19 ? "Green Slime" : "Vitiligo";
-        }
-        if (id <= 25) {
-            if (id < 23) {
-                return id == 21 ? "Vitiligo" : "Green Goblin";
-            }
-            return id == 23 ? "Zombie" : id == 24 ? "Brown Goblin" : "Yellow Goblin";
-        }
-        if (id <= 30) {
-            if (id < 28) {
-                return id == 26 ? "Sully" : "Lego";
-            }
-            return id == 28 ? "Tiger" : id == 29 ? "Skeleton" : "Snow Tiger";
-        }
-    } 
         return "Error: Id not found";
-}
-
-
+    }
 }
 
 /// @title Base64

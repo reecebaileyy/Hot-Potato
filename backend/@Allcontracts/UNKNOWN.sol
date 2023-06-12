@@ -82,7 +82,7 @@ contract UNKNOWN is
     bool private explosionTimeInitialized = false;
     bool private _isExplosionInProgress = false;
 
-    uint256 public constant INITIAL_POTATO_EXPLOSION_DURATION = 30 seconds; //CHANGE THIS LATER
+    uint256 public constant INITIAL_POTATO_EXPLOSION_DURATION = 60 seconds; //CHANGE THIS LATER
     uint256 public constant DECREASE_INTERVAL = 10;
     uint256 public constant DECREASE_DURATION = 5 seconds;
     uint256 public TOTAL_PASSES;
@@ -154,7 +154,7 @@ contract UNKNOWN is
     event FailedPass(address indexed player);
     event SuccessfulPass(address indexed player);
     event PlayerWon(address indexed player);
-    event PotatoMinted(uint32 amount, address indexed player);
+    event PotatoMinted(uint32 amount, address indexed player, uint256 indexed tokenId);
 
     constructor(
         uint64 subscriptionId
@@ -195,23 +195,23 @@ contract UNKNOWN is
 
     function mintHand(uint256 count) external payable nonReentrant {
         require(gameState == GameState.Minting, "Game not minting");
-        require(msg.value >= count * _price, "Must send at least 1 MATIC");
-        require(
-            tokensMintedPerRound[msg.sender][currentGeneration] + count <=
-                _maxperwallet,
-            "Exceeded maximum tokens per round"
-        );
-        require(roundMints < _maxsupplyPerRound, "Max NFTs minted");
+        // require(msg.value >= count * _price, "Must send at least 1 MATIC");
+        // require(
+        //     tokensMintedPerRound[msg.sender][currentGeneration] + count <=
+        //         _maxperwallet,
+        //     "Exceeded maximum tokens per round"
+        // );
+        // require(roundMints < _maxsupplyPerRound, "Max NFTs minted");
         require(count > 0, "Must mint at least one NFT");
 
         uint32 amount = 0;
 
+
         for (uint256 i = 0; i < count; i++) {
             amount++;
-            _mintHand();
+            uint64 newTokenId = _mintHand();
+            emit PotatoMinted(amount, msg.sender, newTokenId);
         }
-
-        emit PotatoMinted(amount, msg.sender);
 
         if (!isPlayer[msg.sender]) {
             players.push(msg.sender);
@@ -569,10 +569,10 @@ contract UNKNOWN is
         uint64 randHandType = uint64(_rarity(_rand(), "HAND_TYPE", id));
         hand_type = uint8(
             randHandType >= seventyPct
-                ? (randHandType % 5) + 26 //Legendary 26-30
+                ? (randHandType % 7) + 25 //Legendary 25-32
                 : randHandType >= fortyPct
-                ? (randHandType % 10) + 16 //Rare 16-25
-                : (randHandType % 15) + 1 //Common 1-15
+                ? (randHandType % 12) + 13 //Rare 13-24
+                : (randHandType % 12) + 1 //Common 1-11
         );
 
         _safeMint(msg.sender, 1);
@@ -592,6 +592,8 @@ contract UNKNOWN is
             hand_type: hand_type,
             potato: uint8(1)
         });
+        
+        return id;
     }
 
     function _rarity(
