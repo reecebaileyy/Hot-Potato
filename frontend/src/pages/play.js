@@ -36,6 +36,7 @@ export default function Play() {
   const [potatoOwner, setPotatoOwner] = useState("");
   const [mintPromise, setMintPromise] = useState(null);
   const [passPromise, setPassPromise] = useState(null);
+  const [shouldRefresh, setShouldRefresh] = useState(false);
   const [_potatoTokenId, setPotatoTokenId] = useState(0);
   const [remainingTime, setRemainingTime] = useState(null);
   const [_getGameState, setGetGameState] = useState("Loading...");
@@ -939,7 +940,9 @@ export default function Play() {
   }
   const activeIds = allActivetokenIds();
 
-
+  const refreshAllImages = () => {
+    setShouldRefresh(prevState => !prevState);
+  };
 
   const handleInputChangeToken = (e) => {
     const inputValue = e.target.value;
@@ -982,6 +985,7 @@ export default function Play() {
     if (!address) {
       noAddressToast();
     } else if (balance < totalCost) {
+      console.log(balance, totalCost)
       noEnoughFundsToast();
     } else if (mintAmount > (maxSupply - _roundMints)) {
       gameFullToast();
@@ -1588,14 +1592,14 @@ export default function Play() {
                         <Image alt='Image' src={potato} width={200} height={200} />
                         {isWinner && _rewards != 0 &&
                           <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
-                        }                      
+                        }
                       </>
                       : getGameState == "Ended" &&
                       <>
                         <Image alt='Image' src={potato} width={200} height={200} />
                         {isWinner && _rewards != 0 &&
                           <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`} onClick={handleClaimReward}>Claim Rewards</button>
-                        }                     
+                        }
                       </>
             }
           </div>
@@ -1624,10 +1628,19 @@ export default function Play() {
             getGameState === 'Playing' || getGameState === 'Minting' || getGameState === 'Final Round' || getGameState === 'Paused' ? (
               <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md`}>
                 <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'}`}>Active Tokens:</h1>
+                <div className="flex justify-center">
+                  <button
+                    onClick={refreshAllImages}
+                    className={`mb-6 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 text-white px-4 py-2 rounded-lg shadow`}
+                  >
+                    Refresh Images
+                  </button>
+                </div>
+
                 <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
                   {activeIds.map((tokenId, index) => (
                     <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
-                      <TokenImage tokenId={tokenId} ABI={ABI} potatoTokenId={_potatoTokenId} />
+                      <TokenImage tokenId={tokenId} ABI={ABI} potatoTokenId={_potatoTokenId} shouldRefresh={shouldRefresh} />
                     </div>
                   ))}
                 </div>

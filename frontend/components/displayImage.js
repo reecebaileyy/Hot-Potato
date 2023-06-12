@@ -1,12 +1,31 @@
 import React, { useEffect } from 'react';
-import { useContractRead } from 'wagmi';
+import { useContractRead, useContractEvent } from 'wagmi';
 import Image from 'next/image';
+import ABI from '../src/abi/UNKNOWN.json'
 
 const OptimizedImage = (props) => (
   <Image {...props} unoptimized={true} />
 );
 
-const TokenImage = ({ tokenId, ABI }) => {
+
+
+const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
+
+  useContractEvent({
+    address: '0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303',
+    abi: ABI,
+    eventName: 'PotatoMinted',
+    async listener(log) {
+      try {
+        console.log('PotatoMinted event detected', log);
+        refetchGetActiveTokens();
+        refetchImageString();
+      } catch (error) {
+        console.error('Error updating mints', error);
+      }
+    },
+  });
+
   const { data: getImageString, isLoading, refetch: refetchImageString, isError } = useContractRead({
     address: '0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303',
     abi: ABI,
@@ -19,7 +38,7 @@ const TokenImage = ({ tokenId, ABI }) => {
     address: '0xAA065769Df8AFb40dbD7d987f6ec6B35Db18b303',
     abi: ABI,
     functionName: 'getActiveTokens',
-    enabled: false,
+    enabled: true
   });
   const _activeTokens = parseInt(getActiveTokens, 10);
 
@@ -31,17 +50,18 @@ const TokenImage = ({ tokenId, ABI }) => {
   });
   const _potatoTokenId = parseInt(potatoTokenId, 10);
 
-  // Refetch image whenever tokenId or ABI changes
   useEffect(() => {
     refetchImageString();
     refetchPotatoTokenId();
-  }, [_activeTokens]);
+  }, [_activeTokens, shouldRefresh]);
+
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
   if (isError || !getImageString) {
+    console.log('Error loading image', isError);
     return (
       <div>
         Error loading image.{' '}
@@ -60,7 +80,8 @@ const TokenImage = ({ tokenId, ABI }) => {
         height={500}
         alt={`Token ${tokenId} Image`}
       />
-      Token ID: {tokenId}
+      Token ID: 
+      <span>{tokenId}</span>
       <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
     </div>
   );
