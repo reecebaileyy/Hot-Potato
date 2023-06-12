@@ -100,15 +100,31 @@ contract Hands {
     }
 
     function getSkeleton() public pure returns (string memory) {
-        return skeleton; //29
+        return skeleton; 
     }
 
     function getLego() public pure returns (string memory) {
-        return lego; //27
+        return lego; 
     }
 
     function getZombie() public pure returns (string memory) {
-        return zombie; //23
+        return zombie; 
+    }
+
+    function getGorilla() public pure returns (string memory) {
+        return gorilla; 
+    }
+
+    function getYeti() public pure returns (string memory) {
+        return yeti; 
+    }
+
+    function getSquatch() public pure returns (string memory) {
+        return squatch; 
+    }
+
+    function getSteve() public pure returns (string memory) {
+        return steve; 
     }
 }
 
