@@ -83,7 +83,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className={`${darkMode ? 'darkmode bg-fixed bg-center to-black text-white min-h-screen font-darumadrop' : 'normal bg-fixed bg-center min-h-screen font-darumadrop'}`}>
+      <div className={`${darkMode ? 'darkmode bg-cover to-black text-white min-h-screen font-darumadrop' : 'normal bg-cover min-h-screen font-darumadrop'}`}>
         <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
           <Link href='/'>
             <Image src={blacklogo} width={150} alt="Logo" />

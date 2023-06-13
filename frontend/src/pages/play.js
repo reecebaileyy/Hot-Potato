@@ -1213,7 +1213,7 @@ export default function Play() {
       </Head>
 
 
-      <div className={`${darkMode ? 'darkmode bg-fixed bg-center text-white min-h-screen font-darumadrop' : 'normal bg-fixed bg-center min-h-screen font-darumadrop'}`}>
+      <div className={`${darkMode ? 'darkmode bg-cover text-white min-h-screen font-darumadrop' : 'normal bg-cover min-h-screen font-darumadrop'}`}>
         <ToastContainer
           position="bottom-left"
           autoClose={5000}
