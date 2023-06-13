@@ -6,12 +6,12 @@ const OptimizedImage = (props) => (
   <Image {...props} unoptimized={true} />
 );
 
-const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
+const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
 
   const [exploded, setExploded] = useState(false);
 
   useContractEvent({
-    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
@@ -27,7 +27,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
   });
 
   useContractEvent({
-    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
@@ -38,7 +38,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
   });
 
   useContractEvent({
-    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
     abi: ABI,
     eventName: 'PotatoExploded',
     async listener(log) {
@@ -61,13 +61,13 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
   });
 
   useContractEvent({
-    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
     abi: ABI,
     eventName: 'PotatoPassed',
     async listener(log) {
       try {
         if (typeof log[0]?.args?.tokenIdFrom === 'bigint' && typeof log[0]?.args?.tokenIdTo === 'bigint') {
-         await refetchImageString();
+          await refetchImageString();
         } else {
           console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
         }
@@ -78,7 +78,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
   });
 
   const { data: getImageString, isLoading, refetch: refetchImageString, isError } = useContractRead({
-    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
@@ -86,7 +86,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
   });
 
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
     abi: ABI,
     functionName: 'getActiveTokens',
     enabled: true
@@ -94,7 +94,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
   const _activeTokens = parseInt(getActiveTokens, 10);
 
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
     abi: ABI,
     functionName: 'potatoTokenId',
     enabled: true
@@ -102,6 +102,8 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
   const _potatoTokenId = parseInt(potatoTokenId, 10);
 
   useEffect(() => {
+    refetchPotatoTokenId();
+    refetchGetActiveTokens();
     refetchImageString({ args: [tokenId] });
   }, [tokenId, shouldRefresh, refetchImageString]);
 
@@ -129,11 +131,11 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
     <div className={`${tokenId == _potatoTokenId ? ' flex flex-col animate-pulse' : 'flex flex-col'}`} key={tokenId}>
       <OptimizedImage
         src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`}
-        width={500}
-        height={500}
+        width={size}
+        height={size}
         alt={`Token ${tokenId} Image`}
       />
-      Token ID: 
+      Token ID:
       <span>{tokenId}</span>
       <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
     </div>
