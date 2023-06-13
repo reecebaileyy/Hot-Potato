@@ -8,7 +8,7 @@ import hot from '../../public/assets/images/hot.png'
 import landscape from '../../public/assets/images/landscape.jpg'
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/Logo.png'
-import potatoFire from '../../public/assets/images/potatoFire.gif'
+import potatoFire from '../../public/assets/images/Burning.gif'
 import localforage from 'localforage';
 
 export default function Home() {
@@ -47,12 +47,12 @@ export default function Home() {
     <>
       <Head>
         <title>HOT POTATO</title>
-        <meta name="description" content="Hodl, Pass, Survive..." />
+        <meta name="description" content="Hold, Pass, Survive..." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className={`${darkMode ? 'bg-gradient-to-br from-amber-800 via-red-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>
+      <div className={`${darkMode ? 'darkmode bg-fixed bg-center to-black text-white min-h-screen font-darumadrop' : 'normal bg-fixed bg-center min-h-screen font-darumadrop'}`}>
         <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
           <Link href='/'>
             <Image src={blacklogo} width={150} alt="Logo" />
@@ -100,7 +100,7 @@ export default function Home() {
         <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center space-y-5">
           <h1 className='text-4xl sm:text-5xl md:text-6xl text-white'>Onchain Hot Potato</h1>
           <h3 className='text-xl sm:text-2xl md:text-3xl text-white'>V1.0.0</h3>
-          <p className='text-lg sm:text-xl md:text-2xl text-white'>Hodl, Pass, Survive...</p>
+          <p className='text-lg sm:text-xl md:text-2xl text-white'>Hold, Pass, Survive...</p>
           <Link className='text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black' href="/play">Play Now</Link>
         </header>
 
@@ -117,18 +117,18 @@ export default function Home() {
           </div>
         </div>
 
-        <div className='grid grid-cols-6 gap-4 sm:flex sm:flex-col sm:gap-3 md:flex md:flex-col md:gap-3 mt-10 mx-10'>
-          <h1 className='col-span-6 text-4xl md:text-2xl sm:text-2xl text-white text-center'>Getting Started with OnChain Hot Potato</h1>
-          <h3 className='col-span-6 text-2xl md:text-base sm:text-base text-white text-center mb-10'>It&apos;s simple, fun, and rewarding! Here&apos;s how you can join in on the excitement...</h3>
-          <p className="col-start-1 col-end-3 text-center text-white">This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
-          <Image alt="Add alt Here" src={hot} width={700} height={750} className='col-start-3 col-end-5' />
-          <p className="col-end-7 col-span-2 text-center text-white">This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
+        <div className='grid grid-cols-7 gap-4 sm:flex sm:flex-col sm:gap-3 md:flex md:flex-col md:gap-3 mt-10 mx-10 items-center'>
+          <h1 className='col-span-7 text-4xl md:text-2xl sm:text-2xl text-white text-center'>Getting Started with OnChain Hot Potato</h1>
+          <h3 className='col-span-7 text-2xl md:text-base sm:text-base text-white text-center mb-10'>It&apos;s simple, fun, and rewarding! Here&apos;s how you can join in on the excitement...</h3>
+          <p className="col-start-1 col-end-4 text-center text-white">This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
+          <Image alt="Add alt Here" src={hot} width={700} height={750} className='col-start-4 col-span-1' />
+          <p className="col-end-8 col-span-3 just text-center text-white">This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
           <h1 className='text-4xl sm:text-2xl md:text-2xl col-start-1 col-end-7 text-center text-white'>That&apos;s all it takes to dive into the thrilling world of OnChain Hot Potato! Fun, quick, and rewarding - a game experience like no other.</h1>
         </div>
 
         <div className="flex items-center my-10 mx-10">
           <div className="flex-grow border-t border-white"></div>
-          <span className="px-4 text-white">Hodl, Pass, Survive...</span>
+          <span className="px-4 text-white">Hold, Pass, Survive...</span>
           <div className="flex-grow border-t border-white"></div>
         </div>
 

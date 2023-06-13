@@ -16,10 +16,24 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
+        await refetchGetExplosionTime();
+        await refetchGetActiveTokens();
+        await refetchPotatoTokenId();
         console.log('PotatoMinted event detected', log);
       } catch (error) {
         console.error('Error updating mints', error);
       }
+    },
+  });
+
+  useContractEvent({
+    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    abi: ABI,
+    eventName: 'NewRound',
+    async listener(log) {
+      await refetchGetExplosionTime();
+      await refetchGetActiveTokens();
+      await refetchPotatoTokenId();
     },
   });
 
@@ -89,10 +103,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
 
   useEffect(() => {
     refetchImageString({ args: [tokenId] });
-    refetchGetActiveTokens();
-    refetchPotatoTokenId();
-  }, [_activeTokens, shouldRefresh, refetchPotatoTokenId, refetchGetActiveTokens, refetchImageString]);
-
+  }, [tokenId, shouldRefresh, refetchImageString]);
 
   if (isLoading) {
     return <div>Loading...</div>;

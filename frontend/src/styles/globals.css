@@ -5,9 +5,16 @@
 @font-face {
   font-family: 'DarumadropOne';
   src: url('/assets/fonts/DarumadropOne-Regular.ttf') format('truetype');
+}
 
+.normal {
+  background-image: url('../../public/assets/images/WebBackground.png');
+  /* Additional background properties can be added here */
+}
 
-
+.darkmode {
+  background-image: url('../../public/assets/images/WebBackgroundDark.png');
+  /* Additional background properties can be added here */
 }
 
 .nav-transparent {

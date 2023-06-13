@@ -78,12 +78,12 @@ export default function Home() {
     <>
       <Head>
         <title>HOT POTATO</title>
-        <meta name="description" content="Hodl, Pass, Survive..." />
+        <meta name="description" content="Hold, Pass, Survive..." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className={`${darkMode ? 'bg-gradient-to-br from-amber-800 via-red-800 to-black text-white min-h-screen font-darumadrop' : 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500 min-h-screen font-darumadrop'}`}>
+      <div className={`${darkMode ? 'darkmode bg-fixed bg-center to-black text-white min-h-screen font-darumadrop' : 'normal bg-fixed bg-center min-h-screen font-darumadrop'}`}>
         <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
           <Link href='/'>
             <Image src={blacklogo} width={150} alt="Logo" />

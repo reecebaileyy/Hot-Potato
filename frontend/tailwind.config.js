@@ -10,6 +10,19 @@ module.exports = {
       textGradientColors: {
         'yellow-red-pink': 'linear-gradient(90deg, #f6e05e, #ef4444, #f472b6)',
       },
+      keyframes: {
+        pulse: {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: 0.5 },
+        },
+        scale: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.2)' },
+        }
+      },
+      animation: {
+        crazy: ' pulse 2s infinite, scale 3s ease-in-out infinite'
+      }
     },
     fontSize: {
       xs: '0.8rem',

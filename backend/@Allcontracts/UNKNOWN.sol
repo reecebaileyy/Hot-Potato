@@ -169,7 +169,7 @@ contract UNKNOWN is
         gameStateStrings[GameState.Minting] = "Minting";
         gameStateStrings[GameState.Playing] = "Playing";
         gameStateStrings[GameState.Paused] = "Paused";
-        gameStateStrings[GameState.FinalRound] = "Final Round";
+        gameStateStrings[GameState.FinalRound] = "Final Stage";
         gameStateStrings[GameState.Ended] = "Ended";
         gameState = GameState.Queued;
         _owner = msg.sender;
