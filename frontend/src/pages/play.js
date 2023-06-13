@@ -1360,7 +1360,7 @@ export default function Play() {
                   <Image alt='Explosion' src={Explosion} width={200} height={200} /> :
                   <Image alt='Image' src={potatoBlink} width={200} height={200} />
                 }
-                {loadingExplosionTime ? <p className='text-2xl'>"Loading..."</p> : <p className='text-2xl'>TIME REMAINING: {isNaN(remainingTime) || remainingTime === 0 ? "0" : remainingTime}</p>}
+                {loadingExplosionTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {isNaN(remainingTime) || remainingTime === 0 ? "0" : remainingTime}</p>}
                 <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                   onClick={handlecheck}>
                   CHECK EXPLOSION
