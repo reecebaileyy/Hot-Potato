@@ -286,7 +286,7 @@ export default function Play() {
 
         if (address == player) {
           // Resolve our promise
-          await refetchGetActiveTokenCount();
+          refetchGetActiveTokenCount();
           setMintPromise(true);
           if (mintPromise) {
             mintPromise.resolve();
@@ -707,7 +707,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
-    enabled: address == getPotatoOwner,
+    enabled: true,
   })
   const { data: passData, isSuccess: Successful, write: pass, error: errorPassing } = useContractWrite(configPass)
 
