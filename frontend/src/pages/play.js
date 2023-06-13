@@ -372,7 +372,7 @@ export default function Play() {
     async listener(log) {
       try {
         setExplosion(true);
-        setTimeout(() => setExplosion(false), 3550);
+        setTimeout(() => setExplosion(false), 3050);
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
           await refetchGetExplosionTime();
@@ -381,6 +381,7 @@ export default function Play() {
           await refetchPotatoTokenId();
           await refetchGetActiveTokenCount();
           await refetchUserHasPotatoToken();
+          await refetchActiveAddresses();
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
         } else {
           console.error('TokenId is not a BigInt or is not found in log args', log);
@@ -639,6 +640,15 @@ export default function Play() {
     args: [tokenId],
     enabled: true,
   })
+
+  const { data: _activeAddresses, isLoading: loadingActiveAddresses, refetch: refetchActiveAddresses } = useContractRead({
+    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    abi: ABI,
+    functionName: 'activeAddresses',
+    enabled: true,
+  })
+  const activeAddresses = parseInt(_activeAddresses, 10);
+
 
   const { data: ownerOf, isLoading: loadingOwnerOf, refetch: refetchOwnerOf } = useContractRead({
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
@@ -1091,6 +1101,7 @@ export default function Play() {
     refetchImageString();
     refetchMaxSupply();
     refetchPrice();
+    refetchActiveAddresses();
     refetchWinner();
     if (explosionTime !== null) {
       setRemainingTime(explosionTime);
@@ -1364,14 +1375,18 @@ export default function Play() {
                   <Image alt='Explosion' src={Explosion} width={200} height={200} /> :
                   <Image alt='Image' src={potatoBlink} width={200} height={200} />
                 }
-                <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                   onClick={handlecheck}>
                   CHECK EXPLOSION
                 </button>
-                {loadingActiveTokens ? (
-                  <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
+                {loadingActiveAddresses ? (
+                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
                 ) : (
-                  <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Hands Remaining</p>)
+                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{activeAddresses} Players Remaining</p>)
+                }{loadingActiveTokens ? (
+                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
+                ) : (
+                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Hands Remaining</p>)
                 }
                 <Link href="https://mumbai.polygonscan.com/address/0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8" target='_blank' className="underline">
                   Smart Contract
