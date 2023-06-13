@@ -106,11 +106,11 @@ export default function Play() {
     address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
     abi: ABI,
     eventName: 'MintingEnded',
-    listener(log) {
+    async listener(log) {
       const message = "No more mints";
       setGetGameState("Playing");
-      refetchPotatoTokenId();
-      refetchGameState();
+      await refetchPotatoTokenId();
+      await refetchGameState();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -121,9 +121,9 @@ export default function Play() {
     eventName: 'GameResumed',
     async listener(log) {
       const message = "Back to it";
-      refetchGameState();
-      refetchPotatoTokenId();
-      refetchRewards();
+      await refetchGameState();
+      await refetchPotatoTokenId();
+      await refetchRewards();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -147,12 +147,12 @@ export default function Play() {
     address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
     abi: ABI,
     eventName: 'GameRestarted',
-    listener(log) {
+    async listener(log) {
       const message = "Game Over";
       setGetGameState("Queued");
-      refetchGameState();
+      await refetchGameState();
       setRoundMints(0);
-      refetchRewards();
+      await refetchRewards();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -161,12 +161,12 @@ export default function Play() {
     address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
     abi: ABI,
     eventName: 'FinalRoundStarted',
-    listener(log) {
+    async listener(log) {
       const message = "HOT HANDZ";
-      refetchPotatoTokenId();
-      setGetGameState("Final Stage");
-      refetchGameState();
-      refetchRewards();
+      await refetchPotatoTokenId();
+      await setGetGameState("Final Stage");
+      await refetchGameState();
+      await refetchRewards();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -1140,7 +1140,7 @@ export default function Play() {
   useEffect(() => {
     const interval = setInterval(() => {
         localStorage.clear();
-    }, 1000 * 15);
+    }, 1000 * 60 * 60);
 
     return () => clearInterval(interval);
 }, []);
