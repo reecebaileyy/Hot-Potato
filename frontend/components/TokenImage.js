@@ -1,15 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useContractRead, useContractEvent } from 'wagmi';
 import Image from 'next/image';
-import ABI from '../src/abi/UNKNOWN.json'
 
 const OptimizedImage = (props) => (
   <Image {...props} unoptimized={true} />
 );
 
-
-
 const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
+
+  const [exploded, setExploded] = useState(false);
 
   useContractEvent({
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
@@ -18,10 +17,48 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
     async listener(log) {
       try {
         console.log('PotatoMinted event detected', log);
-        refetchImageString({ args: [tokenId] });
-        refetchGetActiveTokens();
       } catch (error) {
         console.error('Error updating mints', error);
+      }
+    },
+  });
+
+  useContractEvent({
+    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    abi: ABI,
+    eventName: 'PotatoExploded',
+    async listener(log) {
+      try {
+        if (typeof log[0]?.args?.tokenId === 'bigint') {
+          const tokenId_ = log[0].args.tokenId.toString();
+          if (tokenId_ === tokenId) {
+            setExploded(true);
+          }
+          await refetchGetExplosionTime();
+          await refetchGetActiveTokens();
+          await refetchPotatoTokenId();
+        } else {
+          console.error('TokenId is not a BigInt or is not found in log args', log);
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
+  });
+
+  useContractEvent({
+    address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
+    abi: ABI,
+    eventName: 'PotatoPassed',
+    async listener(log) {
+      try {
+        if (typeof log[0]?.args?.tokenIdFrom === 'bigint' && typeof log[0]?.args?.tokenIdTo === 'bigint') {
+         await refetchImageString();
+        } else {
+          console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
+        }
+      } catch (error) {
+        console.log(error)
       }
     },
   });
@@ -31,7 +68,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
-    enabled: true
+    enabled: false
   });
 
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
@@ -59,6 +96,10 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh }) => {
 
   if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (exploded) {
+    return <div>EXPLODED</div>  // Don't render anything if the token has exploded
   }
 
   if (isError || !getImageString) {

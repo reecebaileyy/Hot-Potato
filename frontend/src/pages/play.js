@@ -9,8 +9,9 @@ import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useCo
 import potato from '../../public/assets/images/potato.png'
 import hot from '../../public/assets/images/hot.png'
 import potatoBlink from '../../public/assets/images/potatoBlink.gif'
+import Explosion from '../../public/assets/images/Explosion.gif'
 import blacklogo from '../../public/assets/images/Logo.png'
-import TokenImage from '../../components/displayImage'
+import TokenImage from '../../components/TokenImage'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 
@@ -35,18 +36,16 @@ export default function Play() {
   const [mintAmount, setMintAmount] = useState("");
   const [totalCost, setTotalCost] = useState(0);
   const argsArray = [1, 2, 3, 4, 5];
-  const [potatoOwner, setPotatoOwner] = useState("");
   const [mintPromise, setMintPromise] = useState(null);
   const [passPromise, setPassPromise] = useState(null);
   const [shouldRefresh, setShouldRefresh] = useState(false);
+  const [explosion, setExplosion] = useState(false);
   const [_potatoTokenId, setPotatoTokenId] = useState(0);
   const [remainingTime, setRemainingTime] = useState(null);
   const [_getGameState, setGetGameState] = useState("Loading...");
   const [_roundMints, setRoundMints] = useState(0);
   const menuRef = useRef()
   const divRef = useRef(null);
-  const [passes, setPasses] = useState(0);
-  const [wins, setWins] = useState(0);
 
 
 
@@ -230,7 +229,7 @@ export default function Play() {
 
         if (address == player) {
           toast.success("Pass Successful!");
-          refetchSuccessfulPasses();
+          await refetchSuccessfulPasses();
           setPassPromise(true);
           if (passPromise) {
             passPromise.resolve();
@@ -249,17 +248,6 @@ export default function Play() {
           },
           body: JSON.stringify({ address: address }),
         });
-
-        const response2 = await fetch(`/api/get-player-data/${address}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const data = await response.json();
-        setPasses(data.passes);
-
 
       } catch (error) {
         console.error('Error updating successful passes', error);
@@ -285,7 +273,7 @@ export default function Play() {
       try {
         const amount = parseInt(log[0].args.amount);
         setRoundMints(prevRoundMints => prevRoundMints + amount);
-        refetchGetRoundMints();
+        await refetchGetRoundMints();
         const player = log[0].args.player.toString();
         const amountDisplay = String(log[0].args.amount); //Need this one
         setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
@@ -293,7 +281,7 @@ export default function Play() {
 
         if (address == player) {
           // Resolve our promise
-          refetchGetActiveTokenCount();
+          await refetchGetActiveTokenCount();
           setMintPromise(true);
           if (mintPromise) {
             mintPromise.resolve();
@@ -330,7 +318,7 @@ export default function Play() {
     eventName: 'NewRound',
     async listener(log) {
       try {
-        refetchCurrentGeneration();
+        await refetchCurrentGeneration();
       } catch (error) {
         console.error('Error updating mints', error);
       }// CACHE THIS DATA IN LOCAL STORAGE
@@ -356,7 +344,7 @@ export default function Play() {
     async listener(log) {
       try {
         const time = log[0].args.time.toString();
-        refetchGetExplosionTime();
+        await refetchGetExplosionTime();
         setRemainingTime(explosionTime);
         setEvents(prevEvents => [...prevEvents, `+${time}`]);
       } catch (error) {
@@ -381,16 +369,18 @@ export default function Play() {
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
     abi: ABI,
     eventName: 'PotatoExploded',
-    listener(log) {
+    async listener(log) {
       try {
+        setExplosion(true);
+        setTimeout(() => setExplosion(false), 3550);
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
-          refetchGetExplosionTime();
+          await refetchGetExplosionTime();
           setRemainingTime(explosionTime);
-          refetchGetActiveTokens();
-          refetchPotatoTokenId();
-          refetchGetActiveTokenCount();
-          refetchUserHasPotatoToken();
+          await refetchGetActiveTokens();
+          await refetchPotatoTokenId();
+          await refetchGetActiveTokenCount();
+          await refetchUserHasPotatoToken();
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
         } else {
           console.error('TokenId is not a BigInt or is not found in log args', log);
@@ -400,6 +390,7 @@ export default function Play() {
       }
     },
   });
+
 
   /*
                                    
@@ -416,15 +407,14 @@ export default function Play() {
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
     abi: ABI,
     eventName: 'PotatoPassed',
-    listener(log) {
+    async listener(log) {
       try {
         if (typeof log[0]?.args?.tokenIdFrom === 'bigint' && typeof log[0]?.args?.tokenIdTo === 'bigint') {
           const tokenIdFrom = log[0]?.args?.tokenIdFrom?.toString();
           const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
           const yielder = log[0]?.args?.yielder?.toString();
           setPotatoTokenId(tokenIdTo);
-          setPotatoOwner(yielder);
-          refetchUserHasPotatoToken();
+          await refetchUserHasPotatoToken();
           setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo} ${yielder} now has the potato`]);
         } else {
           console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
@@ -613,7 +603,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
-    enabled: true
+    enabled: false
   });
 
 
@@ -686,6 +676,7 @@ export default function Play() {
     functionName: 'mintHand',
     args: [mintAmount.toString()],
     value: totalCost,
+    enabled: false,
   })
   const { data: mintData, write: mint } = useContractWrite(config)
 
@@ -697,6 +688,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
+    enabled: address == getPotatoOwner,
   })
   const { data: passData, isSuccess: Successful, write: pass, error: errorPassing } = useContractWrite(configPass)
 
@@ -705,6 +697,7 @@ export default function Play() {
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
     abi: ABI,
     functionName: 'withdrawWinnersFunds',
+    enabled: false,
   })
   const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(withdrawWinnersFunds)
 
@@ -714,7 +707,7 @@ export default function Play() {
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
     abi: ABI,
     functionName: 'checkExplosion',
-    enabled: true,
+    enabled: explosionTime == 0,
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -736,6 +729,7 @@ export default function Play() {
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
     abi: ABI,
     functionName: 'startGame',
+    enabled: address == _ownerAddress,
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
 
@@ -744,6 +738,7 @@ export default function Play() {
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
     abi: ABI,
     functionName: 'endMinting',
+    enabled: false,
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
 
@@ -752,6 +747,7 @@ export default function Play() {
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
     abi: ABI,
     functionName: 'pauseGame',
+    enabled: false,
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
 
@@ -760,6 +756,7 @@ export default function Play() {
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
     abi: ABI,
     functionName: 'resumeGame',
+    enabled: false,
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
 
@@ -768,6 +765,7 @@ export default function Play() {
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
     abi: ABI,
     functionName: 'restartGame',
+    enabled: false,
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
@@ -959,7 +957,8 @@ export default function Play() {
     }
   }
 
-  const handlePass = () => {
+  const handlePass = async () => {
+    await refetchGetPotatoOwner();
     if (!address) {
       noAddressToast();
     } else if (getGameState !== "Playing" && getGameState !== "Final Round") {
@@ -971,6 +970,9 @@ export default function Play() {
     } else if (address == ownerOf) {
       cannotPassToSelfToast();
     } else {
+      console.log("passing")
+      console.log("passing from", address)
+      console.log("Potato Owner is ", getPotatoOwner)
       pass?.();
     }
   };
@@ -1010,30 +1012,10 @@ export default function Play() {
     refetchGetExplosionTime();
     if (!address) {
       noAddressToast();
-    } else if (explosionTime != 0) {
-      hasMoreTimeToast();
     } else {
       check?.();
     }
-
   };
-
-  const fetchPlayerData = useCallback(async () => {
-    try {
-      const response = await fetch('/api/get-player-data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ address: address }),
-      });
-
-      const data = await response.json();
-
-    } catch (error) {
-      console.error('Error fetching player data', error);
-    }
-  }, [address]);
 
 
 
@@ -1075,7 +1057,7 @@ export default function Play() {
       const divElement = divRef.current;
       divElement.scrollLeft = divElement.scrollWidth;
       console.log("An UNKNOWNXBEDTIME PRODUCTION");
-    }, 1000);
+    }, 10000);
 
     return () => {
       clearInterval(intervalId);
@@ -1110,7 +1092,9 @@ export default function Play() {
     refetchMaxSupply();
     refetchPrice();
     refetchWinner();
-    setRemainingTime(explosionTime);
+    if (explosionTime !== null) {
+      setRemainingTime(explosionTime);
+    }
     if (address == _ownerAddress) {
       refetchowner();
     }
@@ -1157,7 +1141,8 @@ export default function Play() {
     const fetchExplosionTime = async () => {
       try {
         await refetchGetExplosionTime();
-        setRemainingTime(parseInt(getExplosionTime, 10));
+        const explosionTime = parseInt(getExplosionTime, 10);
+        setRemainingTime(explosionTime);
       } catch (error) {
         console.error("Error fetching explosion time:", error);
       }
@@ -1198,6 +1183,8 @@ export default function Play() {
    \▓▓   \▓▓   \▓▓   \▓▓      \▓▓\▓▓▓▓▓▓▓▓      \▓▓▓▓▓▓  \▓▓▓▓▓▓  \▓▓▓▓▓▓ 
                                                                      
   */
+
+
 
   return (
     <>
@@ -1364,7 +1351,7 @@ export default function Play() {
                 <p className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
                   <span>
                     {loadingPotatoOwner ? "Loading..." :
-                      <Link className='animate-pulse underline' href={`https://mumbai.polygonscan.com/address/${potatoOwner}`} target='_blank'>
+                      <Link className='animate-pulse underline' href={`https://mumbai.polygonscan.com/address/${getPotatoOwner}`} target='_blank'>
                         Potato Holder
                       </Link>
                     }
@@ -1373,7 +1360,10 @@ export default function Play() {
                 <h2 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
                   {loadingExplosionTime ? "Loading..." : `TIME REMAINING: ${isNaN(remainingTime) || remainingTime === 0 ? "0" : remainingTime}`}
                 </h2>
-                <Image alt='Image' src={potato} width={200} height={200} />
+                {explosion ?
+                  <Image alt='Explosion' src={Explosion} width={200} height={200} /> :
+                  <Image alt='Image' src={potatoBlink} width={200} height={200} />
+                }
                 <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                   onClick={handlecheck}>
                   CHECK EXPLOSION

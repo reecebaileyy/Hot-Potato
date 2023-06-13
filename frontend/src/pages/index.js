@@ -18,6 +18,10 @@ export default function Home() {
   const menuRef = useRef()
 
   useEffect(() => {
+    console.log("An UNKNOWNXBEDTIME PRODUCTION")
+  }, [],5000);
+
+  useEffect(() => {
     const localDarkMode = window.localStorage.getItem('darkMode');
     if (localDarkMode) {
       setDarkMode(JSON.parse(localDarkMode));
