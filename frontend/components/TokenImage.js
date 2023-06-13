@@ -16,7 +16,6 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
-        await refetchGetExplosionTime();
         await refetchGetActiveTokens();
         await refetchPotatoTokenId();
         console.log('PotatoMinted event detected', log);
@@ -31,7 +30,6 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
-      await refetchGetExplosionTime();
       await refetchGetActiveTokens();
       await refetchPotatoTokenId();
     },
@@ -48,7 +46,6 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
           if (tokenId_ === tokenId) {
             setExploded(true);
           }
-          await refetchGetExplosionTime();
           await refetchGetActiveTokens();
           await refetchPotatoTokenId();
         } else {
