@@ -1140,7 +1140,7 @@ export default function Play() {
   useEffect(() => {
     const interval = setInterval(() => {
         localStorage.clear();
-    }, 1000 * 60 * 60);
+    }, 1000 * 60 * 30);
 
     return () => clearInterval(interval);
 }, []);
