@@ -215,7 +215,6 @@ contract UNKNOWN is
         }
 
         if (!isPlayer[msg.sender]) {
-            players.push(msg.sender);
             isPlayer[msg.sender] = true;
         }
 
@@ -309,7 +308,7 @@ contract UNKNOWN is
     {
         uint256[] memory ownedActiveTokens = new uint256[](activeTokens.length);
         uint256 counter = 0;
-        for (uint256 index = 0; index < activeTokens.length; index++) {
+        for (uint256 index = 1; index < activeTokens.length; index++) {
             uint256 tokenId = activeTokens[index];
             if (ownerOf(tokenId) == user) {
                 ownedActiveTokens[counter] = tokenId;
@@ -498,6 +497,7 @@ contract UNKNOWN is
 
         for (uint256 i = 0; i < players.length; i++) {
             addressActiveTokenCount[players[i]] = 0;
+            isPlayer[players[i]] = false;
         }
 
         delete players;
@@ -615,6 +615,7 @@ contract UNKNOWN is
 
         if (addressActiveTokenCount[msg.sender] == 0) {
             activeAddresses += 1;
+            players.push(msg.sender);
         }
         addressActiveTokenCount[msg.sender] += 1;
         tokensOwnedByUser[msg.sender].push(id);
@@ -812,6 +813,7 @@ contract UNKNOWN is
         // If this player has no more active tokens, decrease the count of active addresses
         if (addressActiveTokenCount[failedPlayer] == 0) {
             activeAddresses -= 1;
+            isPlayer[failedPlayer] = false;
         }
 
         // 5. Check if the game should move to the final round or end
@@ -819,7 +821,7 @@ contract UNKNOWN is
             gameState = GameState.FinalRound;
             emit FinalRoundStarted("Final Round Started");
             assignPotato(_findNextActiveToken());
-        } else if (activeAddresses < 2) {
+        } else if (activeAddresses == 1) {
             gameState = GameState.Ended;
             emit PlayerWon(ownerOf(activeTokens[1]));
             winners.push(ownerOf(activeTokens[1]));

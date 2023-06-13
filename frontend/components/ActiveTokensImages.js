@@ -2,10 +2,10 @@ import React, { useEffect } from 'react';
 import { useContractRead } from 'wagmi';
 import TokenImage from './TokenImage';
 
-const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh }) => {
+const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
   
   const { data: activeTokens, isLoading, refetch: refetchActiveTokens, isError } = useContractRead({
-    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
+    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'getActiveTokensOfOwner',
     args: [ownerAddress],

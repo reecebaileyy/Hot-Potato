@@ -11,14 +11,13 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
   const [exploded, setExploded] = useState(false);
 
   useContractEvent({
-    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
+    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
         await refetchGetActiveTokens();
         await refetchPotatoTokenId();
-        console.log('PotatoMinted event detected', log);
       } catch (error) {
         console.error('Error updating mints', error);
       }
@@ -26,7 +25,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
   });
 
   useContractEvent({
-    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
+    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
@@ -36,7 +35,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
   });
 
   useContractEvent({
-    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
+    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     eventName: 'PotatoExploded',
     async listener(log) {
@@ -58,7 +57,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
   });
 
   useContractEvent({
-    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
+    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     eventName: 'PotatoPassed',
     async listener(log) {
@@ -75,7 +74,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
   });
 
   const { data: getImageString, isLoading, refetch: refetchImageString, isError } = useContractRead({
-    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
+    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
@@ -83,7 +82,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
   });
 
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
+    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'getActiveTokens',
     enabled: true
@@ -91,7 +90,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
   const _activeTokens = parseInt(getActiveTokens, 10);
 
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0xfCC1796054b53124f380c56e48351b1B8Ee1Af81',
+    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'potatoTokenId',
     enabled: true
@@ -104,6 +103,13 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
     refetchImageString({ args: [tokenId] });
   }, [tokenId, shouldRefresh, refetchImageString]);
 
+  useEffect(() => {
+    refetchPotatoTokenId();
+    refetchGetActiveTokens();
+    console.log('refetching image string');
+    refetchImageString({ args: [tokenId] });
+  }, []);
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -112,7 +118,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
     return <div>EXPLODED</div>  // Don't render anything if the token has exploded
   }
 
-  if (isError || !getImageString) {
+  if (isError) {
     console.log('Error loading image', isError);
     return (
       <div>
