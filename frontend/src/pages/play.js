@@ -726,7 +726,7 @@ export default function Play() {
     address: '0xe5Fa08a23727Eb8274b60CF093f46f6466dAAEB8',
     abi: ABI,
     functionName: 'checkExplosion',
-    enabled: explosionTime == 0,
+    enabled: true,
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
