@@ -1018,11 +1018,18 @@ export default function Play() {
   }, []);
 
   useEffect(() => {
+
+    const intervalId = setInterval(() => {
     if (getGameState == "Minting") {
       refetchGetRoundMints();
-  console.log(`Total Round Mints: ${totalMints}`);
+      console.log(`Total Round Mints: ${totalMints}`);
     }
-  }, [], 3500);
+  }, 3500);
+
+  return () => {
+    clearInterval(intervalId);
+  };
+  }, []);
 
 
   useEffect(() => {
