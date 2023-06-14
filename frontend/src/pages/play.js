@@ -998,28 +998,24 @@ export default function Play() {
 
   //On Mount
   useEffect(() => {
-    if (refetchPotatoTokenId && refetchGameState && refetchGetActiveTokenCount && refetchGetExplosionTime && refetchGetRoundMints && refetchGetActiveTokens && refetchUserHasPotatoToken && refetchHallOfFame && refetchTotalWins && refetchRewards && refetchCurrentGeneration && refetchSuccessfulPasses && refetchImageString && refetchMaxSupply && refetchPrice && refetchActiveAddresses && refetchWinner && refetchowner && explosionTime) {
-      refetchPotatoTokenId();
-      refetchGameState();
-      refetchGetActiveTokenCount({ args: [address] });
-      refetchGetExplosionTime();
-      setRemainingTime(explosionTime);
-      refetchGetRoundMints();
-      refetchGetActiveTokens();
-      refetchUserHasPotatoToken({ args: [address] });
-      refetchHallOfFame({ args: [_currentGeneration] });
-      refetchTotalWins({ args: [address] });
-      refetchRewards({ args: [address] });
-      refetchCurrentGeneration();
-      refetchSuccessfulPasses({ args: [address] });
-      refetchImageString({ args: [tokenId] });
-      refetchMaxSupply();
-      refetchPrice();
-      refetchActiveAddresses();
-      refetchWinner();
-    } else {
-      console.log("Refetches not ready");
-    }
+    refetchPotatoTokenId();
+    refetchGameState();
+    refetchGetActiveTokenCount({ args: [address] });
+    refetchGetExplosionTime();
+    setRemainingTime(explosionTime);
+    refetchGetRoundMints();
+    refetchGetActiveTokens();
+    refetchUserHasPotatoToken({ args: [address] });
+    refetchHallOfFame({ args: [_currentGeneration] });
+    refetchTotalWins({ args: [address] });
+    refetchRewards({ args: [address] });
+    refetchCurrentGeneration();
+    refetchSuccessfulPasses({ args: [address] });
+    refetchImageString({ args: [tokenId] });
+    refetchMaxSupply();
+    refetchPrice();
+    refetchActiveAddresses();
+    refetchWinner();
     if (address == _ownerAddress) {
       refetchowner();
     }
