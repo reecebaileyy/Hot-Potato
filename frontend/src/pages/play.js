@@ -1705,7 +1705,9 @@ export default function Play() {
                     } else if (getGameState !== "Minting") {
                       endToast();
                     } else {
+                      console.log("end minting")
                       _endMint?.();
+                      console.log("end minting success")
                     }
                   }}
                 >

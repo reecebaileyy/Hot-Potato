@@ -6,9 +6,7 @@ const OptimizedImage = (props) => (
   <Image {...props} unoptimized={true} />
 );
 
-const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
-
-  const [exploded, setExploded] = useState(false);
+const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }) => {
 
   useContractEvent({
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
@@ -17,7 +15,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
     async listener(log) {
       try {
     if (refetchImageString && refetchGetActiveTokens && refetchPotatoTokenId) {
-        await refetchImageString();
+        await refetchImageString({ args: [tokenId] });
         await refetchGetActiveTokens();
         await refetchPotatoTokenId();
     } else {
@@ -48,7 +46,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
           if (tokenId_ === tokenId) {
-            setExploded(true);
+            onTokenExploded(tokenId);
           }
           await refetchGetActiveTokens();
           await refetchPotatoTokenId();
@@ -133,9 +131,6 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
     return <div>Loading...</div>;
   }
 
-  if (exploded) {
-    return <div>EXPLODED</div>  // Don't render anything if the token has exploded
-  }
 
   if (isError) {
     console.log('Error loading image', isError);
