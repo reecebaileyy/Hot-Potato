@@ -3,7 +3,7 @@ import { useContractRead } from 'wagmi';
 import TokenImage from './TokenImage';
 
 const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
-  
+
   const { data: activeTokens, isLoading, refetch: refetchActiveTokens, isError } = useContractRead({
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
@@ -38,13 +38,16 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
 
   return (
     <div className={`grid grid-cols-3 sm:grid-cols-5 md:grid-cols-5 gap-4 justify-center items-center`}>
-      {activeTokens.map((tokenId, index) => (
-        <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
-          <TokenImage tokenId={tokenId} ABI={ABI} shouldRefresh={shouldRefresh} size={300} />
-        </div>
-      ))}
+      {activeTokens.map((tokenId, index) => {
+        return (
+          <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
+            <TokenImage tokenId={Number(tokenId)} ABI={ABI} shouldRefresh={shouldRefresh} size={300} />
+          </div>
+        );
+      })}
     </div>
   );
+
 };
 
 export default ActiveTokensImages;

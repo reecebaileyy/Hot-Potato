@@ -108,10 +108,14 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     eventName: 'MintingEnded',
-    listener(log) {
-      if (refetchGameState && refetchPotatoTokenId) {
+    async listener(log) {
+      if (refetchGameState && refetchPotatoTokenId && refetchGetExplosionTime) {
         refetchGameState();
         refetchPotatoTokenId();
+        await refetchGetExplosionTime();
+        setRemainingTime(explosionTime);
+        console.log(`Explosion time set to ${remainingTime}`);
+        console.log("Refetches set");
       } else {
         console.log("Refetches not set");
       }
@@ -145,11 +149,11 @@ export default function Play() {
     eventName: 'GamePaused',
     listener(log) {
       if (refetchGameState && refetchRewards) {
-      refetchGameState();
-      refetchRewards({ args: [address] });
-    } else {
-      console.log("Refetches not set");
-    }
+        refetchGameState();
+        refetchRewards({ args: [address] });
+      } else {
+        console.log("Refetches not set");
+      }
       const message = "Cooling off";
       setGetGameState("Paused");
       setEvents(prevEvents => [...prevEvents, message]);
@@ -355,18 +359,14 @@ export default function Play() {
     abi: ABI,
     eventName: 'UpdatedTimer',
     async listener(log) {
-      try {
-        if (refetchGetExplosionTime) {
-          await refetchGetExplosionTime();
-        } else {
-          console.log('refetchGetExplosionTime is undefined, not performing refetch');
-        }
-        const time = log[0].args.time.toString();
-        setRemainingTime(explosionTime);
-        setEvents(prevEvents => [...prevEvents, `+${time}`]);
-      } catch (error) {
-        console.error('Error updating timer', error);
-      }
+      const time = log[0].args.time.toString();
+      console.log(`time: ${time}`)
+      console.log(`log: ${log}`)
+      await refetchGetExplosionTime();
+      setRemainingTime(time);
+      console.log(`explosion time is ${explosionTime}`)
+      console.log(`remaining time set to ${remainingTime}`)
+      setEvents(prevEvents => [...prevEvents, `+${time}`]);
     },
   });
 
@@ -387,24 +387,21 @@ export default function Play() {
     abi: ABI,
     eventName: 'PotatoExploded',
     async listener(log) {
+      if (refetchGetActiveTokenIds && refetchGetActiveTokenCount && refetchUserHasPotatoToken && refetchPotatoTokenId && refetchActiveAddresses) {
+        await refetchGetActiveTokens();
+        await refetchPotatoTokenId();
+        await refetchGetActiveTokenCount({ args: [address] });
+        await refetchUserHasPotatoToken({ args: [address] });
+        await refetchActiveAddresses();
+        console.log('refetches performed');
+      } else {
+        console.log('refetchGetExplosionTime is undefined, not performing refetch');
+      }
       try {
         setExplosion(true);
         setTimeout(() => setExplosion(false), 3050);
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
-          if (refetchGetExplosionTime && refetchGetActiveTokenIds && refetchGetActiveTokenCount && refetchUserHasPotatoToken && refetchPotatoTokenId && refetchActiveAddresses) {
-            await refetchGetActiveTokens();
-            await refetchPotatoTokenId();
-            await refetchGetActiveTokenCount({ args: [address] });
-            await refetchUserHasPotatoToken({ args: [address] });
-            await refetchActiveAddresses();
-            await refetchGetExplosionTime();
-            setRemainingTime(explosionTime);
-            console.log('refetches performed');
-          } else {
-            console.log('refetchGetExplosionTime is undefined, not performing refetch');
-          }
-          console.log(`explosion time set to ${remainingTime}`)
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
         } else {
           console.error('TokenId is not a BigInt or is not found in log args', log);
@@ -736,6 +733,7 @@ export default function Play() {
     enabled: true,
     staleTime: Infinity,
     onSuccess(data) {
+      console.log('Success', data)
       refetchRewards({ args: [address] });
     }
   })
@@ -996,24 +994,28 @@ export default function Play() {
 
   //On Mount
   useEffect(() => {
-    refetchPotatoTokenId();
-    refetchGameState();
-    refetchGetActiveTokenCount({ args: [address] });
-    refetchGetExplosionTime();
-    refetchGetRoundMints();
-    refetchGetActiveTokens();
-    refetchUserHasPotatoToken({ args: [address] });
-    refetchHallOfFame({ args: [_currentGeneration] });
-    refetchTotalWins({ args: [address] });
-    refetchRewards({ args: [address] });
-    refetchCurrentGeneration();
-    refetchSuccessfulPasses({ args: [address] });
-    refetchImageString({ args: [tokenId] });
-    refetchMaxSupply();
-    refetchPrice();
-    refetchActiveAddresses();
-    refetchWinner();
-    setRemainingTime(explosionTime);
+    if (refetchPotatoTokenId && refetchGameState && refetchGetActiveTokenCount && refetchGetExplosionTime && refetchGetRoundMints && refetchGetActiveTokens && refetchUserHasPotatoToken && refetchHallOfFame && refetchTotalWins && refetchRewards && refetchCurrentGeneration && refetchSuccessfulPasses && refetchImageString && refetchMaxSupply && refetchPrice && refetchActiveAddresses && refetchWinner && refetchowner && explosionTime) {
+      refetchPotatoTokenId();
+      refetchGameState();
+      refetchGetActiveTokenCount({ args: [address] });
+      refetchGetExplosionTime();
+      setRemainingTime(explosionTime);
+      refetchGetRoundMints();
+      refetchGetActiveTokens();
+      refetchUserHasPotatoToken({ args: [address] });
+      refetchHallOfFame({ args: [_currentGeneration] });
+      refetchTotalWins({ args: [address] });
+      refetchRewards({ args: [address] });
+      refetchCurrentGeneration();
+      refetchSuccessfulPasses({ args: [address] });
+      refetchImageString({ args: [tokenId] });
+      refetchMaxSupply();
+      refetchPrice();
+      refetchActiveAddresses();
+      refetchWinner();
+    } else {
+      console.log("Refetches not ready");
+    }
     if (address == _ownerAddress) {
       refetchowner();
     }
@@ -1073,17 +1075,13 @@ export default function Play() {
   }, [_potatoTokenId, potatoTokenId]);
 
   useEffect(() => {
-    const fetchExplosionTime = async () => {
-      try {
-        await refetchGetExplosionTime();
-        const explosionTime = parseInt(getExplosionTime, 10);
+    try {
+      if (refetchGetExplosionTime) {
+        refetchGetExplosionTime();
         setRemainingTime(explosionTime);
-      } catch (error) {
-        console.error("Error fetching explosion time:", error);
       }
-    };
-    if (getExplosionTime) {
-      fetchExplosionTime();
+    } catch (error) {
+      console.error("Error fetching explosion time:", error);
     }
   }, [getExplosionTime]);
 
@@ -1276,12 +1274,10 @@ export default function Play() {
                     : getGameState == "Minting" ?
                       <>
                         <h1 className={`text-3xl text-center font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Welcome to the Backburner!</h1>
-                        <Image alt='Image' src={potatoBlink} width={200} height={200} />
-                        <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Ready up because this is about to get heated...</p>
-                        <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>mint now or cry later?</p>
-                        <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Got Heat?</p>
+                        <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
+                        <ActiveTokensImages ownerAddress={address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
                         {isWinner && _rewards != 0 &&
-                          <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
+                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
                             onClick={() => {
                               if (!address) {
                                 noAddressToast();
@@ -1331,11 +1327,11 @@ export default function Play() {
                   </h2>
                 )}
                 {explosion ?
-                  <Image alt='Explosion' src={Explosion} width={200} height={200} /> :
+                  <Image className='rounded-full' alt='Explosion' src={Explosion} width={200} height={200} /> :
                   <Image alt='Image' src={potatoBlink} width={200} height={200} />
                 }
-                {loadingExplosionTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {isNaN(remainingTime) || remainingTime === 0 ? "0" : remainingTime}</p>}
-                <button disabled={!check} className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                {loadingExplosionTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {remainingTime}</p>}
+                <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                   onClick={() => {
                     refetchGetExplosionTime();
                     if (!address) {
@@ -1465,7 +1461,7 @@ export default function Play() {
                               pattern="[0-9]*"
                               onChange={handleInputChangeMint}
                               placeholder="Enter mint amount" />
-                            <button disabled={!mint} className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                            <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                               onClick={() => {
                                 if (!address) {
                                   noAddressToast();
@@ -1532,7 +1528,7 @@ export default function Play() {
                       pattern="[0-9]*"
                       onChange={handleInputChangeToken}
                       placeholder="tokenId" />
-                    <button disabled={!pass} className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
+                    <button className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
                       onClick={() => {
                         refetchGetPotatoOwner();
                         if (!address) {
@@ -1559,7 +1555,7 @@ export default function Play() {
                   <>
                     <Image alt='Image' src={hot} width={200} height={200} className='self-center' />
                     {isWinner && _rewards != 0 &&
-                      <button disabled={!claimRewards} className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
+                      <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
                         onClick={() => {
                           if (!address) {
                             noAddressToast();

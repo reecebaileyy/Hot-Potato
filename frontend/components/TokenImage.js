@@ -16,8 +16,13 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
+    if (refetchImageString && refetchGetActiveTokens && refetchPotatoTokenId) {
+        await refetchImageString();
         await refetchGetActiveTokens();
         await refetchPotatoTokenId();
+    } else {
+      console.error('refetchImageString, refetchGetActiveTokens, or refetchPotatoTokenId is not defined');
+    }
       } catch (error) {
         console.error('Error updating mints', error);
       }
@@ -154,7 +159,9 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
       />
       Token ID:
       <span>{tokenId}</span>
+      {isError && (
       <button onClick={() => refetchImageString({ args: [tokenId] })}>Refresh Image</button>
+      )}
     </div>
   );
 };
