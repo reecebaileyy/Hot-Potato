@@ -9,7 +9,7 @@ const OptimizedImage = (props) => (
 const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }) => {
 
   useContractEvent({
-    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
+    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
@@ -28,7 +28,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
   });
 
   useContractEvent({
-    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
+    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
@@ -38,7 +38,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
   });
 
   useContractEvent({
-    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
+    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     eventName: 'PotatoExploded',
     async listener(log) {
@@ -60,7 +60,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
   });
 
   useContractEvent({
-    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
+    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     eventName: 'PotatoPassed',
     async listener(log) {
@@ -77,7 +77,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
   });
 
   const { data: getImageString, isLoading, refetch: refetchImageString, isError } = useContractRead({
-    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
+    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
@@ -85,7 +85,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
   });
 
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
+    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'getActiveTokens',
     enabled: true
@@ -93,7 +93,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
   const _activeTokens = parseInt(getActiveTokens, 10);
 
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
+    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'potatoTokenId',
     enabled: true

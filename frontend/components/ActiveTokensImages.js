@@ -5,7 +5,7 @@ import TokenImage from './TokenImage';
 const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
 
   const { data: activeTokens, isLoading, refetch: refetchActiveTokens, isError } = useContractRead({
-    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
+    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'getActiveTokensOfOwner',
     args: [ownerAddress],
