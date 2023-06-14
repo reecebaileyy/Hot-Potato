@@ -735,7 +735,10 @@ export default function Play() {
     onSuccess(data) {
       console.log('Success', data)
       refetchRewards({ args: [address] });
-    }
+    },
+    onError(error) {
+      console.log('Error', error)
+    },
   })
   const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(withdrawWinnersFunds)
 
@@ -773,7 +776,10 @@ export default function Play() {
     abi: ABI,
     functionName: 'startGame',
     enabled: true,
-    staleTime: Infinity
+    staleTime: Infinity,
+    onError(error) {
+      console.log('Error', error)
+    },
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
 
@@ -783,7 +789,10 @@ export default function Play() {
     abi: ABI,
     functionName: 'endMinting',
     enabled: true,
-    staleTime: Infinity
+    staleTime: Infinity,
+    onError(error) {
+      console.log('Error', error)
+    },
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
 
@@ -793,7 +802,10 @@ export default function Play() {
     abi: ABI,
     functionName: 'pauseGame',
     enabled: true,
-    staleTime: Infinity
+    staleTime: Infinity,
+    onError(error) {
+      console.log('Error', error)
+    },
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
 
@@ -803,7 +815,10 @@ export default function Play() {
     abi: ABI,
     functionName: 'resumeGame',
     enabled: true,
-    staleTime: Infinity
+    staleTime: Infinity,
+    onError(error) {
+      console.log('Error', error)
+    },
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
 
@@ -813,7 +828,10 @@ export default function Play() {
     abi: ABI,
     functionName: 'restartGame',
     enabled: true,
-    staleTime: Infinity
+    staleTime: Infinity,
+    onError(error) {
+      console.log('Error', error)
+    },
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
@@ -1735,6 +1753,7 @@ export default function Play() {
                     } else if (getGameState !== "Paused") {
                       resumeToast()
                     } else {
+                      console.log("resume")
                       _resumeGame?.();
                     }
                   }}
