@@ -129,10 +129,10 @@ export default function Play() {
     eventName: 'GameResumed',
     async listener(log) {
       const message = "Back to it";
-        refetchGameState();
-        refetchPotatoTokenId();
-        refetchRewards({ args: [address] });
-        refetchGetActiveTokens();
+      refetchGameState();
+      refetchPotatoTokenId();
+      refetchRewards({ args: [address] });
+      refetchGetActiveTokens();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -143,9 +143,9 @@ export default function Play() {
     abi: ABI,
     eventName: 'GamePaused',
     listener(log) {
-        refetchGameState();
-        refetchRewards({ args: [address] });
-        refetchGetActiveTokens();
+      refetchGameState();
+      refetchRewards({ args: [address] });
+      refetchGetActiveTokens();
       const message = "Cooling off";
       setGetGameState("Paused");
       setEvents(prevEvents => [...prevEvents, message]);
@@ -1016,6 +1016,14 @@ export default function Play() {
       setRoundMints(roundMints);
     }
   }, []);
+
+  useEffect(() => {
+    if (getGameState == "Minting") {
+      refetchGetRoundMints();
+  console.log(`Total Round Mints: ${totalMints}`);
+    }
+  }, [], 3500);
+
 
   useEffect(() => {
     const activeIds = getActiveTokenIds.slice(1).map((tokenId, index) => tokenId?.toString());
