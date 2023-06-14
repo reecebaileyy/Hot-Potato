@@ -39,13 +39,6 @@ struct Hand {
     uint8 potato;
 }
 
-struct HandImage {
-    uint8 background;
-    uint8 hand_type;
-    uint8 hasPotato;
-    uint256 potato;
-}
-
 enum GameState {
     Queued,
     Minting,
@@ -108,7 +101,6 @@ contract UNKNOWN is
         0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
 
     mapping(uint256 => Hand) public hands;
-    mapping(uint256 => HandImage) public handImages;
     mapping(address => mapping(uint256 => uint256)) public tokensMintedPerRound;
     mapping(address => bool) private isPlayer;
     mapping(address => uint256) public successfulPasses;
@@ -125,7 +117,6 @@ contract UNKNOWN is
     mapping(uint256 => uint256) public roundFunds;
     mapping(address => uint256) public addressActiveTokenCount;
     mapping(address => bool) public activePlayers;
-    mapping(address => bool) private counted;
 
     VRFCoordinatorV2Interface COORDINATOR;
 
@@ -476,6 +467,7 @@ contract UNKNOWN is
         ) {
             // TODO: Check if there is a valid explosion timer ongoing
             EXPLOSION_TIME = block.timestamp + remainingTime;
+            emit UpdatedTimer(EXPLOSION_TIME - block.timestamp);
         }
         gameState = previousGameState;
         emit GameResumed("The game has resumed");

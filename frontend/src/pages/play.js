@@ -1020,15 +1020,20 @@ export default function Play() {
   useEffect(() => {
 
     const intervalId = setInterval(() => {
-    if (getGameState == "Minting") {
-      refetchGetRoundMints();
-      console.log(`Total Round Mints: ${totalMints}`);
-    }
-  }, 3500);
+      if (getGameState == "Minting") {
+        refetchGetRoundMints();
+        console.log(`Total Round Mints: ${totalMints}`);
+      }
+      if (getGameState == "Playing" || getGameState == "Final Stage") {
+        refetchPotatoTokenId();
+        refetchGetExplosionTime();
+        setRemainingTime(explosionTime);
+      }
+    }, 3500);
 
-  return () => {
-    clearInterval(intervalId);
-  };
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [getGameState]);
 
 
