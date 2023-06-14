@@ -399,6 +399,7 @@ export default function Play() {
             await refetchUserHasPotatoToken({ args: [address] });
             await refetchActiveAddresses();
             await refetchGetExplosionTime();
+            console.log('refetches performed');
           } else {
             console.log('refetchGetExplosionTime is undefined, not performing refetch');
           }
