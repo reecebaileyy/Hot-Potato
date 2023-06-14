@@ -251,7 +251,6 @@ export default function Play() {
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
 
         if (address == player) {
-          toast.success("Pass Successful!");
           await refetchSuccessfulPasses({ args: [address] });
           setPassPromise(true);
           if (passPromise) {
@@ -826,7 +825,7 @@ export default function Play() {
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
-  /*
+  /*,
                                             
   ███▀▀██▀▀███                         ██   
   █▀   ██   ▀█                         ██   
