@@ -90,9 +90,9 @@ export default function Play() {
       refetchMaxSupply();
       refetchGetRoundMints();
       refetchPrice();
-      refetchGetActiveTokenCount();
+      refetchGetActiveTokenCount({ args: [address] });
       refetchCurrentGeneration();
-      refetchRewards();
+      refetchRewards({ args: [address] });
       const message = "Heating up";
       setGetGameState("Minting");
       setEvents(prevEvents => [...prevEvents, message]);
@@ -121,7 +121,7 @@ export default function Play() {
       const message = "Back to it";
       await refetchGameState();
       await refetchPotatoTokenId();
-      await refetchRewards();
+      await refetchRewards({ args: [address] });
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -136,7 +136,7 @@ export default function Play() {
       const message = "Cooling off";
       setGetGameState("Paused");
       refetchGameState();
-      refetchRewards();
+      refetchRewards({ args: [address] });
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -150,7 +150,7 @@ export default function Play() {
       setGetGameState("Queued");
       await refetchGameState();
       setRoundMints(0);
-      await refetchRewards();
+      await refetchRewards({ args: [address] });
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -164,7 +164,7 @@ export default function Play() {
       await refetchPotatoTokenId();
       setGetGameState("Final Stage");
       await refetchGameState();
-      await refetchRewards();
+      await refetchRewards({ args: [address] });
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -191,25 +191,15 @@ export default function Play() {
       try {
         const player = log[0]?.args?.player?.toString();
         refetchGameState();
-        refetchHallOfFame();
+        refetchHallOfFame({ args: [_currentGeneration] });
         refetchWinner();
-        refetchRewards();
+        refetchRewards({ args: [address] });
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
-        // Send a POST request to the API route to update the database
-        const response = await fetch('/api/update-wins', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ address: address }),
-        });
 
-        // Send a POST request to the API route to update the database for the gamestate
         setGetGameState("Ended");
 
-        // If the passing player is the connected address, fetch the latest data for this address
         if (player == address) {
-          refetchTotalWins();
+          refetchTotalWins({ args: [address] });
           toast.success("You won! 🎉 Don't forget to claim your rewards!");
         }
 
@@ -231,7 +221,7 @@ export default function Play() {
 
         if (address == player) {
           toast.success("Pass Successful!");
-          await refetchSuccessfulPasses();
+          await refetchSuccessfulPasses({ args: [address] });
           setPassPromise(true);
           if (passPromise) {
             passPromise.resolve();
@@ -272,28 +262,29 @@ export default function Play() {
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
+      console.log("PotatoMinted event emitted, log:", log);
       try {
-        await refetchGetActiveTokenIds();
-        setShouldRefresh(!shouldRefresh);
-        const amount = parseInt(log[0].args.amount);
-        setRoundMints(prevRoundMints => prevRoundMints + amount);
-        await refetchGetRoundMints();
-        const player = log[0].args.player.toString();
-        const amountDisplay = String(log[0].args.amount); //Need this one
-        setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
-        if (address === player) {
-          // Resolve our promise
-          await refetchGetActiveTokenCount();
-          console.log(`address, player ${address} ${player}` );
+        if(refetchGetActiveTokenCount && refetchGetActiveTokenIds && address) {
+          await refetchGetActiveTokenCount({ args: [address] });
+          await refetchGetActiveTokenIds();
+          setShouldRefresh(!shouldRefresh);
+          const amount = parseInt(log[0].args.amount);
+          setRoundMints(prevRoundMints => prevRoundMints + amount);
+          await refetchGetRoundMints();
+          const player = log[0].args.player.toString();
+          const amountDisplay = String(log[0].args.amount); //Need this one
+          setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
+        } else {
+          console.log('One or more dependencies are undefined, not performing refetch');
+          console.log({ refetchGetActiveTokenCount, refetchGetActiveTokenIds, address });
         }
-        
-        const data = await response.json();
-
       } catch (error) {
+        console.log(log);
         console.error('Error updating mints', error);
       }
     },
   });
+
   /*
                                                     ▄▄  
   ▀███▀▀▀██▄                                      ▀███  
@@ -313,7 +304,7 @@ export default function Play() {
         await refetchGetActiveTokenIds();
         setShouldRefresh(!shouldRefresh);
         await refetchCurrentGeneration();
-        await refetchRewards();
+        await refetchRewards({ args: [address] });
       } catch (error) {
         console.error('Error updating mints', error);
       }// CACHE THIS DATA IN LOCAL STORAGE
@@ -375,8 +366,8 @@ export default function Play() {
           console.log(`explosion time set to ${remainingTime}`)
           await refetchGetActiveTokens();
           await refetchPotatoTokenId();
-          await refetchGetActiveTokenCount();
-          await refetchUserHasPotatoToken();
+          await refetchGetActiveTokenCount({ args: [address] });
+          await refetchUserHasPotatoToken({ args: [address] });
           await refetchActiveAddresses();
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
         } else {
@@ -411,7 +402,7 @@ export default function Play() {
           const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
           const yielder = log[0]?.args?.yielder?.toString();
           setPotatoTokenId(tokenIdTo);
-          await refetchUserHasPotatoToken();
+          await refetchUserHasPotatoToken({ args: [address] });
           setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo} ${yielder} now has the potato`]);
         } else {
           console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
@@ -541,17 +532,6 @@ export default function Play() {
   })
   const totalMints = parseInt(getRoundMints, 10);
 
-
-  // GET IMAGES
-
-  const { data: balanceOf, isLoading: loadingBalance, refetch: refetchBalanceOf } = useContractRead({
-    address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
-    abi: ABI,
-    functionName: 'balanceOf',
-    args: [address],
-    enabled: false,
-  })
-  const _balanceOf = parseInt(balanceOf, 10);
 
   const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useContractRead({
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
@@ -684,7 +664,7 @@ export default function Play() {
     functionName: 'mintHand',
     args: [mintAmount.toString()],
     value: totalCost,
-    enabled: getGameState == 'Minting',
+    enabled: false,
     staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
@@ -700,7 +680,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
-    enabled: address == getPotatoOwner,
+    enabled: false,
     staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
@@ -713,10 +693,10 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'withdrawWinnersFunds',
-    enabled: _rewards !== 0 || _rewards !== '0' || _rewards !== null || _rewards !== undefined,
+    enabled: false,
     staleTime: Infinity,
     onSuccess(data) {
-      refetchRewards();
+      refetchRewards({ args: [address] });
     }
   })
   const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(withdrawWinnersFunds)
@@ -727,7 +707,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'checkExplosion',
-    enabled: explosionTime == 0 || explosionTime == '0' || explosionTime == null || explosionTime == undefined,
+    enabled: false,
     staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
@@ -754,7 +734,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'startGame',
-    enabled: getGameState == "Queued",
+    enabled: false,
     staleTime: Infinity
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
@@ -764,7 +744,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'endMinting',
-    enabled: getGameState == "Minting",
+    enabled: false,
     staleTime: Infinity
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
@@ -774,7 +754,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'pauseGame',
-    enabled: getGameState == "Minting" || getGameState == "Ended" || getGameState == "Playing" || getGameState == "Final Stage",
+    enabled: false,
     staleTime: Infinity
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
@@ -784,7 +764,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'resumeGame',
-    enabled: getGameState == "Paused",
+    enabled: false,
     staleTime: Infinity
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
@@ -794,7 +774,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'restartGame',
-    enabled: getGameState == "Ended" || getGameState == "Paused",
+    enabled: false,
     staleTime: Infinity
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
@@ -978,17 +958,17 @@ export default function Play() {
   useEffect(() => {
     refetchPotatoTokenId();
     refetchGameState();
-    refetchGetActiveTokenCount();
+    refetchGetActiveTokenCount({ args: [address] });
     refetchGetExplosionTime();
     refetchGetRoundMints();
     refetchGetActiveTokens();
-    refetchUserHasPotatoToken();
-    refetchHallOfFame();
-    refetchTotalWins();
-    refetchRewards();
+    refetchUserHasPotatoToken({ args: [address] });
+    refetchHallOfFame({ args: [_currentGeneration] });
+    refetchTotalWins({ args: [address] });
+    refetchRewards({ args: [address] });
     refetchCurrentGeneration();
-    refetchSuccessfulPasses();
-    refetchImageString();
+    refetchSuccessfulPasses({ args: [address] });
+    refetchImageString({ args: [tokenId] });
     refetchMaxSupply();
     refetchPrice();
     refetchActiveAddresses();
@@ -1012,19 +992,19 @@ export default function Play() {
 
   useEffect(() => {
     if (roundWinner === undefined) {
-      refetchHallOfFame();
+      refetchHallOfFame({ args: [_currentGeneration] });
     }
     if (roundWinner === null) {
-      refetchHallOfFame();
+      refetchHallOfFame({ args: [_currentGeneration] });
     }
   }, [roundWinner, refetchHallOfFame]);
 
   useEffect(() => {
-    refetchGetActiveTokenCount();
-    refetchUserHasPotatoToken();
-    refetchSuccessfulPasses();
-    refetchTotalWins();
-    refetchRewards();
+    refetchGetActiveTokenCount({ args: [address] });
+    refetchUserHasPotatoToken({ args: [address] });
+    refetchSuccessfulPasses({ args: [address] });
+    refetchTotalWins({ args: [address] });
+    refetchRewards({ args: [address] });
   }, [address]);
 
   useEffect(() => {
@@ -1191,7 +1171,7 @@ export default function Play() {
                           noRewardsToast();
                         } else {
                           claimRewards?.();
-                          refetchRewards();
+                          refetchRewards({ args: [address] });
                         }
                       }}
                     >Claim Rewards</button>
@@ -1211,7 +1191,7 @@ export default function Play() {
                           noRewardsToast();
                         } else {
                           claimRewards?.();
-                          refetchRewards();
+                          refetchRewards({ args: [address] });
                         }
                       }}
                     >Claim Rewards</button>
@@ -1229,7 +1209,7 @@ export default function Play() {
                             noRewardsToast();
                           } else {
                             claimRewards?.();
-                            refetchRewards();
+                            refetchRewards({ args: [address] });
                           }
                         }}
                       >Claim Rewards</button>
@@ -1247,7 +1227,7 @@ export default function Play() {
                               noRewardsToast();
                             } else {
                               claimRewards?.();
-                              refetchRewards();
+                              refetchRewards({ args: [address] });
                             }
                           }}
                         >Claim Rewards</button>
@@ -1269,7 +1249,7 @@ export default function Play() {
                                 noRewardsToast();
                               } else {
                                 claimRewards?.();
-                                refetchRewards();
+                                refetchRewards({ args: [address] });
                               }
                             }}
                           >Claim Rewards</button>
@@ -1288,7 +1268,7 @@ export default function Play() {
                               } else {
                                 console.log('claiming rewards', rewards, _rewards);
                                 claimRewards?.();
-                                refetchRewards();
+                                refetchRewards({ args: [address] });
                               }
                             }}
                           >Claim Rewards</button>
@@ -1315,7 +1295,7 @@ export default function Play() {
                   <Image alt='Image' src={potatoBlink} width={200} height={200} />
                 }
                 {loadingExplosionTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {isNaN(remainingTime) || remainingTime === 0 ? "0" : remainingTime}</p>}
-                <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                <button disabled={!check} className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                   onClick={() => {
                     refetchGetExplosionTime();
                     if (!address) {
@@ -1445,7 +1425,7 @@ export default function Play() {
                               pattern="[0-9]*"
                               onChange={handleInputChangeMint}
                               placeholder="Enter mint amount" />
-                            <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                            <button disabled={!mint} className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                               onClick={() => {
                                 if (!address) {
                                   noAddressToast();
@@ -1512,7 +1492,7 @@ export default function Play() {
                       pattern="[0-9]*"
                       onChange={handleInputChangeToken}
                       placeholder="tokenId" />
-                    <button className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
+                    <button disabled={!pass} className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
                       onClick={() => {
                         refetchGetPotatoOwner();
                         if (!address) {
@@ -1539,7 +1519,7 @@ export default function Play() {
                   <>
                     <Image alt='Image' src={hot} width={200} height={200} className='self-center' />
                     {isWinner && _rewards != 0 &&
-                      <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
+                      <button disabled={!claimRewards} className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
                         onClick={() => {
                           if (!address) {
                             noAddressToast();
@@ -1547,7 +1527,7 @@ export default function Play() {
                             noRewardsToast();
                           } else {
                             claimRewards?.();
-                            refetchRewards();
+                            refetchRewards({ args: [address] });
                           }
                         }}>Claim Rewards</button>
                     }
@@ -1561,7 +1541,7 @@ export default function Play() {
                         <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-b from-yellow-400 to-red-500'>
                           {loadingActiveTokenCount ? ' Loading...' : ` ${activeTokensCount} `}
                         </span>
-                        {loadingActiveTokenCount ? '' : isNaN(activeTokensCount) || activeTokensCount === 1 ? ' pair' : ' pairs'} of hands to handle the heat this round
+                        {isNaN(activeTokensCount) || activeTokensCount === 1 ? ' pair' : ' pairs'} of hands to handle the heat this round
                       </h3>
                       <div className="place-items-center justify-center items center">
                         <button
@@ -1587,7 +1567,7 @@ export default function Play() {
                                 noRewardsToast();
                               } else {
                                 claimRewards?.();
-                                refetchRewards();
+                                refetchRewards({ args: [address] });
                               }
                             }}
                           >Claim Rewards</button>
@@ -1604,7 +1584,7 @@ export default function Play() {
                               } else if (_rewards == 0) {
                                 noRewardsToast();
                               } else {
-                                refetchRewards();
+                                refetchRewards({ args: [address] });
                                 claimRewards?.();
                               }
                             }}

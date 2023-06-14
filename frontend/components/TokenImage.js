@@ -78,7 +78,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
-    enabled: false
+    enabled: true
   });
 
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
@@ -109,6 +109,20 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500 }) => {
     console.log('refetching image string');
     refetchImageString({ args: [tokenId] });
   }, []);
+
+  useEffect(() => {
+    console.log('useEffect with dependencies running');
+    if (refetchPotatoTokenId && refetchGetActiveTokens && refetchImageString && tokenId) {
+      console.log('Dependencies are defined, performing refetch');
+      refetchPotatoTokenId();
+      refetchGetActiveTokens();
+      refetchImageString({ args: [tokenId] });
+    } else {
+      console.log('One or more dependencies are undefined, not performing refetch');
+      console.log({ tokenId, refetchPotatoTokenId, refetchGetActiveTokens, refetchImageString });
+    }
+  }, [tokenId, shouldRefresh, refetchImageString]);
+
 
   if (isLoading) {
     return <div>Loading...</div>;
