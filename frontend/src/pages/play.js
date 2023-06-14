@@ -1022,11 +1022,6 @@ export default function Play() {
         refetchGetRoundMints();
         console.log(`Total Round Mints: ${totalMints}`);
       }
-      if (getGameState == "Playing" || getGameState == "Final Stage") {
-        refetchPotatoTokenId();
-        refetchGetExplosionTime();
-        setRemainingTime(explosionTime);
-      }
     }, 3500);
 
     return () => {
