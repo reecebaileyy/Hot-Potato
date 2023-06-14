@@ -702,7 +702,6 @@ export default function Play() {
     args: [mintAmount.toString()],
     value: totalCost,
     enabled: true,
-    staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
     },
@@ -718,7 +717,6 @@ export default function Play() {
     functionName: 'passPotato',
     args: [tokenId],
     enabled: true,
-    staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
     },
@@ -731,7 +729,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'withdrawWinnersFunds',
     enabled: true,
-    staleTime: Infinity,
     onSuccess(data) {
       console.log('Success', data)
       refetchRewards({ args: [address] });
@@ -749,7 +746,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'checkExplosion',
     enabled: true,
-    staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
     },
@@ -776,7 +772,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'startGame',
     enabled: true,
-    staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
     },
@@ -789,7 +784,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'endMinting',
     enabled: true,
-    staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
     },
@@ -802,7 +796,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'pauseGame',
     enabled: true,
-    staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
     },
@@ -815,7 +808,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'resumeGame',
     enabled: true,
-    staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
     },
@@ -828,7 +820,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'restartGame',
     enabled: true,
-    staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
     },
