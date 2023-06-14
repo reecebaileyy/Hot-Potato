@@ -1029,7 +1029,7 @@ export default function Play() {
   return () => {
     clearInterval(intervalId);
   };
-  }, []);
+  }, [getGameState]);
 
 
   useEffect(() => {
