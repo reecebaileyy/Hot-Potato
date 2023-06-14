@@ -664,7 +664,7 @@ export default function Play() {
     functionName: 'mintHand',
     args: [mintAmount.toString()],
     value: totalCost,
-    enabled: false,
+    enabled: true,
     staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
@@ -680,7 +680,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
-    enabled: false,
+    enabled: true,
     staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
@@ -693,7 +693,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'withdrawWinnersFunds',
-    enabled: false,
+    enabled: true,
     staleTime: Infinity,
     onSuccess(data) {
       refetchRewards({ args: [address] });
@@ -707,7 +707,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'checkExplosion',
-    enabled: false,
+    enabled: true,
     staleTime: Infinity,
     onError(error) {
       console.log('Error', error)
@@ -734,7 +734,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'startGame',
-    enabled: false,
+    enabled: true,
     staleTime: Infinity
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
@@ -744,7 +744,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'endMinting',
-    enabled: false,
+    enabled: true,
     staleTime: Infinity
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
@@ -754,7 +754,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'pauseGame',
-    enabled: false,
+    enabled: true,
     staleTime: Infinity
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
@@ -764,7 +764,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'resumeGame',
-    enabled: false,
+    enabled: true,
     staleTime: Infinity
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
@@ -774,7 +774,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'restartGame',
-    enabled: false,
+    enabled: true,
     staleTime: Infinity
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
