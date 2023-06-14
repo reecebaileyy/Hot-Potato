@@ -399,11 +399,11 @@ export default function Play() {
             await refetchUserHasPotatoToken({ args: [address] });
             await refetchActiveAddresses();
             await refetchGetExplosionTime();
+            setRemainingTime(explosionTime);
             console.log('refetches performed');
           } else {
             console.log('refetchGetExplosionTime is undefined, not performing refetch');
           }
-          setRemainingTime(explosionTime);
           console.log(`explosion time set to ${remainingTime}`)
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
         } else {
