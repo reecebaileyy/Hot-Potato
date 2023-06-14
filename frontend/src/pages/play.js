@@ -85,17 +85,13 @@ export default function Play() {
     abi: ABI,
     eventName: 'GameStarted',
     listener(log) {
-      if (refetchGameState && refetchMaxSupply && refetchGetRoundMints && refetchPrice && refetchGetActiveTokenCount && refetchCurrentGeneration && refetchRewards) {
-        refetchGameState();
-        refetchMaxSupply();
-        refetchGetRoundMints();
-        refetchPrice();
-        refetchGetActiveTokenCount({ args: [address] });
-        refetchCurrentGeneration();
-        refetchRewards({ args: [address] });
-      } else {
-        console.log("Refetches not set");
-      }
+      refetchGameState();
+      refetchMaxSupply();
+      refetchGetRoundMints();
+      refetchPrice();
+      refetchGetActiveTokenCount({ args: [address] });
+      refetchCurrentGeneration();
+      refetchRewards({ args: [address] });
       setRoundMints(0);
       const message = "Heating up";
       setGetGameState("Minting");
