@@ -85,14 +85,18 @@ export default function Play() {
     abi: ABI,
     eventName: 'GameStarted',
     listener(log) {
+      if (refetchGameState && refetchMaxSupply && refetchGetRoundMints && refetchPrice && refetchGetActiveTokenCount && refetchCurrentGeneration && refetchRewards) {
+        refetchGameState();
+        refetchMaxSupply();
+        refetchGetRoundMints();
+        refetchPrice();
+        refetchGetActiveTokenCount({ args: [address] });
+        refetchCurrentGeneration();
+        refetchRewards({ args: [address] });
+      } else {
+        console.log("Refetches not set");
+      }
       setRoundMints(0);
-      refetchGameState();
-      refetchMaxSupply();
-      refetchGetRoundMints();
-      refetchPrice();
-      refetchGetActiveTokenCount({ args: [address] });
-      refetchCurrentGeneration();
-      refetchRewards({ args: [address] });
       const message = "Heating up";
       setGetGameState("Minting");
       setEvents(prevEvents => [...prevEvents, message]);
@@ -104,11 +108,15 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     eventName: 'MintingEnded',
-    async listener(log) {
+    listener(log) {
+      if (refetchGameState && refetchPotatoTokenId) {
+        refetchGameState();
+        refetchPotatoTokenId();
+      } else {
+        console.log("Refetches not set");
+      }
       const message = "No more mints";
       setGetGameState("Playing");
-      await refetchPotatoTokenId();
-      await refetchGameState();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -119,9 +127,13 @@ export default function Play() {
     eventName: 'GameResumed',
     async listener(log) {
       const message = "Back to it";
-      await refetchGameState();
-      await refetchPotatoTokenId();
-      await refetchRewards({ args: [address] });
+      if (refetchGameState && refetchPotatoTokenId && refetchRewards) {
+        refetchGameState();
+        refetchPotatoTokenId();
+        refetchRewards({ args: [address] });
+      } else {
+        console.log("Refetches not set");
+      }
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -132,11 +144,14 @@ export default function Play() {
     abi: ABI,
     eventName: 'GamePaused',
     listener(log) {
-      console.log(log);
-      const message = "Cooling off";
-      setGetGameState("Paused");
+      if (refetchGameState && refetchRewards) {
       refetchGameState();
       refetchRewards({ args: [address] });
+    } else {
+      console.log("Refetches not set");
+    }
+      const message = "Cooling off";
+      setGetGameState("Paused");
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -146,11 +161,15 @@ export default function Play() {
     abi: ABI,
     eventName: 'GameRestarted',
     async listener(log) {
+      if (refetchGameState && refetchRewards) {
+        refetchGameState();
+        refetchRewards({ args: [address] });
+      } else {
+        console.log("Refetches not set");
+      }
       const message = "Game Over";
       setGetGameState("Queued");
-      await refetchGameState();
       setRoundMints(0);
-      await refetchRewards({ args: [address] });
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -160,11 +179,15 @@ export default function Play() {
     abi: ABI,
     eventName: 'FinalRoundStarted',
     async listener(log) {
+      if (refetchGameState && refetchPotatoTokenId && refetchRewards) {
+        refetchGameState();
+        refetchPotatoTokenId();
+        refetchRewards({ args: [address] });
+      } else {
+        console.log("Refetches not set");
+      }
       const message = "HOT HANDZ";
-      await refetchPotatoTokenId();
       setGetGameState("Final Stage");
-      await refetchGameState();
-      await refetchRewards({ args: [address] });
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -190,10 +213,14 @@ export default function Play() {
     async listener(log) {
       try {
         const player = log[0]?.args?.player?.toString();
-        refetchGameState();
-        refetchHallOfFame({ args: [_currentGeneration] });
-        refetchWinner();
-        refetchRewards({ args: [address] });
+        if (refetchGameState && refetchHallOfFame && refetchWinner) {
+          refetchGameState();
+          refetchHallOfFame({ args: [_currentGeneration] });
+          refetchWinner();
+          refetchRewards({ args: [address] });
+        } else {
+          console.log("Error refetching data");
+        }
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
 
         setGetGameState("Ended");
@@ -264,7 +291,7 @@ export default function Play() {
     async listener(log) {
       console.log("PotatoMinted event emitted, log:", log);
       try {
-        if(refetchGetActiveTokenCount && refetchGetActiveTokenIds && address) {
+        if (refetchGetActiveTokenCount && refetchGetActiveTokenIds && address) {
           await refetchGetActiveTokenCount({ args: [address] });
           await refetchGetActiveTokenIds();
           setShouldRefresh(!shouldRefresh);
@@ -329,8 +356,12 @@ export default function Play() {
     eventName: 'UpdatedTimer',
     async listener(log) {
       try {
+        if (refetchGetExplosionTime) {
+          await refetchGetExplosionTime();
+        } else {
+          console.log('refetchGetExplosionTime is undefined, not performing refetch');
+        }
         const time = log[0].args.time.toString();
-        await refetchGetExplosionTime();
         setRemainingTime(explosionTime);
         setEvents(prevEvents => [...prevEvents, `+${time}`]);
       } catch (error) {
@@ -361,14 +392,18 @@ export default function Play() {
         setTimeout(() => setExplosion(false), 3050);
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
-          await refetchGetExplosionTime();
+          if (refetchGetExplosionTime && refetchGetActiveTokenIds && refetchGetActiveTokenCount && refetchUserHasPotatoToken && refetchPotatoTokenId && refetchActiveAddresses) {
+            await refetchGetActiveTokens();
+            await refetchPotatoTokenId();
+            await refetchGetActiveTokenCount({ args: [address] });
+            await refetchUserHasPotatoToken({ args: [address] });
+            await refetchActiveAddresses();
+            await refetchGetExplosionTime();
+          } else {
+            console.log('refetchGetExplosionTime is undefined, not performing refetch');
+          }
           setRemainingTime(explosionTime);
           console.log(`explosion time set to ${remainingTime}`)
-          await refetchGetActiveTokens();
-          await refetchPotatoTokenId();
-          await refetchGetActiveTokenCount({ args: [address] });
-          await refetchUserHasPotatoToken({ args: [address] });
-          await refetchActiveAddresses();
           setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
         } else {
           console.error('TokenId is not a BigInt or is not found in log args', log);
@@ -402,7 +437,11 @@ export default function Play() {
           const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
           const yielder = log[0]?.args?.yielder?.toString();
           setPotatoTokenId(tokenIdTo);
-          await refetchUserHasPotatoToken({ args: [address] });
+          if (refetchUserHasPotatoToken) {
+            await refetchUserHasPotatoToken({ args: [address] });
+          } else {
+            console.log('refetchUserHasPotatoToken is undefined, not performing refetch');
+          }
           setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo} ${yielder} now has the potato`]);
         } else {
           console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
@@ -454,7 +493,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: '_price',
-    enabled: false,
+    enabled: true,
   })
   const price = parseInt(_price, 10) / 10 ** 18;
 
@@ -473,7 +512,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: '_maxsupplyPerRound',
-    enabled: false,
+    enabled: true,
   })
   const maxSupply = parseInt(_maxsupply, 10);
 
@@ -483,7 +522,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
-    enabled: false,
+    enabled: true,
   })
   const hasPotatoToken = userHasPotatoToken?.toString();
 
@@ -492,7 +531,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'getPotatoOwner',
-    enabled: false,
+    enabled: true,
   })
   const _potatoOwner = getPotatoOwner?.toString();
 
@@ -501,7 +540,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'potatoTokenId',
-    enabled: false,
+    enabled: true,
   })
 
   const _potato_token = parseInt(potatoTokenId, 10)
@@ -511,7 +550,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'getActiveTokens',
-    enabled: false,
+    enabled: true,
   })
   const _activeTokens = parseInt(getActiveTokens, 10);
 
@@ -520,7 +559,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'currentGeneration',
-    enabled: false,
+    enabled: true,
   })
   const _currentGeneration = parseInt(currentGeneration, 10);
 
@@ -528,7 +567,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'roundMints',
-    enabled: false,
+    enabled: true,
   })
   const totalMints = parseInt(getRoundMints, 10);
 
@@ -552,7 +591,7 @@ export default function Play() {
     address: '0x4362E9f8de2a7229814d93F2E382d967e5666D9c',
     abi: ABI,
     functionName: 'getAllWinners',
-    enabled: false,
+    enabled: true,
   })
   const isWinner = allWinners?.includes(address)
 
@@ -561,7 +600,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'rewards',
     args: [address],
-    enabled: false,
+    enabled: true,
   })
   const _rewards = parseInt(rewards, 10);
 
@@ -579,7 +618,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
-    enabled: false
+    enabled: true
   });
 
 
@@ -597,7 +636,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'hallOfFame',
     args: [_currentGeneration],
-    enabled: false,
+    enabled: true,
   })
   const roundWinner = hallOfFame?.toString();
 
@@ -630,7 +669,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'ownerOf',
     args: [tokenId],
-    enabled: false,
+    enabled: true,
   })
 
   const { data: userBalance, isError, isLoading } = useBalance({
@@ -712,7 +751,7 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
-    
+
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -973,7 +1012,7 @@ export default function Play() {
     refetchPrice();
     refetchActiveAddresses();
     refetchWinner();
-      setRemainingTime(explosionTime);
+    setRemainingTime(explosionTime);
     if (address == _ownerAddress) {
       refetchowner();
     }
