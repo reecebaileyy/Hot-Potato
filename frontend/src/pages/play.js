@@ -88,6 +88,7 @@ export default function Play() {
       refetchGameState();
       refetchMaxSupply();
       refetchGetRoundMints();
+      await refetchGetActiveTokens();
       refetchPrice();
       refetchGetActiveTokenCount({ args: [address] });
       refetchCurrentGeneration();
@@ -108,6 +109,7 @@ export default function Play() {
       if (refetchGameState && refetchPotatoTokenId && refetchGetExplosionTime) {
         refetchGameState();
         refetchPotatoTokenId();
+        await refetchGetActiveTokens();
         await refetchGetExplosionTime();
         setRemainingTime(explosionTime);
         console.log(`Explosion time set to ${remainingTime}`);
@@ -127,13 +129,10 @@ export default function Play() {
     eventName: 'GameResumed',
     async listener(log) {
       const message = "Back to it";
-      if (refetchGameState && refetchPotatoTokenId && refetchRewards) {
         refetchGameState();
         refetchPotatoTokenId();
         refetchRewards({ args: [address] });
-      } else {
-        console.log("Refetches not set");
-      }
+        refetchGetActiveTokens();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -144,12 +143,9 @@ export default function Play() {
     abi: ABI,
     eventName: 'GamePaused',
     listener(log) {
-      if (refetchGameState && refetchRewards) {
         refetchGameState();
         refetchRewards({ args: [address] });
-      } else {
-        console.log("Refetches not set");
-      }
+        refetchGetActiveTokens();
       const message = "Cooling off";
       setGetGameState("Paused");
       setEvents(prevEvents => [...prevEvents, message]);
@@ -327,6 +323,7 @@ export default function Play() {
     eventName: 'NewRound',
     async listener(log) {
       try {
+        await refetchGetActiveTokens();
         await refetchGetActiveTokenIds();
         setShouldRefresh(!shouldRefresh);
         await refetchCurrentGeneration();
@@ -382,16 +379,11 @@ export default function Play() {
     abi: ABI,
     eventName: 'PotatoExploded',
     async listener(log) {
-      if (refetchGetActiveTokenIds && refetchGetActiveTokenCount && refetchUserHasPotatoToken && refetchPotatoTokenId && refetchActiveAddresses) {
-        await refetchGetActiveTokens();
-        await refetchPotatoTokenId();
-        await refetchGetActiveTokenCount({ args: [address] });
-        await refetchUserHasPotatoToken({ args: [address] });
-        await refetchActiveAddresses();
-        console.log('refetches performed');
-      } else {
-        console.log('refetchGetExplosionTime is undefined, not performing refetch');
-      }
+      await refetchGetActiveTokens();
+      await refetchPotatoTokenId();
+      await refetchGetActiveTokenCount({ args: [address] });
+      await refetchUserHasPotatoToken({ args: [address] });
+      await refetchActiveAddresses();
       try {
         setExplosion(true);
         setTimeout(() => setExplosion(false), 3050);
