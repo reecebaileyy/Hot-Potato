@@ -88,7 +88,7 @@ export default function Play() {
       refetchGameState();
       refetchMaxSupply();
       refetchGetRoundMints();
-      await refetchGetActiveTokens();
+      refetchGetActiveTokens();
       refetchPrice();
       refetchGetActiveTokenCount({ args: [address] });
       refetchCurrentGeneration();
