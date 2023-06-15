@@ -797,11 +797,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'endMinting',
-    enabled: true,
-    onError(error) {
-      console.log('Error', error)
-    },
-    cacheTime: 2_000,
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
 
@@ -810,11 +805,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'pauseGame',
-    enabled: getGameState == "Minting" ? true : getGameState == "Final Stage" ? true : getGameState == "Playing" ? true : false,
-    onError(error) {
-      console.log('Error', error)
-    },
-    cacheTime: 2_000,
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
 
@@ -823,11 +813,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'resumeGame',
-    enabled: getGameState == "Paused" ? true : false,
-    onError(error) {
-      console.log('Error', error)
-    },
-    cacheTime: 2_000,
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
 
@@ -836,11 +821,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'restartGame',
-    enabled: getGameState == "Ended" ? true : getGameState == "Paused" ? true : false,
-    onError(error) {
-      console.log('Error', error)
-    },
-    cacheTime: 2_000,
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
