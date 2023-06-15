@@ -15,7 +15,6 @@ import TokenImage from '../../components/TokenImage'
 import ActiveTokensImages from '../../components/ActiveTokensImages'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
-import { useIsMounted } from '../../components/useIsMounted'
 
 export default function Play() {
 
@@ -54,7 +53,7 @@ export default function Play() {
 
   // STORING USERS ADDRESS
   const { address } = useAccount()
-  const mounted = useIsMounted();
+  // const mounted = useIsMounted();
 
   /*
    ________ __     __ ________ __    __ ________      __    __  ______   ______  __    __  ______  
@@ -1156,12 +1155,12 @@ export default function Play() {
         </nav>
 
         <h1 className={`${darkMode ? 'text-4xl justify-center items-center md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center' : "text-4xl justify-center items-center md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center"}`}>
-          Round {mounted ? _currentGeneration == 0 ? "1" : _currentGeneration : null}
+          Round {_currentGeneration == 0 ? "1" : _currentGeneration}
         </h1>
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
           <div className={`w-full flex flex-col justify-center items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
-            {mounted ? !address ?
+            {!address ?
               <>
                 <>
                   <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Connect First</h1>
@@ -1276,12 +1275,12 @@ export default function Play() {
                             }}
                           >Claim Rewards</button>
                         }
-                      </> : null
+                      </>
             }
           </div>
 
           <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
-            {mounted ? getGameState == "Playing" || getGameState == "Final Stage" ?
+            {getGameState == "Playing" || getGameState == "Final Stage" ?
               <>
                 <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>
                   {loadingPotatoTokenId ? "Loading..." : `Token #${_potato_token} has the potato`}
@@ -1460,12 +1459,12 @@ export default function Play() {
                         </Link>
                       </>
 
-                    ) : null}
+                    )}
             {/* Content when address does not exist */}
           </div>
 
           <div className={`w-full flex flex-col justify-center items-center p-4 mb-8 col-end-9 col-span-2  md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-xl`}>
-            {mounted ? !address ?
+            {!address ?
               <>
                 <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Connect First</h1>
                 <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>You must connect your wallet to view this page! Hope you join the fun soon...</h3>
@@ -1594,7 +1593,7 @@ export default function Play() {
                           >Claim Rewards</button>
                         }
                       </>
-              : null}
+              }
           </div>
           <div
             ref={divRef}
@@ -1611,7 +1610,7 @@ export default function Play() {
           </div>
 
 
-          {mounted ? getGameState !== 'Minting' && getGameState !== 'Queued' && loadingActiveTokenIds ? (
+          {getGameState !== 'Minting' && getGameState !== 'Queued' && loadingActiveTokenIds ? (
             <div className="text-center">
               <h1>Loading...</h1>
             </div>
@@ -1643,9 +1642,9 @@ export default function Play() {
                 </div>
               </div>
             ) : null
-          ) : null}
+          )}
 
-          {mounted ? address === _ownerAddress &&
+          {address === _ownerAddress &&
             <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-xl overflow-x-auto`}>
               <div className="p-4 grid grid-cols-1 md:grid-cols-3 sm:grid-cols-3 gap-4">
                 <button
@@ -1727,7 +1726,7 @@ export default function Play() {
                 </button>
               </div>
             </div>
-          : null}
+         }
 
 
 
