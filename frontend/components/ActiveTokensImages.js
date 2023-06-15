@@ -52,7 +52,7 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
     return (
       <div className='flex flex-col'>
         <p>Error loading active tokens.{' '}</p>
-        <button className='font-bold' onClick={() => refetchActiveTokens({ args: [ownerAddress] })}>
+        <button className='border-t-emerald-900 font-bold' onClick={() => refetchActiveTokens({ args: [ownerAddress] })}>
           Try Refreshing
         </button>
       </div>

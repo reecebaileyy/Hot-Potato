@@ -67,8 +67,7 @@ export default function Play() {
    \▓▓▓▓▓▓▓▓    \▓    \▓▓▓▓▓▓▓▓\▓▓   \▓▓   \▓▓        \▓▓   \▓▓ \▓▓▓▓▓▓  \▓▓▓▓▓▓ \▓▓   \▓▓ \▓▓▓▓▓▓ 
                                                                                            
   */
-  /*
-                                                                                       
+  /*                                                                           
     ▄▄█▀▀▀█▄█                                      ▄█▀▀▀█▄█ ██            ██           
   ▄██▀     ▀█                                     ▄██    ▀█ ██            ██           
   ██▀       ▀ ▄█▀██▄ ▀████████▄█████▄   ▄▄█▀██    ▀███▄   ██████ ▄█▀██▄ ██████  ▄▄█▀██ 
@@ -76,9 +75,6 @@ export default function Play() {
   ██▄    ▀████▄█████   ██    ██    ██  ██▀▀▀▀▀▀   ▄     ▀██ ██   ▄█████   ██   ██▀▀▀▀▀▀
   ▀██▄     ████   ██   ██    ██    ██  ██▄    ▄   ██     ██ ██  ██   ██   ██   ██▄    ▄
     ▀▀███████▀████▀██▄████  ████  ████▄ ▀█████▀   █▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀
-                                                                                       
-                                                                                       
-  
   */
 
   useContractEvent({
@@ -87,18 +83,15 @@ export default function Play() {
     eventName: 'GameStarted',
     async listener(log) {
       await refetchGameState();
-      await refetchMaxSupply();
+      if (address) {
+        await refetchGetActiveTokenCount({ args: [address] });
+      }
       await refetchGetRoundMints();
       await refetchGetActiveTokens();
-      await refetchPrice();
-      await refetchGetActiveTokenCount({ args: [address] });
-      await refetchCurrentGeneration();
-      await refetchRewards({ args: [address] });
       setRoundMints(0);
       const message = "Heating up";
       setGetGameState("Minting");
       setEvents(prevEvents => [...prevEvents, message]);
-
     },
   })
 
@@ -107,10 +100,9 @@ export default function Play() {
     abi: ABI,
     eventName: 'MintingEnded',
     async listener(log) {
-      await refetchGameState();
-      await refetchPotatoTokenId();
-      await refetchGetActiveTokens();
-      await refetchGetExplosionTime();
+      await refetchGameState?.();
+      await refetchPotatoTokenId?.();
+      await refetchGetActiveTokens?.();
       setRemainingTime(explosionTime);
       const message = "No more mints";
       setGetGameState("Playing");
@@ -126,8 +118,6 @@ export default function Play() {
       const message = "Back to it";
       await refetchGameState();
       await refetchPotatoTokenId();
-      await refetchGetExplosionTime();
-      setRemainingTime(explosionTime);
       await refetchRewards({ args: [address] });
       await refetchGetActiveTokens();
       setEvents(prevEvents => [...prevEvents, message]);
@@ -144,7 +134,6 @@ export default function Play() {
       await refetchRewards({ args: [address] });
       await refetchGetActiveTokens();
       const message = "Cooling off";
-      setGetGameState("Paused");
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -157,7 +146,6 @@ export default function Play() {
       await refetchGameState();
       await refetchRewards({ args: [address] });
       const message = "Game Over";
-      setGetGameState("Queued");
       setRoundMints(0);
       setEvents(prevEvents => [...prevEvents, message]);
     },
@@ -168,11 +156,7 @@ export default function Play() {
     abi: ABI,
     eventName: 'FinalRoundStarted',
     async listener(log) {
-      await refetchGameState();
-      await refetchPotatoTokenId();
-      await refetchRewards({ args: [address] });
-      const message = "HOT HANDZ";
-      setGetGameState("Final Stage");
+      const message = "2 PLAYERS LEFT";
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -200,15 +184,13 @@ export default function Play() {
         const player = log[0]?.args?.player?.toString();
         await refetchGameState();
         await refetchHallOfFame({ args: [_currentGeneration] });
-        await refetchWinner();
-        await refetchRewards({ args: [address] });
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
-        setGetGameState("Ended");
         if (player == address) {
-          await refetchTotalWins({ args: [address] });
           toast.success("You won! 🎉 Don't forget to claim your rewards!");
+          await refetchWinner();
+          await refetchRewards({ args: [address] });
+          await refetchTotalWins({ args: [address] });
         }
-
       } catch (error) {
         console.error('Error updating wins', error);
       }
@@ -222,9 +204,7 @@ export default function Play() {
     async listener(log) {
       try {
         const player = log[0].args.player.toString();
-        await refetchPotatoTokenId();
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
-
         if (address == player) {
           await refetchSuccessfulPasses({ args: [address] });
           setPassPromise(true);
@@ -236,7 +216,6 @@ export default function Play() {
             passPromise.reject(new Error('Passing failed'));
           }
         }
-
         // Send a POST request to the API route to update the database
         await fetch('/api/update-passes', {
           method: 'POST',
@@ -304,7 +283,6 @@ export default function Play() {
         await refetchGetActiveTokenIds();
         setShouldRefresh(!shouldRefresh);
         await refetchCurrentGeneration();
-        await refetchRewards({ args: [address] });
       } catch (error) {
         console.error('Error updating mints', error);
       }// CACHE THIS DATA IN LOCAL STORAGE
@@ -327,14 +305,9 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     eventName: 'UpdatedTimer',
-    async listener(log) {
+    listener(log) {
       const time = log[0].args.time.toString();
-      console.log(`time: ${time}`)
-      console.log(`log: ${log}`)
-      await refetchGetExplosionTime();
       setRemainingTime(time);
-      console.log(`explosion time is ${explosionTime}`)
-      console.log(`remaining time set to ${remainingTime}`)
       setEvents(prevEvents => [...prevEvents, `+${time}`]);
     },
   });
@@ -356,20 +329,14 @@ export default function Play() {
     abi: ABI,
     eventName: 'PotatoExploded',
     async listener(log) {
-      await refetchGetActiveTokens();
-      await refetchPotatoTokenId();
-      await refetchGetActiveTokenCount({ args: [address] });
-      await refetchUserHasPotatoToken({ args: [address] });
-      await refetchActiveAddresses();
       try {
         setExplosion(true);
         setTimeout(() => setExplosion(false), 3050);
-        if (typeof log[0]?.args?.tokenId === 'bigint') {
-          const tokenId_ = log[0].args.tokenId.toString();
-          setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
-        } else {
-          console.error('TokenId is not a BigInt or is not found in log args', log);
-        }
+        await refetchGetActiveTokenCount({ args: [address] });
+        await refetchActiveAddresses();
+        console.log("REFETCHED ALL DATA");
+        const tokenId_ = log[0].args.tokenId.toString();
+        setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
       } catch (error) {
         console.log(error)
       }
@@ -394,16 +361,11 @@ export default function Play() {
     eventName: 'PotatoPassed',
     async listener(log) {
       try {
-        if (typeof log[0]?.args?.tokenIdFrom === 'bigint' && typeof log[0]?.args?.tokenIdTo === 'bigint') {
-          const tokenIdFrom = log[0]?.args?.tokenIdFrom?.toString();
-          const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
-          const yielder = log[0]?.args?.yielder?.toString();
-          setPotatoTokenId(tokenIdTo);
-          await refetchUserHasPotatoToken({ args: [address] });
-          setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo} ${yielder} now has the potato`]);
-        } else {
-          console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
-        }
+        await refetchUserHasPotatoToken({args: [address]});
+        const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
+        setPotatoTokenId(tokenIdTo);
+        console.log(`userHasPotatoToken: ${userHasPotatoToken}`);
+        setEvents(prevEvents => [...prevEvents, `Potato Passed to #${tokenIdTo}`]);
       } catch (error) {
         console.log(error)
       }
@@ -492,8 +454,8 @@ export default function Play() {
     abi: ABI,
     functionName: 'potatoTokenId',
   })
+  const _potato_token = parseInt(potatoTokenId, 10);
 
-  const _potato_token = parseInt(potatoTokenId, 10)
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
@@ -555,12 +517,6 @@ export default function Play() {
   })
   const totalWins = parseInt(_totalWins, 10);
 
-  const { data: getImageString, isLoading: loadingGetImageString, refetch: refetchImageString } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
-    abi: ABI,
-    functionName: 'getImageString',
-    args: [tokenId],
-  });
 
 
   const { data: _successfulPasses, isLoading: loadingSuccessfulPasses, refetch: refetchSuccessfulPasses } = useContractRead({
@@ -638,8 +594,8 @@ export default function Play() {
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount.toString()],
-    // value: totalCost,
-    enabled: true,
+    value: totalCost,
+    enabled: getGameState === "Minting",
     onError(error) {
       console.log('Error', error)
     },
@@ -654,7 +610,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
-    enabled: true,
+    enabled: getGameState === "Playing" || getGameState === "Final Stage",
     onError(error) {
       console.log('Error', error)
     },
@@ -666,7 +622,7 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'withdrawWinnersFunds',
-    enabled: true,
+    enabled: address === isWinner,
     onSuccess(data) {
       console.log('Success', data)
       refetchRewards({ args: [address] });
@@ -684,9 +640,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'checkExplosion',
     enabled: true,
-    onError(error) {
-      console.log('Error', error)
-    },
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -893,24 +846,23 @@ export default function Play() {
 
   //On Mount
   useEffect(() => {
-    refetchPotatoTokenId();
+    const fetchData = async () => {
+      await refetchPotatoTokenId?.();
+      setPotatoTokenId(parseInt(potatoTokenId, 10)?.toString());
+      await refetchUserHasPotatoToken({ args: [address] });
+      await refetchSuccessfulPasses({ args: [address] });
+    }
+    fetchData();
+    setPotatoTokenId(_potato_token);
     refetchGameState();
     refetchGetActiveTokenCount({ args: [address] });
     refetchGetExplosionTime();
     setRemainingTime(explosionTime);
     refetchGetRoundMints();
     refetchGetActiveTokens();
-    refetchUserHasPotatoToken({ args: [address] });
-    refetchHallOfFame({ args: [_currentGeneration] });
     refetchTotalWins({ args: [address] });
-    refetchRewards({ args: [address] });
     refetchCurrentGeneration();
-    refetchSuccessfulPasses({ args: [address] });
-    refetchImageString({ args: [tokenId] });
-    refetchMaxSupply();
-    refetchPrice();
     refetchActiveAddresses();
-    refetchWinner();
     if (address == _ownerAddress) {
       refetchowner();
     }
@@ -918,7 +870,7 @@ export default function Play() {
     if (!isNaN(roundMints)) {
       setRoundMints(roundMints);
     }
-  }, []);
+  }, [refetchPotatoTokenId, potatoTokenId]);
 
 
   useEffect(() => {
@@ -938,8 +890,11 @@ export default function Play() {
   }, [roundWinner, refetchHallOfFame]);
 
   useEffect(() => {
+    const fetchData = async () => {
+      await refetchUserHasPotatoToken({ args: [address] });
+    }
+    fetchData();
     refetchGetActiveTokenCount({ args: [address] });
-    refetchUserHasPotatoToken({ args: [address] });
     refetchSuccessfulPasses({ args: [address] });
     refetchTotalWins({ args: [address] });
     refetchRewards({ args: [address] });
@@ -963,22 +918,6 @@ export default function Play() {
     // Cleanup function to clear the interval when component unmounts or re-renders
     return () => clearInterval(interval);
   }, []);
-
-
-
-  //GAME STATE
-  useEffect(() => {
-
-    if (!isNaN(_potatoTokenId)) {
-      const localPotatoTokenId = localStorage.getItem('_potatoTokenId');
-      if (!localPotatoTokenId) {
-        const getPotatoTokenId = parseInt(potatoTokenId, 10);
-        setPotatoTokenId(getPotatoTokenId);
-      } else {
-        setPotatoTokenId(localPotatoTokenId);
-      }
-    }
-  }, [_potatoTokenId, potatoTokenId]);
 
   useEffect(() => {
     try {
@@ -1124,9 +1063,7 @@ export default function Play() {
               </> :
               getGameState == "Playing" || getGameState == "Final Stage" ?
                 <>
-                  <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
-                  <ActiveTokensImages ownerAddress={address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
-                  {isWinner && _rewards != 0 &&
+                {isWinner && _rewards != 0 &&
                     <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
                       onClick={() => {
                         if (!address) {
@@ -1140,6 +1077,9 @@ export default function Play() {
                       }}
                     >Claim Rewards</button>
                   }
+                  <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
+                  <ActiveTokensImages ownerAddress={address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
+                  
                 </>
                 : getGameState == "Queued" ?
                   <>
@@ -1223,7 +1163,7 @@ export default function Play() {
             {getGameState == "Playing" || getGameState == "Final Stage" ?
               <>
                 <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>
-                  {loadingPotatoTokenId ? "Loading..." : `Token #${_potato_token} has the potato`}
+                  {_potatoTokenId == NaN ? setPotatoTokenId(_potato_token) : `Token #${_potatoTokenId} has the potato`}
                 </h1>
                 {loadingHasPotato ? (
                   <h2 className="text-center font-bold mb-2">Loading Has Potato...</h2>
@@ -1382,7 +1322,7 @@ export default function Play() {
                                 // maxPerWalletToast();
                                 // } 
                                 // else {
-                                  mint?.();
+                                mint?.();
                                 // }
                               }}
                             >Join Round!</button>

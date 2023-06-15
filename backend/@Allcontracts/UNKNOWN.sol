@@ -144,7 +144,7 @@ contract UNKNOWN is
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
     event FailedPass(address indexed player);
     event SuccessfulPass(address indexed player);
-    event PlayerWon(address indexed player);
+    event PlayerWon(address indexed player, string message);
     event PotatoMinted(
         uint32 amount,
         address indexed player,
@@ -436,7 +436,7 @@ contract UNKNOWN is
         gameState = GameState.Minting;
         currentGeneration += 1;
         emit NewRound(currentGeneration);
-        emit GameStarted("The game has started");
+        emit GameStarted("Minting");
     }
 
     function endMinting() external onlyOwner {
@@ -456,7 +456,7 @@ contract UNKNOWN is
         }
         previousGameState = gameState;
         gameState = GameState.Paused;
-        emit GamePaused("The game has pasued");
+        emit GamePaused("Paused");
     }
 
     function resumeGame() external onlyOwner {
@@ -496,7 +496,7 @@ contract UNKNOWN is
         activeTokens.push(0);
         roundFunds[currentGeneration] = 0;
 
-        emit GameRestarted("The game has restarted");
+        emit GameRestarted("Queued");
     }
 
     function setInventoryManager(address addy) external onlyOwner {
@@ -692,7 +692,7 @@ contract UNKNOWN is
         gameState = GameState.Playing;
         updateExplosionTimer();
         emit UpdatedTimer(EXPLOSION_TIME - block.timestamp);
-        emit MintingEnded("Minting has ended");
+        emit MintingEnded("Playing");
         emit HandsActivated(activeTokens.length);
         emit PotatoPassed(0, potatoTokenId, ownerOf(potatoTokenId));
     }
@@ -815,7 +815,7 @@ contract UNKNOWN is
             assignPotato(_findNextActiveToken());
         } else if (activeAddresses == 1) {
             gameState = GameState.Ended;
-            emit PlayerWon(ownerOf(activeTokens[1]));
+            emit PlayerWon(ownerOf(activeTokens[1]), "Ended");
             winners.push(ownerOf(activeTokens[1]));
             hallOfFame[currentGeneration] = ownerOf(activeTokens[1]);
             totalWins[ownerOf(activeTokens[1])] += 1;

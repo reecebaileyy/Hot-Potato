@@ -40,6 +40,8 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
     eventName: 'PotatoExploded',
     async listener(log) {
       try {
+        await refetchPotatoTokenId();
+        console.log(`PotatoExploded ${log}`);
         if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
           if (tokenId_ === tokenId) {
@@ -128,7 +130,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
     return (
       <div>
         Error loading image.{' '}
-        <button onClick={() => refetchImageString({ args: [tokenId] })}>
+        <button className='p-10 rounded-lg bg-black text-white' onClick={() => refetchImageString({ args: [tokenId] })}>
           Try Refreshing
         </button>
       </div>

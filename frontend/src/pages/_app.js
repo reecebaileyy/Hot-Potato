@@ -3,17 +3,24 @@ import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
 import { Web3Modal } from '@web3modal/react'
 import { useState } from 'react'
 import { createWalletClient, createPublicClient, custom, webSocket } from 'viem'
-import { configureChains, createConfig, WagmiConfig } from 'wagmi'
+import { createConfig, WagmiConfig, createStorage } from 'wagmi'
 import {polygon, polygonMumbai } from 'wagmi/chains'
 
 export default function App({ Component, pageProps }) {
   const chains = [polygon, polygonMumbai]
   const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
   const transport = webSocket(process.env.NEXT_PUBLIC_ALCHEMY_URL);
+
+  const noCacheStorage = {
+    setItem: () => {},
+    getItem: () => null,
+    removeItem: () => {},
+    clear: () => {}
+  };
   
   const wagmiConfig = createConfig({
     autoConnect: true,
-    storage: null,
+    storage: createStorage({ storage: noCacheStorage }),
     connectors: w3mConnectors({
       appName:"Hot Potato",
       projectId,
