@@ -15,6 +15,7 @@ import TokenImage from '../../components/TokenImage'
 import ActiveTokensImages from '../../components/ActiveTokensImages'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
+import { get } from 'mongoose';
 
 export default function Play() {
 
@@ -53,7 +54,6 @@ export default function Play() {
 
   // STORING USERS ADDRESS
   const { address } = useAccount()
-  // const mounted = useIsMounted();
 
   /*
    ________ __     __ ________ __    __ ________      __    __  ______   ______  __    __  ______  
@@ -85,15 +85,15 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     eventName: 'GameStarted',
-    listener(log) {
-      refetchGameState();
-      refetchMaxSupply();
-      refetchGetRoundMints();
-      refetchGetActiveTokens();
-      refetchPrice();
-      refetchGetActiveTokenCount({ args: [address] });
-      refetchCurrentGeneration();
-      refetchRewards({ args: [address] });
+    async listener(log) {
+      await refetchGameState();
+      await refetchMaxSupply();
+      await refetchGetRoundMints();
+      await refetchGetActiveTokens();
+      await refetchPrice();
+      await refetchGetActiveTokenCount({ args: [address] });
+      await refetchCurrentGeneration();
+      await refetchRewards({ args: [address] });
       setRoundMints(0);
       const message = "Heating up";
       setGetGameState("Minting");
@@ -107,13 +107,11 @@ export default function Play() {
     abi: ABI,
     eventName: 'MintingEnded',
     async listener(log) {
-      refetchGameState();
-      refetchPotatoTokenId();
+      await refetchGameState();
+      await refetchPotatoTokenId();
       await refetchGetActiveTokens();
       await refetchGetExplosionTime();
       setRemainingTime(explosionTime);
-      console.log(`Explosion time set to ${remainingTime}`);
-      console.log("Refetches set");
       const message = "No more mints";
       setGetGameState("Playing");
       setEvents(prevEvents => [...prevEvents, message]);
@@ -126,12 +124,12 @@ export default function Play() {
     eventName: 'GameResumed',
     async listener(log) {
       const message = "Back to it";
-      refetchGameState();
-      refetchPotatoTokenId();
+      await refetchGameState();
+      await refetchPotatoTokenId();
       await refetchGetExplosionTime();
       setRemainingTime(explosionTime);
-      refetchRewards({ args: [address] });
-      refetchGetActiveTokens();
+      await refetchRewards({ args: [address] });
+      await refetchGetActiveTokens();
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
@@ -141,10 +139,10 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     eventName: 'GamePaused',
-    listener(log) {
-      refetchGameState();
-      refetchRewards({ args: [address] });
-      refetchGetActiveTokens();
+    async listener(log) {
+      await refetchGameState();
+      await refetchRewards({ args: [address] });
+      await refetchGetActiveTokens();
       const message = "Cooling off";
       setGetGameState("Paused");
       setEvents(prevEvents => [...prevEvents, message]);
@@ -156,12 +154,8 @@ export default function Play() {
     abi: ABI,
     eventName: 'GameRestarted',
     async listener(log) {
-      if (refetchGameState && refetchRewards) {
-        refetchGameState();
-        refetchRewards({ args: [address] });
-      } else {
-        console.log("Refetches not set");
-      }
+      await refetchGameState();
+      await refetchRewards({ args: [address] });
       const message = "Game Over";
       setGetGameState("Queued");
       setRoundMints(0);
@@ -174,13 +168,9 @@ export default function Play() {
     abi: ABI,
     eventName: 'FinalRoundStarted',
     async listener(log) {
-      if (refetchGameState && refetchPotatoTokenId && refetchRewards) {
-        refetchGameState();
-        refetchPotatoTokenId();
-        refetchRewards({ args: [address] });
-      } else {
-        console.log("Refetches not set");
-      }
+      await refetchGameState();
+      await refetchPotatoTokenId();
+      await refetchRewards({ args: [address] });
       const message = "HOT HANDZ";
       setGetGameState("Final Stage");
       setEvents(prevEvents => [...prevEvents, message]);
@@ -208,20 +198,14 @@ export default function Play() {
     async listener(log) {
       try {
         const player = log[0]?.args?.player?.toString();
-        if (refetchGameState && refetchHallOfFame && refetchWinner) {
-          refetchGameState();
-          refetchHallOfFame({ args: [_currentGeneration] });
-          refetchWinner();
-          refetchRewards({ args: [address] });
-        } else {
-          console.log("Error refetching data");
-        }
+        await refetchGameState();
+        await refetchHallOfFame({ args: [_currentGeneration] });
+        await refetchWinner();
+        await refetchRewards({ args: [address] });
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
-
         setGetGameState("Ended");
-
         if (player == address) {
-          refetchTotalWins({ args: [address] });
+          await refetchTotalWins({ args: [address] });
           toast.success("You won! 🎉 Don't forget to claim your rewards!");
         }
 
@@ -238,7 +222,7 @@ export default function Play() {
     async listener(log) {
       try {
         const player = log[0].args.player.toString();
-        refetchPotatoTokenId();
+        await refetchPotatoTokenId();
         setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
 
         if (address == player) {
@@ -283,22 +267,16 @@ export default function Play() {
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
-      console.log("PotatoMinted event emitted, log:", log);
       try {
-        if (refetchGetActiveTokenCount && refetchGetActiveTokenIds && address) {
-          await refetchGetActiveTokenCount({ args: [address] });
-          await refetchGetActiveTokenIds();
-          setShouldRefresh(!shouldRefresh);
-          const amount = parseInt(log[0].args.amount);
-          setRoundMints(prevRoundMints => prevRoundMints + amount);
-          await refetchGetRoundMints();
-          const player = log[0].args.player.toString();
-          const amountDisplay = String(log[0].args.amount); //Need this one
-          setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
-        } else {
-          console.log('One or more dependencies are undefined, not performing refetch');
-          console.log({ refetchGetActiveTokenCount, refetchGetActiveTokenIds, address });
-        }
+        await refetchGetActiveTokenCount?.({ args: [address] });
+        await refetchGetActiveTokenIds?.();
+        await refetchGetRoundMints?.();
+        setShouldRefresh(!shouldRefresh);
+        setRoundMints(totalMints);
+        const player = log[0].args.player.toString();
+        const amountDisplay = String(log[0].args.amount); //Need this one
+        setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
+
       } catch (error) {
         console.log(log);
         console.error('Error updating mints', error);
@@ -421,11 +399,7 @@ export default function Play() {
           const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
           const yielder = log[0]?.args?.yielder?.toString();
           setPotatoTokenId(tokenIdTo);
-          if (refetchUserHasPotatoToken) {
-            await refetchUserHasPotatoToken({ args: [address] });
-          } else {
-            console.log('refetchUserHasPotatoToken is undefined, not performing refetch');
-          }
+          await refetchUserHasPotatoToken({ args: [address] });
           setEvents(prevEvents => [...prevEvents, `Potato Passed from: ${tokenIdFrom} to: ${tokenIdTo} ${yielder} now has the potato`]);
         } else {
           console.error('tokenIdFrom or tokenIdTo is not a BigInt or is not found in log args', log);
@@ -459,8 +433,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'getGameState',
-    enabled: true,
-    cacheTime: 2_000,
   })
 
   // GET MINT PRICE
@@ -468,8 +440,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'getExplosionTime',
-    enabled: true,
-    cacheTime: 2_000,
   })
   const explosionTime = parseInt(getExplosionTime, 10);
 
@@ -479,8 +449,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: '_price',
-    enabled: true,
-    cacheTime: 2_000,
   })
   const price = parseInt(_price, 10) / 10 ** 18;
 
@@ -490,8 +458,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'addressActiveTokenCount',
     args: [address],
-    enabled: true,
-    cacheTime: 2_000,
   })
   const activeTokensCount = parseInt(getActiveTokenCount, 10);
 
@@ -500,8 +466,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: '_maxsupplyPerRound',
-    enabled: true,
-    cacheTime: 2_000,
   })
   const maxSupply = parseInt(_maxsupply, 10);
 
@@ -511,8 +475,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
-    enabled: true,
-    cacheTime: 2_000,
   })
   const hasPotatoToken = userHasPotatoToken?.toString();
 
@@ -521,8 +483,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'getPotatoOwner',
-    enabled: true,
-    cacheTime: 2_000,
   })
   const _potatoOwner = getPotatoOwner?.toString();
 
@@ -531,8 +491,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'potatoTokenId',
-    enabled: true,
-    cacheTime: 2_000,
   })
 
   const _potato_token = parseInt(potatoTokenId, 10)
@@ -542,8 +500,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'getActiveTokens',
-    enabled: true,
-    cacheTime: 2_000,
   })
   const _activeTokens = parseInt(getActiveTokens, 10);
 
@@ -552,8 +508,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'currentGeneration',
-    enabled: true,
-    cacheTime: 2_000,
   })
   const _currentGeneration = parseInt(currentGeneration, 10);
 
@@ -561,8 +515,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'roundMints',
-    enabled: true,
-    cacheTime: 2_000,
   })
   const totalMints = parseInt(getRoundMints, 10);
 
@@ -571,8 +523,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: '_owner',
-    enabled: true,
-    cacheTime: 2_000,
   })
   const _ownerAddress = _owner?.toString();
 
@@ -580,16 +530,12 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'getActiveTokenIds',
-    enabled: true,
-    cacheTime: 2_000,
   })
 
   const { data: allWinners, isLoading: loadingWinners, refetch: refetchWinner } = useContractRead({
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'getAllWinners',
-    enabled: true,
-    cacheTime: 2_000,
   })
   const isWinner = allWinners?.includes(address)
 
@@ -598,8 +544,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'rewards',
     args: [address],
-    enabled: true,
-    cacheTime: 2_000,
   })
   const _rewards = parseInt(rewards, 10);
 
@@ -608,8 +552,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'totalWins',
     args: [address],
-    enabled: true,
-    cacheTime: 2_000,
   })
   const totalWins = parseInt(_totalWins, 10);
 
@@ -618,8 +560,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
-    enabled: true,
-    cacheTime: 2_000,
   });
 
 
@@ -628,8 +568,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'successfulPasses',
     args: [address],
-    enabled: true,
-    cacheTime: 2_000,
   })
   const successfulPasses = parseInt(_successfulPasses, 10);
 
@@ -638,8 +576,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'hallOfFame',
     args: [_currentGeneration],
-    enabled: true,
-    cacheTime: 2_000,
   })
   const roundWinner = hallOfFame?.toString();
 
@@ -647,7 +583,6 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: '_maxperwallet',
-    cacheTime: 2_000,
   })
   const maxPerWallet = parseInt(_maxperwallet, 10);
 
@@ -656,16 +591,12 @@ export default function Play() {
     abi: ABI,
     functionName: '_isTokenActive',
     args: [tokenId],
-    enabled: true,
-    cacheTime: 2_000,
   })
 
   const { data: _activeAddresses, isLoading: loadingActiveAddresses, refetch: refetchActiveAddresses } = useContractRead({
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'activeAddresses',
-    enabled: true,
-    cacheTime: 2_000,
   })
   const activeAddresses = parseInt(_activeAddresses, 10);
 
@@ -675,8 +606,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'ownerOf',
     args: [tokenId],
-    enabled: true,
-    cacheTime: 2_000,
   })
 
   const { data: userBalance, isError, isLoading } = useBalance({
@@ -709,7 +638,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount.toString()],
-    value: totalCost,
+    // value: totalCost,
     enabled: true,
     onError(error) {
       console.log('Error', error)
@@ -1024,6 +953,17 @@ export default function Play() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (getGameState === "Minting") {
+        refetchGetRoundMints();
+      }
+    }, 3000);
+
+    // Cleanup function to clear the interval when component unmounts or re-renders
+    return () => clearInterval(interval);
+  }, []);
+
 
 
   //GAME STATE
@@ -1159,7 +1099,7 @@ export default function Play() {
         </h1>
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
-          <div className={`w-full flex flex-col justify-center items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+          <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto h-96 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {!address ?
               <>
                 <>
@@ -1429,19 +1369,21 @@ export default function Play() {
                               placeholder="Enter mint amount" />
                             <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                               onClick={() => {
-                                if (!address) {
-                                  noAddressToast();
-                                } else if (balance < totalCost) {
-                                  noEnoughFundsToast();
-                                } else if (mintAmount > (maxSupply - _roundMints)) {
-                                  gameFullToast();
-                                } else if (mintAmount === 0) {
-                                  mintOneToast();
-                                } else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
-                                  maxPerWalletToast();
-                                } else {
+                                // if (!address) {
+                                //   noAddressToast();
+                                // } else if (balance < totalCost) {
+                                //   noEnoughFundsToast();
+                                // } else if (mintAmount > (maxSupply - _roundMints)) {
+                                //   gameFullToast();
+                                // } else if (mintAmount === 0) {
+                                //   mintOneToast();
+                                // }
+                                // else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
+                                // maxPerWalletToast();
+                                // } 
+                                // else {
                                   mint?.();
-                                }
+                                // }
                               }}
                             >Join Round!</button>
                             <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{totalMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
@@ -1593,7 +1535,7 @@ export default function Play() {
                           >Claim Rewards</button>
                         }
                       </>
-              }
+            }
           </div>
           <div
             ref={divRef}
@@ -1616,7 +1558,7 @@ export default function Play() {
             </div>
           ) : (
             getGameState === 'Playing' || getGameState === 'Minting' || getGameState === 'Final Stage' || getGameState === 'Paused' ? (
-              <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md`}>
+              <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-xl`}>
                 <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Active Tokens:</h1>
                 <div className="flex justify-center">
                   <button
@@ -1726,7 +1668,7 @@ export default function Play() {
                 </button>
               </div>
             </div>
-         }
+          }
 
 
 

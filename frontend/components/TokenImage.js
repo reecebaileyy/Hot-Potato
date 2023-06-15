@@ -14,13 +14,9 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
     eventName: 'PotatoMinted',
     async listener(log) {
       try {
-    if (refetchImageString && refetchGetActiveTokens && refetchPotatoTokenId) {
         await refetchImageString({ args: [tokenId] });
         await refetchGetActiveTokens();
         await refetchPotatoTokenId();
-    } else {
-      console.error('refetchImageString, refetchGetActiveTokens, or refetchPotatoTokenId is not defined');
-    }
       } catch (error) {
         console.error('Error updating mints', error);
       }
@@ -82,7 +78,10 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
-    enabled: true
+    enabled: true,
+    onError(error) {
+      console.log('Error', error)
+    },
   });
 
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
@@ -91,7 +90,6 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
     functionName: 'getActiveTokens',
     enabled: true
   });
-  const _activeTokens = parseInt(getActiveTokens, 10);
 
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
@@ -115,16 +113,9 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
   }, []);
 
   useEffect(() => {
-    console.log('useEffect with dependencies running');
-    if (refetchPotatoTokenId && refetchGetActiveTokens && refetchImageString && tokenId) {
-      console.log('Dependencies are defined, performing refetch');
       refetchPotatoTokenId();
       refetchGetActiveTokens();
       refetchImageString({ args: [tokenId] });
-    } else {
-      console.log('One or more dependencies are undefined, not performing refetch');
-      console.log({ tokenId, refetchPotatoTokenId, refetchGetActiveTokens, refetchImageString });
-    }
   }, [tokenId, shouldRefresh, refetchImageString]);
 
 
@@ -134,7 +125,6 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
 
 
   if (isError) {
-    console.log('Error loading image', isError);
     return (
       <div>
         Error loading image.{' '}
