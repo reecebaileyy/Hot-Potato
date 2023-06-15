@@ -715,7 +715,6 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
-    cacheTime: 2_000,
   })
   const { data: mintData, write: mint } = useContractWrite(config)
 
@@ -731,7 +730,6 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
-    cacheTime: 2_000,
   })
   const { data: passData, isSuccess: Successful, write: pass, error: errorPassing } = useContractWrite(configPass)
 
@@ -748,7 +746,6 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
-    cacheTime: 2_000,
   })
   const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(withdrawWinnersFunds)
 
@@ -762,7 +759,6 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
-    cacheTime: 2_000,
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -784,11 +780,9 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'startGame',
-    enabled: getGameState == "Queued" ? true : false,
     onError(error) {
       console.log('Error', error)
     },
-    cacheTime: 2_000,
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
 
