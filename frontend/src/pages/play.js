@@ -890,9 +890,7 @@ export default function Play() {
   }, [roundWinner, refetchHallOfFame]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      await refetchUserHasPotatoToken({ args: [address] });
-    }
+    refetchUserHasPotatoToken({ args: [address] });
     fetchData();
     refetchGetActiveTokenCount({ args: [address] });
     refetchSuccessfulPasses({ args: [address] });
