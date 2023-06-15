@@ -34,6 +34,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
     async listener(log) {
       await refetchGetActiveTokens();
       await refetchPotatoTokenId();
+      refetchImageString({ args: [tokenId] });
     },
   });
 
