@@ -2,11 +2,10 @@ import Head from 'next/head'
 import Link from 'next/link'
 import Image from 'next/image'
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Web3Button } from '@web3modal/react'
 import ABI from '../abi/UNKNOWN.json'
 import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent, useEnsName } from 'wagmi'
-import potato from '../../public/assets/images/potato.png'
 import hot from '../../public/assets/images/hot.png'
 import potatoBlink from '../../public/assets/images/potatoBlink.gif'
 import Explosion from '../../public/assets/images/Explosion.gif'
@@ -16,6 +15,7 @@ import TokenImage from '../../components/TokenImage'
 import ActiveTokensImages from '../../components/ActiveTokensImages'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
+import { useIsMounted } from '../../components/useIsMounted'
 
 export default function Play() {
 
@@ -54,6 +54,8 @@ export default function Play() {
 
   // STORING USERS ADDRESS
   const { address } = useAccount()
+  const mounted = useIsMounted();
+
   /*
    ________ __     __ ________ __    __ ________      __    __  ______   ______  __    __  ______  
   |        \  \   |  \        \  \  |  \        \    |  \  |  \/      \ /      \|  \  /  \/      \ 
@@ -106,13 +108,13 @@ export default function Play() {
     abi: ABI,
     eventName: 'MintingEnded',
     async listener(log) {
-        refetchGameState();
-        refetchPotatoTokenId();
-        await refetchGetActiveTokens();
-        await refetchGetExplosionTime();
-        setRemainingTime(explosionTime);
-        console.log(`Explosion time set to ${remainingTime}`);
-        console.log("Refetches set");
+      refetchGameState();
+      refetchPotatoTokenId();
+      await refetchGetActiveTokens();
+      await refetchGetExplosionTime();
+      setRemainingTime(explosionTime);
+      console.log(`Explosion time set to ${remainingTime}`);
+      console.log("Refetches set");
       const message = "No more mints";
       setGetGameState("Playing");
       setEvents(prevEvents => [...prevEvents, message]);
@@ -459,6 +461,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getGameState',
     enabled: true,
+    cacheTime: 2_000,
   })
 
   // GET MINT PRICE
@@ -467,6 +470,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getExplosionTime',
     enabled: true,
+    cacheTime: 2_000,
   })
   const explosionTime = parseInt(getExplosionTime, 10);
 
@@ -477,6 +481,7 @@ export default function Play() {
     abi: ABI,
     functionName: '_price',
     enabled: true,
+    cacheTime: 2_000,
   })
   const price = parseInt(_price, 10) / 10 ** 18;
 
@@ -487,6 +492,7 @@ export default function Play() {
     functionName: 'addressActiveTokenCount',
     args: [address],
     enabled: true,
+    cacheTime: 2_000,
   })
   const activeTokensCount = parseInt(getActiveTokenCount, 10);
 
@@ -496,6 +502,7 @@ export default function Play() {
     abi: ABI,
     functionName: '_maxsupplyPerRound',
     enabled: true,
+    cacheTime: 2_000,
   })
   const maxSupply = parseInt(_maxsupply, 10);
 
@@ -506,6 +513,7 @@ export default function Play() {
     functionName: 'userHasPotatoToken',
     args: [address],
     enabled: true,
+    cacheTime: 2_000,
   })
   const hasPotatoToken = userHasPotatoToken?.toString();
 
@@ -515,6 +523,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getPotatoOwner',
     enabled: true,
+    cacheTime: 2_000,
   })
   const _potatoOwner = getPotatoOwner?.toString();
 
@@ -524,6 +533,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'potatoTokenId',
     enabled: true,
+    cacheTime: 2_000,
   })
 
   const _potato_token = parseInt(potatoTokenId, 10)
@@ -534,6 +544,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getActiveTokens',
     enabled: true,
+    cacheTime: 2_000,
   })
   const _activeTokens = parseInt(getActiveTokens, 10);
 
@@ -543,6 +554,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'currentGeneration',
     enabled: true,
+    cacheTime: 2_000,
   })
   const _currentGeneration = parseInt(currentGeneration, 10);
 
@@ -551,6 +563,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'roundMints',
     enabled: true,
+    cacheTime: 2_000,
   })
   const totalMints = parseInt(getRoundMints, 10);
 
@@ -560,6 +573,7 @@ export default function Play() {
     abi: ABI,
     functionName: '_owner',
     enabled: true,
+    cacheTime: 2_000,
   })
   const _ownerAddress = _owner?.toString();
 
@@ -568,6 +582,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getActiveTokenIds',
     enabled: true,
+    cacheTime: 2_000,
   })
 
   const { data: allWinners, isLoading: loadingWinners, refetch: refetchWinner } = useContractRead({
@@ -575,6 +590,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'getAllWinners',
     enabled: true,
+    cacheTime: 2_000,
   })
   const isWinner = allWinners?.includes(address)
 
@@ -584,6 +600,7 @@ export default function Play() {
     functionName: 'rewards',
     args: [address],
     enabled: true,
+    cacheTime: 2_000,
   })
   const _rewards = parseInt(rewards, 10);
 
@@ -593,6 +610,7 @@ export default function Play() {
     functionName: 'totalWins',
     args: [address],
     enabled: true,
+    cacheTime: 2_000,
   })
   const totalWins = parseInt(_totalWins, 10);
 
@@ -601,7 +619,8 @@ export default function Play() {
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
-    enabled: true
+    enabled: true,
+    cacheTime: 2_000,
   });
 
 
@@ -611,6 +630,7 @@ export default function Play() {
     functionName: 'successfulPasses',
     args: [address],
     enabled: true,
+    cacheTime: 2_000,
   })
   const successfulPasses = parseInt(_successfulPasses, 10);
 
@@ -620,6 +640,7 @@ export default function Play() {
     functionName: 'hallOfFame',
     args: [_currentGeneration],
     enabled: true,
+    cacheTime: 2_000,
   })
   const roundWinner = hallOfFame?.toString();
 
@@ -627,6 +648,7 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: '_maxperwallet',
+    cacheTime: 2_000,
   })
   const maxPerWallet = parseInt(_maxperwallet, 10);
 
@@ -636,6 +658,7 @@ export default function Play() {
     functionName: '_isTokenActive',
     args: [tokenId],
     enabled: true,
+    cacheTime: 2_000,
   })
 
   const { data: _activeAddresses, isLoading: loadingActiveAddresses, refetch: refetchActiveAddresses } = useContractRead({
@@ -643,6 +666,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'activeAddresses',
     enabled: true,
+    cacheTime: 2_000,
   })
   const activeAddresses = parseInt(_activeAddresses, 10);
 
@@ -653,6 +677,7 @@ export default function Play() {
     functionName: 'ownerOf',
     args: [tokenId],
     enabled: true,
+    cacheTime: 2_000,
   })
 
   const { data: userBalance, isError, isLoading } = useBalance({
@@ -690,6 +715,7 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
+    cacheTime: 2_000,
   })
   const { data: mintData, write: mint } = useContractWrite(config)
 
@@ -705,6 +731,7 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
+    cacheTime: 2_000,
   })
   const { data: passData, isSuccess: Successful, write: pass, error: errorPassing } = useContractWrite(configPass)
 
@@ -721,6 +748,7 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
+    cacheTime: 2_000,
   })
   const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(withdrawWinnersFunds)
 
@@ -734,7 +762,7 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
-
+    cacheTime: 2_000,
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -756,10 +784,11 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'startGame',
-    enabled: true,
+    enabled: getGameState == "Queued" ? true : false,
     onError(error) {
       console.log('Error', error)
     },
+    cacheTime: 2_000,
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
 
@@ -772,6 +801,7 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
+    cacheTime: 2_000,
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
 
@@ -780,10 +810,11 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'pauseGame',
-    enabled: true,
+    enabled: getGameState == "Minting" ? true : getGameState == "Final Stage" ? true : getGameState == "Playing" ? true : false,
     onError(error) {
       console.log('Error', error)
     },
+    cacheTime: 2_000,
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
 
@@ -792,10 +823,11 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'resumeGame',
-    enabled: true,
+    enabled: getGameState == "Paused" ? true : false,
     onError(error) {
       console.log('Error', error)
     },
+    cacheTime: 2_000,
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
 
@@ -804,10 +836,11 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'restartGame',
-    enabled: true,
+    enabled: getGameState == "Ended" ? true : getGameState == "Paused" ? true : false,
     onError(error) {
       console.log('Error', error)
     },
+    cacheTime: 2_000,
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
@@ -955,36 +988,6 @@ export default function Play() {
    \▓▓   \▓▓\▓▓▓▓▓▓▓▓\▓▓      \▓▓   \▓▓\▓▓▓▓▓▓▓▓ \▓▓▓▓▓▓ \▓▓   \▓▓
                                                                  
   */
-  // EVENT LISTENERS
-
-  // DARK MODE
-  useEffect(() => {
-    const localDarkMode = window.localStorage.getItem('darkMode');
-    if (localDarkMode) {
-      setDarkMode(JSON.parse(localDarkMode));
-    }
-
-    const intervalId = setInterval(() => {
-      const divElement = divRef.current;
-      divElement.scrollLeft = divElement.scrollWidth;
-      console.log("An UNKNOWNXBEDTIME PRODUCTION");
-    }, 10000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [events]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (darkMode) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      window.localStorage.setItem('darkMode', darkMode);
-    }
-  }, [darkMode]);
 
   //On Mount
   useEffect(() => {
@@ -1014,20 +1017,6 @@ export default function Play() {
       setRoundMints(roundMints);
     }
   }, []);
-
-  useEffect(() => {
-
-    const intervalId = setInterval(() => {
-      if (getGameState == "Minting") {
-        refetchGetRoundMints();
-        console.log(`Total Round Mints: ${totalMints}`);
-      }
-    }, 3500);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [getGameState]);
 
 
   useEffect(() => {
@@ -1076,7 +1065,6 @@ export default function Play() {
         setPotatoTokenId(localPotatoTokenId);
       }
     }
-
   }, [_potatoTokenId, potatoTokenId]);
 
   useEffect(() => {
@@ -1194,12 +1182,12 @@ export default function Play() {
         </nav>
 
         <h1 className={`${darkMode ? 'text-4xl justify-center items-center md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center' : "text-4xl justify-center items-center md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center"}`}>
-          Round {_currentGeneration == 0 ? "1" : _currentGeneration}
+          Round {mounted ? _currentGeneration == 0 ? "1" : _currentGeneration : null}
         </h1>
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
           <div className={`w-full flex flex-col justify-center items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
-            {!address ?
+            {mounted ? !address ?
               <>
                 <>
                   <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Connect First</h1>
@@ -1314,12 +1302,12 @@ export default function Play() {
                             }}
                           >Claim Rewards</button>
                         }
-                      </>
+                      </> : null
             }
           </div>
 
           <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
-            {getGameState == "Playing" || getGameState == "Final Stage" ?
+            {mounted ? getGameState == "Playing" || getGameState == "Final Stage" ?
               <>
                 <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>
                   {loadingPotatoTokenId ? "Loading..." : `Token #${_potato_token} has the potato`}
@@ -1498,12 +1486,12 @@ export default function Play() {
                         </Link>
                       </>
 
-                    )}
+                    ) : null}
             {/* Content when address does not exist */}
           </div>
 
           <div className={`w-full flex flex-col justify-center items-center p-4 mb-8 col-end-9 col-span-2  md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-xl`}>
-            {!address ?
+            {mounted ? !address ?
               <>
                 <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Connect First</h1>
                 <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>You must connect your wallet to view this page! Hope you join the fun soon...</h3>
@@ -1632,7 +1620,7 @@ export default function Play() {
                           >Claim Rewards</button>
                         }
                       </>
-            }
+              : null}
           </div>
           <div
             ref={divRef}
@@ -1649,7 +1637,7 @@ export default function Play() {
           </div>
 
 
-          {getGameState !== 'Minting' && getGameState !== 'Queued' && loadingActiveTokenIds ? (
+          {mounted ? getGameState !== 'Minting' && getGameState !== 'Queued' && loadingActiveTokenIds ? (
             <div className="text-center">
               <h1>Loading...</h1>
             </div>
@@ -1681,11 +1669,9 @@ export default function Play() {
                 </div>
               </div>
             ) : null
-          )}
+          ) : null}
 
-
-
-          {address === _ownerAddress &&
+          {mounted ? address === _ownerAddress &&
             <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-xl overflow-x-auto`}>
               <div className="p-4 grid grid-cols-1 md:grid-cols-3 sm:grid-cols-3 gap-4">
                 <button
@@ -1767,7 +1753,7 @@ export default function Play() {
                 </button>
               </div>
             </div>
-          }
+          : null}
 
 
 

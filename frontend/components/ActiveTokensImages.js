@@ -24,7 +24,7 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
     return <div>Loading...</div>;
   }
 
-  if (isError || !activeTokens) {
+  if (!activeTokens) {
     console.log('Error loading active tokens', isError);
     return (
       <div className='flex flex-col'>
