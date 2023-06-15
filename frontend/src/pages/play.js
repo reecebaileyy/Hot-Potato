@@ -891,7 +891,6 @@ export default function Play() {
 
   useEffect(() => {
     refetchUserHasPotatoToken({ args: [address] });
-    fetchData();
     refetchGetActiveTokenCount({ args: [address] });
     refetchSuccessfulPasses({ args: [address] });
     refetchTotalWins({ args: [address] });
