@@ -14,6 +14,7 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef();
+  const [isLoading, setIsLoading] = useState(true);
   const [sortKey, setSortKey] = useState('successfulPasses');
   const [sortAsc, setSortAsc] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,6 +23,7 @@ export default function Home() {
   const itemsPerPage = 20;
 
   useEffect(() => {
+    setIsLoading(true);
     fetch('/api/get-leaderboard')
       .then(response => {
         if (!response.ok) {
@@ -43,12 +45,14 @@ export default function Home() {
         });
         console.log('Sorted data:', sortedData);
         setLeaderboardData(sortedData);
+        setIsLoading(false);
       })
       .catch(error => {
         console.error('Error fetching leaderboard:', error);
+        setIsLoading(false);
       });
   }, [sortKey, sortAsc]);
-  
+
 
   const sortedLeaderboardData = [...leaderboardData].sort((a, b) => {
     if (a[sortKey] < b[sortKey]) return sortAsc ? -1 : 1;
@@ -153,28 +157,32 @@ export default function Home() {
               <button onClick={() => { setSortAsc(!sortAsc); console.log('Toggling sort direction...') }} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>Sort {sortAsc ? 'Descending' : 'Ascending'}</button>
             </div>
             <div className='overflow-auto'>
-              <table className="table-auto w-full min-w-full">
-                <thead>
-                  <tr>
-                    <th className={`px-4 py-2 sm:px-0 md:px-0 text-center sm:text-center md:text-center sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Rank</th>
-                    <th className={`px-4 py-2 sm:px-0 md:px-0 text-center sm:text-center md:text-center sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Player Address</th>
-                    <th className={`px-4 py-2 sm:px-0 md:px-0 text-center sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Passes</th>
-                    <th className={`px-4 py-2 sm:px-0 md:px-0 text-center sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Wins</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedData
-                    .filter((player) => searchAddress ? player.address.includes(searchAddress) : true)
-                    .map((player, index) => (
-                      <tr key={index} className={index % 2 === 0 ? (darkMode ? 'bg-gray-700' : 'bg-gray-200') : ''}>
-                        <td className={`px-4 py-2 sm:px-0 border sm:text-xs text-center ${darkMode ? 'text-white' : 'text-black'}`}>{index + 1}</td>
-                        <td className={`px-4 py-2 sm:px-0 border sm:text-xs text-center ${darkMode ? 'text-white' : 'text-black'}`}>{player.address}</td>
-                        <td className={`px-4 py-2 sm:px-0 border sm:text-xs text-center ${darkMode ? 'text-white' : 'text-black'}`}>{player.passes}</td>
-                        <td className={`px-4 py-2 sm:px-0 border sm:text-xs text-center ${darkMode ? 'text-white' : 'text-black'}`}>{player.wins}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+              {isLoading ? ( // Conditional rendering based on isLoading state
+                <p>Loading...</p> // Display "Loading..." when isLoading is true
+              ) : (
+                <table className="table-auto w-full min-w-full">
+                  <thead>
+                    <tr>
+                      <th className={`px-4 py-2 sm:px-0 md:px-0 text-center sm:text-center md:text-center sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Rank</th>
+                      <th className={`px-4 py-2 sm:px-0 md:px-0 text-center sm:text-center md:text-center sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Player Address</th>
+                      <th className={`px-4 py-2 sm:px-0 md:px-0 text-center sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Passes</th>
+                      <th className={`px-4 py-2 sm:px-0 md:px-0 text-center sm:text-xs md:text-xs ${darkMode ? 'text-white' : 'text-black'}`}>Wins</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedData
+                      .filter((player) => searchAddress ? player.address.includes(searchAddress) : true)
+                      .map((player, index) => (
+                        <tr key={index} className={index % 2 === 0 ? (darkMode ? 'bg-gray-700' : 'bg-gray-200') : ''}>
+                          <td className={`px-4 py-2 sm:px-0 border sm:text-xs text-center ${darkMode ? 'text-white' : 'text-black'}`}>{index + 1}</td>
+                          <td className={`px-4 py-2 sm:px-0 border sm:text-xs text-center ${darkMode ? 'text-white' : 'text-black'}`}>{player.address}</td>
+                          <td className={`px-4 py-2 sm:px-0 border sm:text-xs text-center ${darkMode ? 'text-white' : 'text-black'}`}>{player.passes}</td>
+                          <td className={`px-4 py-2 sm:px-0 border sm:text-xs text-center ${darkMode ? 'text-white' : 'text-black'}`}>{player.wins}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              )}
             </div>
             <div className="mt-4 p-2 flex justify-between">
               {currentPage > 1 && <button onClick={() => setCurrentPage(old => Math.max(old - 1, 1))} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>Previous</button>}
