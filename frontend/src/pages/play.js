@@ -383,6 +383,7 @@ export default function Play() {
         setPotatoTokenId(tokenIdTo);
         console.log(`userHasPotatoToken: ${userHasPotatoToken}`);
         setEvents(prevEvents => [...prevEvents, `Potato Passed to #${tokenIdTo}`]);
+        setShouldRefresh(!shouldRefresh);
       } catch (error) {
         console.log(error)
       }
@@ -612,12 +613,11 @@ export default function Play() {
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount.toString()],
-    // value: totalCost,
+    value: totalCost,
     enabled: getGameState === "Minting",
     onError(error) {
       console.log('Error', error)
     },
-    staleTime: Infinity,
   })
   const { data: mintData, write: mint } = useContractWrite(config)
 
@@ -632,7 +632,6 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
-    staleTime: Infinity,
   });
   const { data: passData, isSuccess: Successful, write: pass, error: errorPassing } = useContractWrite(configPass)
 
@@ -649,7 +648,6 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
-    staleTime: Infinity,
   })
   const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(withdrawWinnersFunds)
 
@@ -660,7 +658,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'checkExplosion',
     enabled: getGameState === "Playing" || getGameState === "Final Stage",
-    staleTime: Infinity,
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -686,7 +683,6 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
-    staleTime: Infinity,
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
 
@@ -696,7 +692,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'endMinting',
     enabled: getGameState === "Minting" && address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F',
-    staleTime: Infinity,
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
 
@@ -706,7 +701,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'pauseGame',
     enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Minting" || getGameState === "Playing" || getGameState === "Final Stage"),
-    staleTime: Infinity,
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
 
@@ -716,7 +710,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'resumeGame',
     enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && getGameState === "Paused",
-    staleTime: Infinity,
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
 
@@ -726,7 +719,6 @@ export default function Play() {
     abi: ABI,
     functionName: 'restartGame',
     enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Paused" || getGameState === "Ended"),
-    staleTime: Infinity,
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
@@ -1150,20 +1142,20 @@ export default function Play() {
                         <h1 className={`text-3xl text-center font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Welcome to the Backburner!</h1>
                         <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
                         <ActiveTokensImages ownerAddress={address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
-                        {isWinner && _rewards != 0 &&
+                        {/* {isWinner && _rewards != 0 && */}
                           <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
                             onClick={() => {
-                              if (!address) {
-                                noAddressToast();
-                              } else if (_rewards == 0) {
-                                noRewardsToast();
-                              } else {
+                              // if (!address) {
+                              //   noAddressToast();
+                              // } else if (_rewards == 0) {
+                              //   noRewardsToast();
+                              // } else {
                                 claimRewards?.();
-                                refetchRewards({ args: [address] });
-                              }
+                              //   refetchRewards({ args: [address] });
+                              // }
                             }}
                           >Claim Rewards</button>
-                        }
+                        {/* } */}
                       </>
                       : getGameState == "Ended" &&
                       <>
@@ -1337,21 +1329,21 @@ export default function Play() {
                               placeholder="Enter mint amount" />
                             <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                               onClick={() => {
-                                // if (!address) {
-                                //   noAddressToast();
-                                // } else if (balance < totalCost) {
-                                //   noEnoughFundsToast();
-                                // } else if (mintAmount > (maxSupply - _roundMints)) {
-                                //   gameFullToast();
-                                // } else if (mintAmount === 0) {
-                                //   mintOneToast();
-                                // }
-                                // else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
-                                // maxPerWalletToast();
-                                // } 
-                                // else {
+                                if (!address) {
+                                  noAddressToast();
+                                } else if (balance < totalCost) {
+                                  noEnoughFundsToast();
+                                } else if (mintAmount > (maxSupply - _roundMints)) {
+                                  gameFullToast();
+                                } else if (mintAmount === 0) {
+                                  mintOneToast();
+                                }
+                                else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
+                                maxPerWalletToast();
+                                } 
+                                else {
                                 mint?.();
-                                // }
+                                }
                               }}
                             >Join Round!</button>
                             <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{totalMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
