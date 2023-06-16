@@ -6,7 +6,7 @@ const OptimizedImage = (props) => (
   <Image {...props} unoptimized={true} />
 );
 
-const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }) => {
+const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, delay }) => {
   
   useContractEvent({
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
@@ -102,25 +102,17 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }
   const _potatoTokenId = parseInt(potatoTokenId, 10);
 
   useEffect(() => {
-    refetchPotatoTokenId();
-    refetchGetActiveTokens();
-    refetchImageString({ args: [tokenId] });
-  }, [tokenId, shouldRefresh, refetchImageString]);
-
-  useEffect(() => {
-    refetchPotatoTokenId();
-    refetchGetActiveTokens();
-    console.log('refetching image string');
-    refetchImageString({ args: [tokenId] });
-  }, []);
-
-  useEffect(() => {
+    const timer = setTimeout(() => {
       refetchPotatoTokenId();
       refetchGetActiveTokens();
       refetchImageString({ args: [tokenId] });
-  }, [tokenId, shouldRefresh, refetchImageString]);
+    }, delay);
+    
+    // Cleanup function
+    return () => clearTimeout(timer);
+  }, [tokenId, shouldRefresh, refetchImageString, delay]);
 
-
+  
   if (isLoading) {
     return <div>Loading...</div>;
   }

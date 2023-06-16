@@ -47,6 +47,8 @@ export default function Play() {
   const [remainingTime, setRemainingTime] = useState(null);
   const [_getGameState, setGetGameState] = useState("Loading...");
   const [_roundMints, setRoundMints] = useState(0);
+  const [passArgs, setPassArgs] = useState(null);
+  const [mintArgs, setMintArgs] = useState(null);
   const menuRef = useRef()
   const divRef = useRef(null);
 
@@ -308,7 +310,7 @@ export default function Play() {
     listener(log) {
       const time = log[0].args.time.toString();
       setRemainingTime(time);
-      setEvents(prevEvents => [...prevEvents, `+${time}`]);
+      setEvents(prevEvents => [...prevEvents, `${time} seconds till explosion`]);
     },
   });
 
@@ -332,10 +334,13 @@ export default function Play() {
       try {
         setExplosion(true);
         setTimeout(() => setExplosion(false), 3050);
-        await refetchGetActiveTokenCount({ args: [address] });
+        if (address === log[0].args.player.toString()) {
+          await refetchGetActiveTokenCount({ args: [address] });
+          console.log(`player to be exploded: ${log[0].args.player}`)
+        }
         await refetchActiveAddresses();
         console.log("REFETCHED ALL DATA");
-        const tokenId_ = log[0].args.tokenId.toString();
+        const tokenId_ = log[0].args.tokenId;
         setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
       } catch (error) {
         console.log(error)
@@ -361,7 +366,7 @@ export default function Play() {
     eventName: 'PotatoPassed',
     async listener(log) {
       try {
-        await refetchUserHasPotatoToken({args: [address]});
+        await refetchUserHasPotatoToken({ args: [address] });
         const tokenIdTo = log[0]?.args?.tokenIdTo?.toString();
         setPotatoTokenId(tokenIdTo);
         console.log(`userHasPotatoToken: ${userHasPotatoToken}`);
@@ -395,6 +400,7 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'getGameState',
+    enabled: true,
   })
 
   // GET MINT PRICE
@@ -604,17 +610,16 @@ export default function Play() {
 
 
 
-  // PASS POTATO
   const { config: configPass } = usePrepareContractWrite({
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'passPotato',
-    args: [tokenId],
+    args: passArgs,
     enabled: getGameState === "Playing" || getGameState === "Final Stage",
     onError(error) {
       console.log('Error', error)
     },
-  })
+  });
   const { data: passData, isSuccess: Successful, write: pass, error: errorPassing } = useContractWrite(configPass)
 
   // CLAIM REWARDS
@@ -639,7 +644,7 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'checkExplosion',
-    enabled: true,
+    enabled: getGameState === "Playing" || getGameState === "Final Stage",
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -661,7 +666,7 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'startGame',
-    enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F',
+    enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && getGameState === "Queued",
     onError(error) {
       console.log('Error', error)
     },
@@ -673,6 +678,7 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'endMinting',
+    enabled: getGameState === "Minting" && address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F',
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
 
@@ -681,6 +687,7 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'pauseGame',
+    enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Minting" || getGameState === "Playing" || getGameState === "Final Stage"),
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
 
@@ -697,6 +704,7 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'restartGame',
+    enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Paused")
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
@@ -1032,11 +1040,11 @@ export default function Play() {
         </nav>
 
         <h1 className={`${darkMode ? 'text-4xl justify-center items-center md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center' : "text-4xl justify-center items-center md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center"}`}>
-          Round {_currentGeneration == 0 ? "1" : _currentGeneration}
+          {!_currentGeneration ? "Loading" : { _currentGeneration } == 0 ? _currentGeneration == 0 ? "Round 1" : _currentGeneration == 1 : `Round ${_currentGeneration}`}
         </h1>
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
-          <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto h-96 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+          <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar h-96 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {!address ?
               <>
                 <>
@@ -1061,7 +1069,7 @@ export default function Play() {
               </> :
               getGameState == "Playing" || getGameState == "Final Stage" ?
                 <>
-                {isWinner && _rewards != 0 &&
+                  {isWinner && _rewards != 0 &&
                     <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
                       onClick={() => {
                         if (!address) {
@@ -1077,7 +1085,7 @@ export default function Play() {
                   }
                   <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
                   <ActiveTokensImages ownerAddress={address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
-                  
+
                 </>
                 : getGameState == "Queued" ?
                   <>
@@ -1158,10 +1166,11 @@ export default function Play() {
           </div>
 
           <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+            {!getGameState ? <h1 className="text-4xl font-extrabold underline text-center mb-4">Loading...</h1> : null}
             {getGameState == "Playing" || getGameState == "Final Stage" ?
               <>
                 <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>
-                  {_potatoTokenId == NaN ? setPotatoTokenId(_potato_token) : `Token #${_potatoTokenId} has the potato`}
+                  {!_potatoTokenId ? `Loading...` && setPotatoTokenId(_potato_token) : `Token #${_potatoTokenId} has the potato`}
                 </h1>
                 {loadingHasPotato ? (
                   <h2 className="text-center font-bold mb-2">Loading Has Potato...</h2>
@@ -1174,8 +1183,7 @@ export default function Play() {
                   <Image className='rounded-full' alt='Explosion' src={Explosion} width={200} height={200} /> :
                   <Image alt='Image' src={potatoBlink} width={200} height={200} />
                 }
-                {loadingExplosionTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {remainingTime}</p>}
-                <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                {loadingExplosionTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {remainingTime}</p>}                <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                   onClick={() => {
                     refetchGetExplosionTime();
                     if (!address) {
@@ -1388,6 +1396,7 @@ export default function Play() {
                         } else if (address == ownerOf) {
                           cannotPassToSelfToast();
                         } else {
+                          setPassArgs([tokenId]); // Set the args when the button is pressed
                           console.log("passing")
                           console.log("passing from", address)
                           console.log("Potato Owner is ", getPotatoOwner)
@@ -1516,6 +1525,7 @@ export default function Play() {
                         potatoTokenId={_potatoTokenId}
                         shouldRefresh={shouldRefresh}
                         onTokenExploded={handleTokenExploded}
+                        delay={index * 1000}
                       />
                     </div>
                   ))}
