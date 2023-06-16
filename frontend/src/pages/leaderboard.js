@@ -158,7 +158,7 @@ export default function Home() {
             </div>
             <div className='overflow-auto'>
               {isLoading ? ( // Conditional rendering based on isLoading state
-                <p>Loading...</p> // Display "Loading..." when isLoading is true
+                <p className='text-2xl text-center'>Loading Please Wait...</p> // Display "Loading..." when isLoading is true
               ) : (
                 <table className="table-auto w-full min-w-full">
                   <thead>
