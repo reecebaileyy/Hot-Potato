@@ -594,7 +594,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount.toString()],
-    value: totalCost,
+    // value: totalCost,
     enabled: getGameState === "Minting",
     onError(error) {
       console.log('Error', error)
@@ -661,6 +661,7 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'startGame',
+    enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F',
     onError(error) {
       console.log('Error', error)
     },

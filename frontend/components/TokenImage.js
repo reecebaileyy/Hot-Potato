@@ -7,7 +7,7 @@ const OptimizedImage = (props) => (
 );
 
 const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded }) => {
-
+  
   useContractEvent({
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
