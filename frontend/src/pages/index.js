@@ -9,6 +9,7 @@ import landscape from '../../public/assets/images/landscape.jpg'
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/Logo.png'
 import potatoFire from '../../public/assets/images/Burning.gif'
+import CHAINLINK from '../../public/assets/images/CHAINLINK.png'
 import localforage from 'localforage';
 
 export default function Home() {
@@ -236,7 +237,15 @@ export default function Home() {
                 </p>
               </div>
             </div>
+            
           </footer>
+          <Image
+              alt="Add alt Here"
+              src={CHAINLINK}
+              width={300}
+              height={300}
+              className="justify-items-center"
+            />
         </div>
       </div>
     </>
