@@ -1155,7 +1155,7 @@ export default function Play() {
                               }
                             }}
                           >Claim Rewards</button>
-                          }
+                        }
                       </>
                       : getGameState == "Ended" &&
                       <>
@@ -1261,9 +1261,13 @@ export default function Play() {
                     ) : (
                       <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Active Tokens Remaing</p>)
                     }
-                    <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className='underline'>
-                      Smart Contract
-                    </Link>
+                    <div className='grid grid-cols-3 justify-center gap-4'>
+                      <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
+                        Discord
+                      </Link>
+                      <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                      <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/0xHotPotato_">Twitter</Link>
+                    </div>
                   </>
                 ) :
                   getGameState == "Ended" ? (
@@ -1318,6 +1322,7 @@ export default function Play() {
                         )}
 
 
+
                         {address ?
                           <>
                             <input className="mt-4 w-3/4 bg-white hover:bg-gray-300 text-black px-4 py-2 rounded-lg shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
@@ -1356,9 +1361,13 @@ export default function Play() {
                             </p1>
                           </>
                         }
-                        <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className='underline'>
-                          Smart Contract
-                        </Link>
+                        <div className='grid grid-cols-3 justify-center gap-4'>
+                          <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
+                            Discord
+                          </Link>
+                          <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                          <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/0xHotPotato_">Twitter</Link>
+                        </div>
                       </>
 
                     )}
