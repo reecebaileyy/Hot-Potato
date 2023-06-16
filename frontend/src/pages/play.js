@@ -1247,7 +1247,7 @@ export default function Play() {
                       Discord
                     </Link>
                     <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
-                    <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/0xHotPotato_">Twitter</Link>
+                    <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
                   </div>
                 </>
               ) :
@@ -1266,7 +1266,7 @@ export default function Play() {
                         Discord
                       </Link>
                       <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
-                      <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/0xHotPotato_">Twitter</Link>
+                      <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
                     </div>
                   </>
                 ) :
@@ -1366,7 +1366,7 @@ export default function Play() {
                             Discord
                           </Link>
                           <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
-                          <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/0xHotPotato_">Twitter</Link>
+                          <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
                         </div>
                       </>
 
@@ -1461,7 +1461,7 @@ export default function Play() {
                         <button
                           className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
                           onClick={() => {
-                            const tweetText = `I have ${activeTokensCount} ${activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!!\nAre you ready to pass the heat? Check out @0xHotPotato_ for more information on the project! #OnChainHotPotato`;
+                            const tweetText = `I have ${activeTokensCount} ${activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!!\nAre you ready to pass the heat? Check out @ocHotPotato for more information on the project! #OnChainHotPotato`;
                             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
                           }}
                         >
