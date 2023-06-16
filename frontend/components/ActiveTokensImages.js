@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useContractRead, useContractEvent } from 'wagmi';
 import TokenImage from './TokenImage';
 
-const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
+const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, onTokenExploded, tokenId }) => {
 
   useContractEvent({
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
@@ -16,6 +16,37 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
         console.error('Error updating mints', error);
       }
     },
+  });
+
+  useContractEvent({
+    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    abi: ABI,
+    eventName: 'PotatoExploded',
+    async listener(log) {
+      try {
+        await refetchPotatoTokenId();
+        console.log(`PotatoExploded ${log}`);
+        if (typeof log[0]?.args?.tokenId === 'bigint') {
+          const tokenId_ = log[0].args.tokenId.toString();
+          if (tokenId_ === tokenId) {
+            onTokenExploded(tokenId);
+          }
+          await refetchGetActiveTokens();
+        } else {
+          console.error('TokenId is not a BigInt or is not found in log args', log);
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
+  });
+
+  
+  const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
+    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    abi: ABI,
+    functionName: 'getActiveTokens',
+    enabled: true
   });
 
   const { data: activeTokens, isLoading, refetch: refetchActiveTokens, isError } = useContractRead({

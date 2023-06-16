@@ -5,7 +5,6 @@ export default async function handler(req, res) {
     const { address } = req.body;
 
     try {
-        console.log("address: ", address)
         const existingPlayer = await prisma.leaderboard.findUnique({
             where: { address: address },
         });

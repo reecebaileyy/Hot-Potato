@@ -15,7 +15,7 @@ model GameState {
 
 model leaderboard {
   id      String @id @default(auto()) @map("_id") @db.ObjectId
-  address String
+  address String @unique
   fails   Int
   passes  Int
   wins    Int

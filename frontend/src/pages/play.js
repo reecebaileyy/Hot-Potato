@@ -183,16 +183,26 @@ export default function Play() {
     eventName: 'PlayerWon',
     async listener(log) {
       try {
-        const player = log[0]?.args?.player?.toString();
+        const player = log[0]?.args?.player;
         await refetchGameState();
         await refetchHallOfFame({ args: [_currentGeneration] });
-        setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
+        setEvents(prevEvents => [...prevEvents, `+1 win: ${player}`]);
         if (player == address) {
           toast.success("You won! 🎉 Don't forget to claim your rewards!");
           await refetchWinner();
           await refetchRewards({ args: [address] });
           await refetchTotalWins({ args: [address] });
         }
+
+        await fetch('/api/update-wins', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address: player }),
+        });
+
+
       } catch (error) {
         console.error('Error updating wins', error);
       }
@@ -205,8 +215,10 @@ export default function Play() {
     eventName: 'SuccessfulPass',
     async listener(log) {
       try {
-        const player = log[0].args.player.toString();
-        setEvents(prevEvents => [...prevEvents, `+1: ${player}`]);
+        console.log('SuccessfulPass', log);
+        const player = log[0]?.args?.player;
+        console.log('player', player);
+        setEvents(prevEvents => [...prevEvents, `+1 pass: ${player}`]);
         if (address == player) {
           await refetchSuccessfulPasses({ args: [address] });
           setPassPromise(true);
@@ -224,7 +236,7 @@ export default function Play() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ address: address }),
+          body: JSON.stringify({ address: player }),
         });
 
       } catch (error) {
@@ -605,6 +617,7 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
+    staleTime: Infinity,
   })
   const { data: mintData, write: mint } = useContractWrite(config)
 
@@ -619,6 +632,7 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
+    staleTime: Infinity,
   });
   const { data: passData, isSuccess: Successful, write: pass, error: errorPassing } = useContractWrite(configPass)
 
@@ -635,6 +649,7 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
+    staleTime: Infinity,
   })
   const { data: claimRewardsData, isSuccess: claimRewardsSuccessful, write: claimRewards } = useContractWrite(withdrawWinnersFunds)
 
@@ -645,6 +660,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'checkExplosion',
     enabled: getGameState === "Playing" || getGameState === "Final Stage",
+    staleTime: Infinity,
   })
   const { data: checkData, isSuccess: CheckSuccessful, write: check } = useContractWrite(configCheck)
 
@@ -670,6 +686,7 @@ export default function Play() {
     onError(error) {
       console.log('Error', error)
     },
+    staleTime: Infinity,
   })
   const { data: startGameData, isSuccess: started, write: _startGame } = useContractWrite(startGame)
 
@@ -679,6 +696,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'endMinting',
     enabled: getGameState === "Minting" && address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F',
+    staleTime: Infinity,
   })
   const { data: endMintingData, isSuccess: ended, write: _endMint } = useContractWrite(endMinting)
 
@@ -688,6 +706,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'pauseGame',
     enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Minting" || getGameState === "Playing" || getGameState === "Final Stage"),
+    staleTime: Infinity,
   })
   const { data: pauseGameData, isSuccess: pasued, write: _pauseGame } = useContractWrite(pauseGame)
 
@@ -696,6 +715,8 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'resumeGame',
+    enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && getGameState === "Paused",
+    staleTime: Infinity,
   })
   const { data: resumeGameData, isSuccess: resumed, write: _resumeGame } = useContractWrite(resumeGame)
 
@@ -704,7 +725,8 @@ export default function Play() {
     address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
     abi: ABI,
     functionName: 'restartGame',
-    enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Paused")
+    enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Paused" || getGameState === "Ended"),
+    staleTime: Infinity,
   })
   const { data: restartGameData, isSuccess: restarted, write: _restartGame } = useContractWrite(restartGame)
 
