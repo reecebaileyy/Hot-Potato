@@ -25,6 +25,7 @@ export default async function handler(req, res) {
                 data: {
                     address: address,
                     passes: 1,
+                    fails: 0,
                     wins: 0,  // initial value, adjust as needed
                 },
             });
