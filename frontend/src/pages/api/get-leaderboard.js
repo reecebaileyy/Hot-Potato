@@ -1,8 +1,9 @@
+// Path: frontend\src\pages\api\get-leaderboard.js
 const { prisma } = require('../../../lib/prisma');
 
 export default async function handler(req, res) {
     try {
-        const Leaderboard = await prisma.Leaderboard.findMany({
+        const Leaderboard = await prisma.leaderboard.findMany({
             orderBy: [
                 {
                     wins: 'desc',
@@ -12,6 +13,7 @@ export default async function handler(req, res) {
                 },
             ],
         });
+
 
         // Set Cache-Control headers
         res.setHeader('Cache-Control', 's-maxage=1, stale-while-revalidate');

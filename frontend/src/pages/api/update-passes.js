@@ -6,12 +6,12 @@ export default async function handler(req, res) {
 
     try {
         console.log("address: ", address)
-        const existingPlayer = await prisma.Leaderboard.findUnique({
+        const existingPlayer = await prisma.leaderboard.findUnique({
             where: { address: address },
         });
 
         if (existingPlayer) {
-            await prisma.Leaderboard.updateMany({
+            await prisma.leaderboard.updateMany({
                 where: { address: address },
                 data: {
                     passes: {
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
             console.log("Completed updateMany")
 
         } else {
-            await prisma.Leaderboard.create({
+            await prisma.leaderboard.create({
                 data: {
                     address: address,
                     passes: 1,

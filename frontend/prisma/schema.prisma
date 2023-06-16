@@ -13,10 +13,10 @@ model GameState {
   previous String
 }
 
-model Leaderboard {
+model leaderboard {
   id      String @id @default(auto()) @map("_id") @db.ObjectId
   address String
-  fails   BigInt
-  passes  BigInt
-  wins    BigInt
+  fails   Int
+  passes  Int
+  wins    Int
 }

@@ -1,3 +1,4 @@
+// Purpose: Displays the leaderboard page.
 import Head from 'next/head'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -22,8 +23,18 @@ export default function Home() {
 
   useEffect(() => {
     fetch('/api/get-leaderboard')
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then(data => {
+        if (data.error) {
+          console.error('API returned an error:', data.error);
+          throw new Error('API returned an error');
+        }
+
         console.log('Data from API:', data);
         const sortedData = data.Leaderboard.sort((a, b) => {
           if (a[sortKey] < b[sortKey]) return sortAsc ? -1 : 1;
@@ -33,7 +44,9 @@ export default function Home() {
         console.log('Sorted data:', sortedData);
         setLeaderboardData(sortedData);
       })
-      .catch(console.error);
+      .catch(error => {
+        console.error('Error fetching leaderboard:', error);
+      });
   }, [sortKey, sortAsc]);
   
 

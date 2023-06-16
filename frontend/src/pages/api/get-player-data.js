@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
     console.log('Before findUnique')
-    const playerData = await prisma.Leaderboard.findUnique({
+    const playerData = await prisma.leaderboard.findUnique({
       where: { address: address },
     });
     console.log('After findUnique')
