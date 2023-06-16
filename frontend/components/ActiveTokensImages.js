@@ -15,6 +15,7 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
       try {
         await refetchImageString({ args: [tokenId] });
         await refetchPotatoTokenId();
+        await refetchGetActiveTokens();
       } catch (error) {
         console.error('Error updating mints', error);
       }

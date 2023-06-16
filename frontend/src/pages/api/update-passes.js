@@ -5,32 +5,22 @@ export default async function handler(req, res) {
     const { address } = req.body;
 
     try {
-        const existingPlayer = await prisma.leaderboard.findUnique({
+        await prisma.leaderboard.upsert({
             where: { address: address },
+            update: {
+                passes: {
+                    increment: 1
+                },
+            },
+            create: {
+                address: address,
+                passes: 1,
+                fails: 0,
+                wins: 0,  // initial value, adjust as needed
+            },
         });
 
-        if (existingPlayer) {
-            await prisma.leaderboard.updateMany({
-                where: { address: address },
-                data: {
-                    passes: {
-                        increment: 1
-                    },
-                },
-            });
-            console.log("Completed updateMany")
-
-        } else {
-            await prisma.leaderboard.create({
-                data: {
-                    address: address,
-                    passes: 1,
-                    fails: 0,
-                    wins: 0,  // initial value, adjust as needed
-                },
-            });
-
-        }
+        console.log("Completed upsert")
 
         res.status(200).json({ message: `Updated successful passes for ${address}` });
     } catch (error) {

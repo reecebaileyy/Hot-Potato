@@ -238,6 +238,8 @@ export default function Play() {
           },
           body: JSON.stringify({ address: player }),
         });
+        
+        console.log(`1 pass for ${player}`)
 
       } catch (error) {
         console.error('Error updating successful passes', error);
