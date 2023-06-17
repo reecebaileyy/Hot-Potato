@@ -1015,7 +1015,7 @@ export default function Play() {
           <Link href='/'>
             <Image src={blacklogo} width={150} alt="Logo" />
           </Link>
-          <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
+          <div className="xl:hidden 2xl:hidden 3xl:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
               <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
             </button>
@@ -1039,13 +1039,13 @@ export default function Play() {
               </ul>
             </div>
           </div>
-          <ul className='flex md:hidden sm:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
+          <ul className='flex md:hidden sm:hidden lg:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
             <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/play">Play</Link></li>
             <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/leaderboard">Leaderboard</Link></li>
             <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
             <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
           </ul>
-          <div className='flex gap-2 items-center sm:hidden md:hidden'>
+          <div className='flex gap-2 items-center sm:hidden lg:hidden md:hidden'>
             <DarkModeSwitch
               checked={darkMode}
               onChange={() => setDarkMode(!darkMode)}
@@ -1055,12 +1055,12 @@ export default function Play() {
           </div>
         </nav>
 
-        <h1 className={`${darkMode ? 'text-4xl justify-center items-center md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center' : "text-4xl justify-center items-center md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center"}`}>
+        <h1 className={`${darkMode ? 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto' : 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto'}`}>
           {!_currentGeneration ? "Loading" : { _currentGeneration } == 0 ? _currentGeneration == 0 ? "Round 1" : _currentGeneration == 1 : `Round ${_currentGeneration}`}
         </h1>
 
-        <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col grid grid-cols-8 gap-4 justify-center items-center">
-          <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar h-96 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+        <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col lg:flex lg:flex-col grid grid-cols-8 gap-4 justify-center items-center">
+          <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar h-auto ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {!address ?
               <>
                 <>
@@ -1541,7 +1541,7 @@ export default function Play() {
                   </button>
                 </div>
 
-                <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 gap-4 justify-center items-center`}>
+                <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4 justify-center items-center`}>
                   {activeTokens.filter(tokenId => !explodedTokens.includes(tokenId)).map((tokenId, index) => (
                     <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
                       <TokenImage

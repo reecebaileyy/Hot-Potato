@@ -111,7 +111,7 @@ export default function Home() {
         </div>
 
         <div className="w-full flex justify-center items-center relative">
-          <Image alt="Add alt Here" src={landscape} className="h-96 w-full object-cover" />
+          <Image alt="Add alt Here" src={landscape} className="h-96 w-full object-cover object-center" />
           <div className="absolute z-10 mx-10 text-center flex flex-col gap-4 justify-center h-full items-center">
             <h1 className="text-4xl md:text-2xl sm:text-2xl text-white">Onchain Hot Potato: Where Every Pass Can Make a Difference!</h1>
             <h3 className="text-2xl md:text-base sm:text-base text-white">Join the web3 revolution and immerse yourself in a fast-paced, exhilarating game of skill and strategy.</h3>
