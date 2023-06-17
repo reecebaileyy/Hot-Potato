@@ -76,6 +76,15 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
     );
   }
 
+  if (activeTokens == 0) {
+    console.log('Error loading active tokens', isError);
+    return (
+      <div className='flex flex-col text-center'>
+        <h1 className='text-xl'>Mint some hands to join the round!</h1>
+      </div>
+    );
+  }
+
   return (
     <div className={`grid grid-cols-3 sm:grid-cols-5 md:grid-cols-5 gap-4 justify-center items-center`}>
       {activeTokens.filter(tokenId => !explodedTokens.includes(tokenId)).map((tokenId, index) => (

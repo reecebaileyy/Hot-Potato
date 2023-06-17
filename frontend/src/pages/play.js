@@ -1060,7 +1060,7 @@ export default function Play() {
         </h1>
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col lg:flex lg:flex-col grid grid-cols-8 gap-4 justify-center items-center">
-          <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar h-auto ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+        <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar ${getGameState !== "Paused" && getGameState !== "Queued" && address ? "max-h-96" : ""} ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {!address ?
               <>
                 <>
