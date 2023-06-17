@@ -79,7 +79,7 @@ export default function App({ Component, pageProps }) {
           '--w3m-text-big-bold-size': '25px',
           '--w3m-text-small-regular-size': '1rem',
           '--w3m-text-xsmall-bold-size': '.8rem',
-          '--w3m-logo-image-url': 'https://0xhotpotato.vercel.app/assets/images/Burning.gif',
+          '--w3m-logo-image-url': 'https://onchainhotpotato.vercel.app/assets/images/Burning.gif',
           '--w3m-text-xsmall-regular-size': '.8rem',
           '--w3m-font-weight': '400',
         }}
