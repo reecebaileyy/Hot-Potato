@@ -156,7 +156,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel={`Token ${tokenId} Image`}
-        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 flex items-center justify-center"
+        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 flex items-center justify-center border-none"
       >
         <div className="rounded flex items-center justify-center">
           <OptimizedImage
