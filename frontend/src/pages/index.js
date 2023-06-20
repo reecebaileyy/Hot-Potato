@@ -19,8 +19,8 @@ export default function Home() {
   const menuRef = useRef()
 
   useEffect(() => {
-    console.log("An UNKNOWNXBEDTIME PRODUCTION")
-  }, [],5000);
+    console.log("An UNKNOWN X BEDTIME PRODUCTION")
+  }, [], 5000);
 
   useEffect(() => {
     const localDarkMode = window.localStorage.getItem('darkMode');
@@ -36,12 +36,12 @@ export default function Home() {
       document.documentElement.classList.remove('dark');
     }
     localforage.setItem('darkMode', darkMode)
-    .then(() => {
-      console.log('Item saved to local storage');
-    })
-    .catch((error) => {
-      console.error('Error saving item:', error);
-    });
+      .then(() => {
+        console.log('Item saved to local storage');
+      })
+      .catch((error) => {
+        console.error('Error saving item:', error);
+      });
   }, [darkMode]);
 
   return (
@@ -121,9 +121,9 @@ export default function Home() {
         <div className='grid grid-cols-7 gap-4 sm:flex sm:flex-col sm:gap-3 md:flex md:flex-col md:gap-3 mt-10 mx-10 items-center'>
           <h1 className='col-span-7 text-4xl md:text-2xl sm:text-2xl text-white text-center'>Getting Started with OnChain Hot Potato</h1>
           <h3 className='col-span-7 text-2xl md:text-base sm:text-base text-white text-center mb-10'>It&apos;s simple, fun, and rewarding! Here&apos;s how you can join in on the excitement...</h3>
-          <p className="col-start-1 col-end-4 text-center text-white">This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
+          <p className="col-start-1 col-end-4 text-center text-white">I am gonna explain the mechanics of the game in simple terms. Using clear, concise language and possibly some supporting infographics or images. I will also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
           <Image alt="Add alt Here" src={hot} width={700} height={750} className='col-start-4 col-span-1' />
-          <p className="col-end-8 col-span-3 just text-center text-white">This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
+          <p className="col-end-8 col-span-3 just text-center text-white">I am gonna explain the mechanics of the game in simple terms. Using clear, concise language and possibly some supporting infographics or images. I will also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
           <h1 className='text-4xl sm:text-2xl md:text-2xl col-start-1 col-end-8 text-center text-white'>That&apos;s all it takes to dive into the thrilling world of OnChain Hot Potato! Fun, quick, and rewarding - a game experience like no other.</h1>
         </div>
 
@@ -144,12 +144,13 @@ export default function Home() {
           <div className="flex-grow border-t border-white"></div>
         </div>
 
-        <div className='grid grid-cols-6 gap-4 sm:flex sm:flex-col sm:gap-3 md:flex md:flex-col sm:items-center md:items-center md:gap-3 mt-10 mx-10'>
-          <Image alt="Add alt Here" src={potato} width={200} className='col-start-1 col-end-3' />
-          <h1 className="col-start-3 col-end-5 text-center text-white text-3xl sm:text-2xl md:text-2xl">Don&apos;t miss out on the most exciting onchain game of the year.
+        <div className='grid grid-cols-3 items-center gap-3 mt-10 mx-10'>
+          <Image alt="Add alt Here" src={potato} width={200} className='col-start-1' />
+          <h1 className="col-start-2 col-end-3 text-center text-white text-3xl sm:text-2xl md:text-2xl">Don&apos;t miss out on the most exciting onchain game of the year.
             <span className='text-black'><Link href="/play"> Get started </Link></span>
-            with OnChain Hot Potato now!</h1>
-          <Image alt="Add alt Here" src={potato} width={200} className='col-end-7 col-span-1' />
+            with OnChain Hot Potato now!
+          </h1>
+          <Image alt="Add alt Here" src={potato} width={200} className='col-start-3 col-span-1 justify-self-end' />
         </div>
 
         <div className="flex flex-col items-center py-12 bg-black mt-12">
@@ -176,7 +177,7 @@ export default function Home() {
                     What do I need to play?
                   </dt>
                   <dd className="mt-2 text-lg text-gray-500">
-                    All you need to play is a stable internet connection, a MetaMask wallet, and some Matic to get started. You can download MetaMask [here](https://metamask.io/download.html). Please, refer to our documentation for more information on how to get started.
+                    All you need to play is a stable internet connection, a MetaMask wallet, and some Matic to get started. You can download MetaMask <Link href='https://metamask.io/download.html' target='_blank' className='text-white'>here</Link>. Please, refer to our documentation for more information on how to get started.
                   </dd>
                 </div>
                 <div>
@@ -237,15 +238,15 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            
+
           </footer>
           <Image
-              alt="Add alt Here"
-              src={CHAINLINK}
-              width={300}
-              height={300}
-              className="justify-items-center"
-            />
+            alt="Add alt Here"
+            src={CHAINLINK}
+            width={300}
+            height={300}
+            className="justify-items-center"
+          />
         </div>
       </div>
     </>

@@ -615,7 +615,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount.toString()],
-    // value: totalCost,
+    value: totalCost,
     enabled: getGameState === "Minting",
     onError(error) {
       console.log('Error', error)
@@ -788,7 +788,7 @@ export default function Play() {
   }
 
   function maxPerWalletToast() {
-    toast.error(`You can only mint ${maxPerWallet} Potato per round`);
+    toast.error(`You can only mint ${maxPerWallet} Hands per round`);
   }
 
   function mintOneToast() {
@@ -940,6 +940,10 @@ export default function Play() {
     // Cleanup function to clear the interval when component unmounts or re-renders
     return () => clearInterval(interval);
   }, []);
+  
+  useEffect(() => {
+    console.log("An UNKNOWN X BEDTIME PRODUCTION")
+  }, [], 5000);
 
   useEffect(() => {
     try {
@@ -1336,21 +1340,21 @@ export default function Play() {
                               placeholder="Enter mint amount" />
                             <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                               onClick={() => {
-                                // if (!address) {
-                                //   noAddressToast();
-                                // } else if (balance < totalCost) {
-                                //   noEnoughFundsToast();
-                                // } else if (mintAmount > (maxSupply - _roundMints)) {
-                                //   gameFullToast();
-                                // } else if (mintAmount === 0) {
-                                //   mintOneToast();
-                                // }
-                                // else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
-                                // maxPerWalletToast();
-                                // } 
-                                // else {
+                                if (!address) {
+                                  noAddressToast();
+                                } else if (balance < totalCost) {
+                                  noEnoughFundsToast();
+                                } else if (mintAmount > (maxSupply - _roundMints)) {
+                                  gameFullToast();
+                                } else if (mintAmount === 0) {
+                                  mintOneToast();
+                                }
+                                else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
+                                maxPerWalletToast();
+                                } 
+                                else {
                                 mint?.();
-                                // }
+                                }
                               }}
                             >Join Round!</button>
                             <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{totalMints}/{loadingMaxSupply ? 'Loading Max Supply...' : maxSupply} MINTED</p>
