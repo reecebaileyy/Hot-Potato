@@ -207,7 +207,7 @@ export default function Play() {
         const player = log[0]?.args?.player;
         await refetchGameState();
         await refetchHallOfFame({ args: [_currentGeneration] });
-        setEvents(prevEvents => [...prevEvents, `+1 win: ${player}`]);
+        setEvents(prevEvents => [...prevEvents, `${player} won! 🎉`]);
         if (player == address) {
           toast.success("You won! 🎉 Don't forget to claim your rewards!");
           await refetchWinner();
@@ -239,7 +239,6 @@ export default function Play() {
         console.log('SuccessfulPass', log);
         const player = log[0]?.args?.player;
         console.log('player', player);
-        setEvents(prevEvents => [...prevEvents, `+1 pass: ${player}`]);
         if (address == player) {
           await refetchSuccessfulPasses({ args: [address] });
           setPassPromise(true);
@@ -369,14 +368,12 @@ export default function Play() {
       try {
         setExplosion(true);
         setTimeout(() => setExplosion(false), 3050);
-        if (address === log[0].args.player.toString()) {
-          await refetchGetActiveTokenCount({ args: [address] });
-          console.log(`player to be exploded: ${log[0].args.player}`)
-        }
+        await refetchGetActiveTokenCount({ args: [address] });
+        console.log(`player to be exploded: ${log[0].args.player}`)
         await refetchActiveAddresses();
         console.log("REFETCHED ALL DATA");
         const tokenId_ = log[0].args.tokenId;
-        setEvents(prevEvents => [...prevEvents, `Potato Exploded: ${tokenId_}`]);
+        setEvents(prevEvents => [...prevEvents, `Token #${tokenId_} just exploded`]);
       } catch (error) {
         console.log(error)
       }
@@ -650,8 +647,8 @@ export default function Play() {
     address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'passPotato',
-    args: passArgs,
-    enabled: getGameState === "Playing" || getGameState === "Final Stage",
+    args: [tokenId],
+    enabled: (getGameState === "Playing" || getGameState === "Final Stage") && userHasPotatoToken,
     onError(error) {
       console.log('Error', error)
     },
@@ -1244,13 +1241,13 @@ export default function Play() {
                   <Image className='rounded-full' alt='Explosion' src={Explosion} width={200} height={200} /> :
                   <Image alt='Image' src={potatoBlink} width={200} height={200} />
                 }
-                {loadingExplosionTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {remainingTime}</p>}                <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                {remainingTime == 0 ? <p className='text-2xl'>TIME REMAINING: 0</p> : !remainingTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {remainingTime}</p>}
+                <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                   onClick={() => {
                     refetchGetExplosionTime();
                     if (!address) {
                       noAddressToast();
                     } else {
-                      console.log("CHECKING EXPLOSION");
                       check?.();
                       console.log("CHECKED EXPLOSION");
                     }
@@ -1559,7 +1556,7 @@ export default function Play() {
             className={`hide-scrollbar w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}
           >
 
-            <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4 overflow-auto">
+            <div className="scrollable-div whitespace-nowrap h-full flex items-center space-x-4 pl-4 overflow-auto">
               {events.map((event, index) => (
                 <div key={index} className={darkMode ? 'text-white' : 'text-black'}>
                   {event}

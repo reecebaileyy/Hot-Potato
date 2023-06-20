@@ -21,6 +21,16 @@
   background-color: transparent !important;
 }
 
+.scrollable-div::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollable-div {
+  -ms-overflow-style: none;  /* Internet Explorer and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+
 .overlay {
   position: fixed;
   top: 0;

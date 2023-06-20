@@ -57,11 +57,9 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
       try {
         await refetchPotatoTokenId();
         console.log(`PotatoExploded ${log}`);
-        if (typeof log[0]?.args?.tokenId === 'bigint') {
           const tokenId_ = log[0].args.tokenId.toString();
           if (tokenId_ === tokenId) {
             onTokenExploded(tokenId);
-          }
           await refetchGetActiveTokens();
           await refetchPotatoTokenId();
         } else {
