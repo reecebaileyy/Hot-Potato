@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
 import { useState, useRef, useEffect } from 'react'
 import { Web3Button } from '@web3modal/react'
-import hot from '../../public/assets/images/hot.png'
+import potatoBlink from '../../public/assets/images/potatoBlink.gif'
 import landscape from '../../public/assets/images/landscape.jpg'
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/Logo.png'
@@ -52,7 +52,6 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
       <div className={`${darkMode ? 'darkmode to-black text-white min-h-screen font-darumadrop' : 'normal min-h-screen font-darumadrop'}`}>
         <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
           <Link href='/'>
@@ -99,37 +98,39 @@ export default function Home() {
         </nav>
 
         <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center space-y-5">
-          <h1 className='text-4xl sm:text-5xl md:text-6xl text-white'>Onchain Hot Potato</h1>
-          <h3 className='text-xl sm:text-2xl md:text-3xl text-white'>V1.0.0</h3>
-          <p className='text-lg sm:text-xl md:text-2xl text-white'>Hold, Pass, Survive...</p>
-          <Link className='text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black' href="/play">Play Now</Link>
+          <h1 className='text-6xl md:text-4xl sm:text-3xl text-white'>Onchain Hot Potato</h1>
+          <p className='text-3xl sm:text-xl md:text-2xl text-white'>Hold, Pass, Survive...</p>
+          <Link className='items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black' href="/play">Play Now</Link>
         </header>
 
-        <div className='flex flex-row sm:flex-col md:flex-col justify-between items-center gap-28 mx-12 mb-20'>
-          <Image className='sm:mt-10' alt="Add alt Here" src={potatoFire} width={400} height={400} />
+        <div className='grid grid-cols-2 justify-between items-center mx-12 mb-20'>
+          <Image className='justify-self-center' alt="Potato image" src={potatoFire} width='auto' height='auto' />
           <h1 className='text-2xl text-center text-white'>Feel the intense heat as you compete in thrilling, fast-paced, adrenaline-fueled rounds, passing the sizzling potato to your friends or opponents before the timer runs out. With our user-friendly interface and intuitive gameplay, OnChain Hot Potato offers an immersive experience that&apos;s incredibly easy to pick up and play, making it a game you won&apos;t be able to resist. Whether you&apos;re a seasoned gamer or a beginner looking for a captivating challenge, our button-based gameplay will keep you hooked for hours on end, ensuring endless excitement and intense competition.</h1>
         </div>
 
         <div className="w-full flex justify-center items-center relative">
           <Image alt="Add alt Here" src={landscape} className="h-96 w-full object-cover object-center" />
           <div className="absolute z-10 mx-10 text-center flex flex-col gap-4 justify-center h-full items-center">
-            <h1 className="text-4xl md:text-2xl sm:text-2xl text-white">Onchain Hot Potato: Where Every Pass Can Make a Difference!</h1>
-            <h3 className="text-2xl md:text-base sm:text-base text-white">Join the web3 revolution and immerse yourself in a fast-paced, exhilarating game of skill and strategy.</h3>
+            <h1 className="text-4xl md:text-2xl sm:text-2xl text-white">Onchain Hot Potato: Where Every Pass<br></br> Can Make a Difference!</h1>
+            <h3 className="text-2xl md:text-base sm:text-base text-white">Join the web3 revolution and immerse yourself in<br></br> a fast-paced, exhilarating game of skill and strategy.</h3>
           </div>
         </div>
 
         <div className='grid grid-cols-7 gap-4 sm:flex sm:flex-col sm:gap-3 md:flex md:flex-col md:gap-3 mt-10 mx-10 items-center'>
           <h1 className='col-span-7 text-4xl md:text-2xl sm:text-2xl text-white text-center'>Getting Started with OnChain Hot Potato</h1>
           <h3 className='col-span-7 text-2xl md:text-base sm:text-base text-white text-center mb-10'>It&apos;s simple, fun, and rewarding! Here&apos;s how you can join in on the excitement...</h3>
-          <p className="col-start-1 col-end-4 text-center text-white">I am gonna explain the mechanics of the game in simple terms. Using clear, concise language and possibly some supporting infographics or images. I will also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
-          <Image alt="Add alt Here" src={hot} width={700} height={750} className='col-start-4 col-span-1' />
-          <p className="col-end-8 col-span-3 just text-center text-white">I am gonna explain the mechanics of the game in simple terms. Using clear, concise language and possibly some supporting infographics or images. I will also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.</p>
-          <h1 className='text-4xl sm:text-2xl md:text-2xl col-start-1 col-end-8 text-center text-white'>That&apos;s all it takes to dive into the thrilling world of OnChain Hot Potato! Fun, quick, and rewarding - a game experience like no other.</h1>
+          <div className="grid grid-cols-2 justify-between items-center col-span-7">
+            <p className="text-center basis-1/2 text-2xl text-white">
+              I am gonna explain the mechanics of the game in simple terms. Using clear, concise language and possibly some supporting infographics or images. I will also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.This is a great place to explain the mechanics of the game in simple terms. Use clear, concise language and possibly some supporting infographics or images. You could also have a short video here demonstrating the gameplay. The goal is to make sure anyone visiting the page understands how the game is played and what makes it exciting.
+            </p>
+              <Image className='justify-self-center basis-1/2' alt="Add alt Here" src={potatoBlink} width='auto' height='auto' />
+          </div>
+          <h1 className='text-2xl sm:text-xl md:text-xl col-start-1 col-end-8 text-center text-white'>That&apos;s all it takes to dive into the thrilling world of OnChain Hot Potato! Fun, quick, and rewarding - a game experience like no other.</h1>
         </div>
 
         <div className="flex items-center my-10 mx-10">
           <div className="flex-grow border-t border-white"></div>
-          <span className="px-4 text-white">Hold, Pass, Survive...</span>
+          <span className="px-4 text-6xl text-white">Hold, Pass, Survive...</span>
           <div className="flex-grow border-t border-white"></div>
         </div>
 
@@ -140,7 +141,7 @@ export default function Home() {
 
         <div className="flex items-center my-10 mx-10">
           <div className="flex-grow border-t border-white"></div>
-          <span className="px-4 text-white">Mint, Trade, Collect..</span>
+          <span className="px-4 text-6xl text-white">Mint, Trade, Collect..</span>
           <div className="flex-grow border-t border-white"></div>
         </div>
 
@@ -229,9 +230,9 @@ export default function Home() {
               </nav>
               <div className="mt-8 border-t border-gray-200 pt-8 md:flex md:items-center md:justify-center">
                 <div className="flex space-x-6 items-center justify-center">
-                  <Link href="#" className="text-gray-500 hover:text-gray-900">Privacy</Link>
-                  <Link href="#" className="text-gray-500 hover:text-gray-900">Terms</Link>
-                  <Link href="#" className="text-gray-500 hover:text-gray-900">Support</Link>
+                  <Link href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target='_blank' className="text-gray-500 hover:text-gray-900">Privacy</Link>
+                  <Link href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target='_blank' className="text-gray-500 hover:text-gray-900">Terms</Link>
+                  <Link href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target='_blank' className="text-gray-500 hover:text-gray-900">Support</Link>
                 </div>
                 <p className="mt-8 text-center text-base text-gray-400">
                   &copy; 2023 OnChain Hot Potato. All rights reserved.
