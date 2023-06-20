@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useContractRead, useContractEvent } from 'wagmi';
 import Image from 'next/image';
 import Modal from 'react-modal';
+import { BsXCircle } from "react-icons/bs";
 
 Modal.setAppElement('#__next')
 
@@ -13,6 +14,7 @@ const OptimizedImage = (props) => (
 const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, delay }) => {
   const [isModalOpen, setModalOpen] = useState(false);
 
+
   const openModal = () => {
     setModalOpen(true);
   };
@@ -22,7 +24,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   };
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
@@ -37,7 +39,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   });
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
@@ -48,7 +50,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   });
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'PotatoExploded',
     async listener(log) {
@@ -72,7 +74,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   });
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'PotatoPassed',
     async listener(log) {
@@ -89,7 +91,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   });
 
   const { data: getImageString, isLoading, refetch: refetchImageString, isError } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
@@ -100,14 +102,14 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   });
 
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'getActiveTokens',
     enabled: true
   });
 
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'potatoTokenId',
     enabled: true
@@ -123,6 +125,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
 
     // Cleanup function
     return () => clearTimeout(timer);
+    
   }, [tokenId, shouldRefresh, refetchImageString, delay]);
 
 
@@ -157,15 +160,19 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
         onRequestClose={closeModal}
         contentLabel={`Token ${tokenId} Image`}
         className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 flex items-center justify-center border-transparent bg-transparent"
-        
       >
-        <div className="border-transparent rounded flex items-center justify-center">
+        <div className="relative border-transparent rounded flex items-center justify-center">
+        <button
+            onClick={closeModal}
+            className='absolute top-0 right-0 text-2xl mt-2 mr-2'
+          >
+            <BsXCircle/>
+          </button>
           <OptimizedImage
             src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`}
             alt={`Token ${tokenId} Image`}
             width="1000"
             height="1000"
-            className=""
           />
         </div>
       </Modal>

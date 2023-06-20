@@ -53,6 +53,11 @@ export default function Play() {
   const [sortedTokens, setSortedTokens] = useState([]);
   const menuRef = useRef()
   const divRef = useRef(null);
+  const endOfDiv = useRef(null);
+  const [searchId, setSearchId] = useState('');
+
+
+
 
 
 
@@ -63,6 +68,14 @@ export default function Play() {
   const indexOfLastToken = currentPage * itemsPerPage;
   const indexOfFirstToken = indexOfLastToken - itemsPerPage;
   const currentTokens = sortedTokens?.slice(indexOfFirstToken, indexOfLastToken);
+  const pageCount = Math.ceil(sortedTokens.length / itemsPerPage);
+  const maxPageNumbersToShow = 3;
+  let startPage = Math.max(currentPage - Math.floor(maxPageNumbersToShow / 2), 1);
+  let endPage = Math.min(startPage + maxPageNumbersToShow - 1, pageCount);
+  if (endPage - startPage < maxPageNumbersToShow && startPage > 1) {
+    startPage = endPage - maxPageNumbersToShow + 1;
+  }
+  const pages = [...Array((endPage + 1) - startPage).keys()].map(i => startPage + i);
 
 
   /*
@@ -88,7 +101,7 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'GameStarted',
     async listener(log) {
@@ -106,7 +119,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'MintingEnded',
     async listener(log) {
@@ -121,7 +134,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'GameResumed',
     async listener(log) {
@@ -136,7 +149,7 @@ export default function Play() {
 
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'GamePaused',
     async listener(log) {
@@ -149,7 +162,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'GameRestarted',
     async listener(log) {
@@ -162,7 +175,7 @@ export default function Play() {
   })
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'FinalRoundStarted',
     async listener(log) {
@@ -186,7 +199,7 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'PlayerWon',
     async listener(log) {
@@ -218,7 +231,7 @@ export default function Play() {
   });
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'SuccessfulPass',
     async listener(log) {
@@ -266,7 +279,7 @@ export default function Play() {
   ▄████▄      ▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀    ▄███▄ ▀▀  ▄████▄████▄████  ████▄ ▀████
   */
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
@@ -278,7 +291,7 @@ export default function Play() {
         setRoundMints(totalMints);
         const player = log[0].args.player.toString();
         const amountDisplay = String(log[0].args.amount); //Need this one
-        setEvents(prevEvents => [...prevEvents, `+${amountDisplay}: ${player}`]);
+        setEvents(prevEvents => [...prevEvents, `${player} just minted ${log.length} hands`]);
 
       } catch (error) {
         console.log(log);
@@ -298,7 +311,7 @@ export default function Play() {
   ▄████▄ ▄███▄ ▀█████▀  ▀████▀███▄████  ████▄ ▀████▀███▄
   */
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
@@ -326,7 +339,7 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'UpdatedTimer',
     listener(log) {
@@ -349,7 +362,7 @@ export default function Play() {
                       ▄████▄
   */
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'PotatoExploded',
     async listener(log) {
@@ -383,7 +396,7 @@ export default function Play() {
   */
 
   useContractEvent({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     eventName: 'PotatoPassed',
     async listener(log) {
@@ -420,7 +433,7 @@ export default function Play() {
 
   // GET MINT PRICE
   const { data: getGameState, refetch: refetchGameState, isLoading: loadingGetGameState } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'getGameState',
     enabled: true,
@@ -428,7 +441,7 @@ export default function Play() {
 
   // GET MINT PRICE
   const { data: getExplosionTime, isLoading: loadingExplosionTime, error: loadingError, refetch: refetchGetExplosionTime } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'getExplosionTime',
   })
@@ -437,7 +450,7 @@ export default function Play() {
 
   // GET MINT PRICE
   const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: '_price',
   })
@@ -445,7 +458,7 @@ export default function Play() {
 
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'addressActiveTokenCount',
     args: [address],
@@ -454,7 +467,7 @@ export default function Play() {
 
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: '_maxsupplyPerRound',
   })
@@ -462,7 +475,7 @@ export default function Play() {
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [address],
@@ -471,7 +484,7 @@ export default function Play() {
 
   // GET POTATO HOLDER
   const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'getPotatoOwner',
   })
@@ -479,7 +492,7 @@ export default function Play() {
 
   // GET POTATO TOKEN ID
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
@@ -488,7 +501,7 @@ export default function Play() {
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
@@ -496,14 +509,14 @@ export default function Play() {
 
   // GET CURRENT GENERATION
   const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'currentGeneration',
   })
   const _currentGeneration = parseInt(currentGeneration, 10);
 
   const { data: getRoundMints, isLoading: loadingGetRoundMints, refetch: refetchGetRoundMints } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'roundMints',
   })
@@ -511,27 +524,27 @@ export default function Play() {
 
 
   const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: '_owner',
   })
   const _ownerAddress = _owner?.toString();
 
   const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'getActiveTokenIds',
   })
 
   const { data: allWinners, isLoading: loadingWinners, refetch: refetchWinner } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'getAllWinners',
   })
   const isWinner = allWinners?.includes(address)
 
   const { data: rewards, isLoading: loadingRewards, refetch: refetchRewards } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'rewards',
     args: [address],
@@ -539,7 +552,7 @@ export default function Play() {
   const _rewards = parseInt(rewards, 10);
 
   const { data: _totalWins, isLoading: loadingTotalWins, refetch: refetchTotalWins } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'totalWins',
     args: [address],
@@ -549,7 +562,7 @@ export default function Play() {
 
 
   const { data: _successfulPasses, isLoading: loadingSuccessfulPasses, refetch: refetchSuccessfulPasses } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'successfulPasses',
     args: [address],
@@ -557,7 +570,7 @@ export default function Play() {
   const successfulPasses = parseInt(_successfulPasses, 10);
 
   const { data: hallOfFame, isLoading: loadingHGallOfFame, refetch: refetchHallOfFame } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'hallOfFame',
     args: [_currentGeneration],
@@ -565,21 +578,21 @@ export default function Play() {
   const roundWinner = hallOfFame?.toString();
 
   const { data: _maxperwallet, isLoading: loadingMaxPerWallet, refetch: refetchMaxPerWallet } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: '_maxperwallet',
   })
   const maxPerWallet = parseInt(_maxperwallet, 10);
 
   const { data: isTokenActive, isLoading: loadingIsTokenActive, refetch: refetchIsTokenActive } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: '_isTokenActive',
     args: [tokenId],
   })
 
   const { data: _activeAddresses, isLoading: loadingActiveAddresses, refetch: refetchActiveAddresses } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'activeAddresses',
   })
@@ -587,7 +600,7 @@ export default function Play() {
 
 
   const { data: ownerOf, isLoading: loadingOwnerOf, refetch: refetchOwnerOf } = useContractRead({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'ownerOf',
     args: [tokenId],
@@ -619,7 +632,7 @@ export default function Play() {
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount.toString()],
@@ -634,7 +647,7 @@ export default function Play() {
 
 
   const { config: configPass } = usePrepareContractWrite({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'passPotato',
     args: passArgs,
@@ -647,7 +660,7 @@ export default function Play() {
 
   // CLAIM REWARDS
   const { config: withdrawWinnersFunds } = usePrepareContractWrite({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'withdrawWinnersFunds',
     enabled: address === isWinner,
@@ -664,7 +677,7 @@ export default function Play() {
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'checkExplosion',
     enabled: getGameState === "Playing" || getGameState === "Final Stage",
@@ -686,7 +699,7 @@ export default function Play() {
   */
   // START GAME
   const { config: startGame } = usePrepareContractWrite({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'startGame',
     enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && getGameState === "Queued",
@@ -698,7 +711,7 @@ export default function Play() {
 
   // END MINTING
   const { config: endMinting } = usePrepareContractWrite({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'endMinting',
     enabled: getGameState === "Minting" && address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F',
@@ -707,7 +720,7 @@ export default function Play() {
 
   // PAUSE GAME
   const { config: pauseGame } = usePrepareContractWrite({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'pauseGame',
     enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Minting" || getGameState === "Playing" || getGameState === "Final Stage"),
@@ -716,7 +729,7 @@ export default function Play() {
 
   // RESUME GAME
   const { config: resumeGame } = usePrepareContractWrite({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'resumeGame',
     enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && getGameState === "Paused",
@@ -725,7 +738,7 @@ export default function Play() {
 
   // RESTART GAME 
   const { config: restartGame } = usePrepareContractWrite({
-    address: '0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a',
+    address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
     abi: ABI,
     functionName: 'restartGame',
     enabled: address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Paused" || getGameState === "Ended"),
@@ -811,6 +824,10 @@ export default function Play() {
     toast.warn("You have no rewards to claim");
   }
 
+  function invalidTokenIdToast() {
+    toast.error("Inactive Token ID");
+  }
+
 
   /* 
    __    __  ______  __    __ _______  __       ________ _______   ______  
@@ -873,6 +890,17 @@ export default function Play() {
     const sorted = [...activeTokens].sort((a, b) => b - a);
     setSortedTokens(sorted);
   }
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const tokenIdIndex = sortedTokens.indexOf(searchId);
+    if (tokenIdIndex !== -1) {
+      setCurrentPage(Math.floor(tokenIdIndex / itemsPerPage) + 1);
+    } else {
+      invalidTokenIdToast();
+    }
+  };
+
 
   /* 
    _______  ________ ________ _______  ________  ______  __    __ 
@@ -997,6 +1025,12 @@ export default function Play() {
 
     return () => clearInterval(timer);
   }, [remainingTime]);
+
+  useEffect(() => {
+    if (endOfDiv.current) {
+      endOfDiv.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    }
+  }, [events]);
   /*
    __    __ ________ __       __ __             ______   ______   ______  
   |  \  |  \        \  \     /  \  \           /      \ /      \ /      \ 
@@ -1111,9 +1145,9 @@ export default function Play() {
                       }}
                     >Claim Rewards</button>
                   }
-                  <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
+                  <h2 className={`text-2xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
                   <ActiveTokensImages ownerAddress={address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
-                  
+
                 </>
                 : getGameState == "Queued" ?
                   <>
@@ -1153,7 +1187,7 @@ export default function Play() {
                     </>
                     : getGameState == "Minting" ?
                       <>
-                        <h1 className={`text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h1>
+                        <h1 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h1>
                         <ActiveTokensImages ownerAddress={address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
                         {isWinner && _rewards != 0 &&
                           <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
@@ -1246,7 +1280,7 @@ export default function Play() {
                   }
                 </div>
 
-                <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className="underline">
+                <Link href="https://mumbai.polygonscan.com/address/0xc30F158Bc9d42cd30e6061220815E8A17df108df" target='_blank' className="underline">
                   Smart Contract
                 </Link>
               </>
@@ -1259,7 +1293,7 @@ export default function Play() {
                     <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
                       Discord
                     </Link>
-                    <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                    <Link href="https://mumbai.polygonscan.com/address/0xc30F158Bc9d42cd30e6061220815E8A17df108df" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
                     <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
                   </div>
                 </>
@@ -1278,7 +1312,7 @@ export default function Play() {
                       <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
                         Discord
                       </Link>
-                      <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                      <Link href="https://mumbai.polygonscan.com/address/0xc30F158Bc9d42cd30e6061220815E8A17df108df" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
                       <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
                     </div>
                   </>
@@ -1378,7 +1412,7 @@ export default function Play() {
                           <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
                             Discord
                           </Link>
-                          <Link href="https://mumbai.polygonscan.com/address/0x09ED17Ad25F9d375eB24aa4A3C8d23D625D0aF7a" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                          <Link href="https://mumbai.polygonscan.com/address/0xc30F158Bc9d42cd30e6061220815E8A17df108df" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
                           <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
                         </div>
                       </>
@@ -1525,12 +1559,13 @@ export default function Play() {
             className={`hide-scrollbar w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}
           >
 
-            <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4">
+            <div className="whitespace-nowrap h-full flex items-center space-x-4 pl-4 overflow-auto">
               {events.map((event, index) => (
                 <div key={index} className={darkMode ? 'text-white' : 'text-black'}>
                   {event}
                 </div>
               ))}
+              <div ref={endOfDiv}></div>
             </div>
           </div>
 
@@ -1554,10 +1589,26 @@ export default function Play() {
 
                 <div className='text-3xl sm:text-xl md:text-xl lg:text-xl text-center'>
                   <h1 className='underline'>Sort By:</h1>
-                  <button className='mr-5' onClick={sortTokensAsc}><HiArrowCircleUp/></button>
-                  <button onClick={sortTokensDesc}><HiArrowCircleDown/></button>
+                  <button className='mr-5' onClick={sortTokensAsc}><HiArrowCircleUp /></button>
+                  <button onClick={sortTokensDesc}><HiArrowCircleDown /></button>
                 </div>
-
+                <div className='grid grid-cols-8'>
+                  <form onSubmit={handleSearch} className="col-start-3 col-span-4 flex flex-row justify-center items-center space-x-2 mt-4 mb-4">
+                    <input
+                      type="number"
+                      value={searchId}
+                      onChange={e => setSearchId(e.target.value)}
+                      placeholder="Search by token ID"
+                      className='basis-2/3 border-2 rounded-lg border-gray-200 focus:border-blue-500 focus:outline-none p-1 w-1/2'
+                    />
+                    <button
+                      type="submit"
+                      className={`basis-1/3 px-4 py-2 rounded-lg shadow ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white`}
+                    >
+                      Search
+                    </button>
+                  </form>
+                </div>
                 <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4 justify-center items-center`}>
                   {currentTokens.filter(tokenId => !explodedTokens.includes(tokenId)).map((tokenId, index) => (
                     <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
@@ -1567,17 +1618,28 @@ export default function Play() {
                         potatoTokenId={_potatoTokenId}
                         shouldRefresh={shouldRefresh}
                         onTokenExploded={handleTokenExploded}
-                        delay={index * 1000}
+                        delay={index * 300}
                       />
                     </div>
                   ))}
                 </div>
 
-                <div className='text-center'>
-                  {/* Implement the pagination buttons here */}
-                  {Array(Math.ceil(sortedTokens.length / itemsPerPage)).fill().map((_, index) => (
-                    <button className='justify-items-center mx-8 sm:mx-4 mt-4' key={index} onClick={() => setCurrentPage(index + 1)}>{index + 1}</button>
+                <div className='text-3xl lg:text-2xl md:text-2xl sm:text-xl text-center'>
+                  {currentPage !== 1 &&
+                    <button className='justify-items-center mx-8 sm:mx-4 mt-4' onClick={() => setCurrentPage(currentPage - 1)}>&lt;</button>
+                  }
+                  {pages.map((page, index) => (
+                    <button
+                      className={`justify-items-center mx-8 sm:mx-4 mt- bg-clip-text ${page === currentPage ? (darkMode ? 'text-transparent bg-gradient-to-br from-amber-800 to-red-800' : 'text-transparent bg-gradient-to-b from-yellow-400 to-red-500') : 'text-black'}`}
+                      key={index}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
                   ))}
+                  {currentPage !== pageCount &&
+                    <button className='justify-items-center mx-8 sm:mx-4 mt-4' onClick={() => setCurrentPage(currentPage + 1)}>&gt;</button>
+                  }
                 </div>
               </div>
             ) : null

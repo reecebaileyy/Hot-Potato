@@ -98,14 +98,14 @@ export default function Home() {
         </nav>
 
         <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center space-y-5">
-          <h1 className='text-6xl md:text-4xl sm:text-4xl text-white'>Onchain Hot Potato</h1>
-          <p className='text-3xl sm:text-2xl md:text-2xl text-white'>Hold, Pass, Survive...</p>
+          <h1 className='text-6xl sm:text-4xl text-white'>Onchain Hot Potato</h1>
+          <p className='text-3xl sm:text-2xl text-white'>Hold, Pass, Survive...</p>
           <Link className='z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black' href="/play">Play Now</Link>
         </header>
 
         <div className='xl:grid xl:grid-cols-2 lg:grid lg:grid-cols-2 2xl:grid 2xl:grid-cols-2 3xl:grid 3xl:grid-cols-2  sm:flex-col md:flex-col lg:flex-col justify-between items-center mx-12 mb-20'>
           <Image className='justify-self-center' alt="Add alt Here" src={potatoFire} width='auto' height='auto' />
-          <h1 className='text-2xl sm:text-base text-center text-white'>Feel the intense heat as you compete in thrilling, fast-paced, adrenaline-fueled rounds, passing the sizzling potato to your friends or opponents before the timer runs out. With our user-friendly interface and intuitive gameplay, OnChain Hot Potato offers an immersive experience that&apos;s incredibly easy to pick up and play, making it a game you won&apos;t be able to resist. Whether you&apos;re a seasoned gamer or a beginner looking for a captivating challenge, our button-based gameplay will keep you hooked for hours on end, ensuring endless excitement and intense competition.</h1>
+          <h1 className='text-xl sm:text-base text-center text-white'>Feel the intense heat as you compete in thrilling, fast-paced, adrenaline-fueled rounds, passing the sizzling potato to your friends or opponents before the timer runs out. With our user-friendly interface and intuitive gameplay, OnChain Hot Potato offers an immersive experience that&apos;s incredibly easy to pick up and play, making it a game you won&apos;t be able to resist. Whether you&apos;re a seasoned gamer or a beginner looking for a captivating challenge, our button-based gameplay will keep you hooked for hours on end, ensuring endless excitement and intense competition.</h1>
         </div>
 
 
@@ -143,13 +143,13 @@ export default function Home() {
           <div className="flex-grow border-t border-white"></div>
         </div>
 
-        <div className='grid grid-cols-3 items-center gap-3 mt-10 mx-10'>
-          <Image alt="Add alt Here" src={potato} width='auto' className='col-start-1' />
-          <h1 className="col-start-2 col-end-3 text-center text-white text-3xl sm:text-base md:text-2xl">Don&apos;t miss out on the most exciting onchain game of the year.
+        <div className='grid grid-cols-3 sm:grid-cols-2 md:grid-cols-2 items-center gap-3 mt-10 mx-10'>
+          <Image alt="Add alt Here" src={potato} width='auto' className='sm:hidden md:hidden col-start-1' />
+          <h1 className="col-start-2 col-end-3 sm:col-start-1 sm:col-end-2 md:col-start-1 md:col-span-1 text-center text-white text-3xl sm:text-base md:text-2xl">Don&apos;t miss out on the most exciting onchain game of the year.
             <span className='text-black'><Link href="/play"> Get started </Link></span>
             with OnChain Hot Potato now!
           </h1>
-          <Image alt="Add alt Here" src={potato} width='auto' className='col-start-3 col-span-1 justify-self-end' />
+          <Image alt="Add alt Here" src={potato} width='auto' className='col-start-3 col-span-1 sm:col-start-2 sm:col-span-1 md:col-start-2 md:col-span-1 justify-self-end' />
         </div>
 
         <div className="flex flex-col items-center py-12 bg-black mt-12">
