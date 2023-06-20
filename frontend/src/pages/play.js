@@ -15,8 +15,7 @@ import TokenImage from '../../components/TokenImage'
 import ActiveTokensImages from '../../components/ActiveTokensImages'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
-import { get } from 'mongoose';
-
+import { HiArrowCircleDown, HiArrowCircleUp } from "react-icons/hi";
 export default function Play() {
 
   /* 
@@ -49,6 +48,9 @@ export default function Play() {
   const [_roundMints, setRoundMints] = useState(0);
   const [passArgs, setPassArgs] = useState(null);
   const [mintArgs, setMintArgs] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(32); // You can set items per page as you want
+  const [sortedTokens, setSortedTokens] = useState([]);
   const menuRef = useRef()
   const divRef = useRef(null);
 
@@ -56,6 +58,12 @@ export default function Play() {
 
   // STORING USERS ADDRESS
   const { address } = useAccount()
+
+  // Pagination logic
+  const indexOfLastToken = currentPage * itemsPerPage;
+  const indexOfFirstToken = indexOfLastToken - itemsPerPage;
+  const currentTokens = sortedTokens?.slice(indexOfFirstToken, indexOfLastToken);
+
 
   /*
    ________ __     __ ________ __    __ ________      __    __  ______   ______  __    __  ______  
@@ -238,7 +246,7 @@ export default function Play() {
           },
           body: JSON.stringify({ address: player }),
         });
-        
+
         console.log(`1 pass for ${player}`)
 
       } catch (error) {
@@ -615,7 +623,7 @@ export default function Play() {
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount.toString()],
-    value: totalCost,
+    //value: totalCost,
     enabled: getGameState === "Minting",
     onError(error) {
       console.log('Error', error)
@@ -856,6 +864,16 @@ export default function Play() {
     setExplodedTokens(prevTokens => [...prevTokens, tokenId]);
   }
 
+  const sortTokensAsc = () => {
+    const sorted = [...activeTokens].sort((a, b) => a - b);
+    setSortedTokens(sorted);
+  }
+
+  const sortTokensDesc = () => {
+    const sorted = [...activeTokens].sort((a, b) => b - a);
+    setSortedTokens(sorted);
+  }
+
   /* 
    _______  ________ ________ _______  ________  ______  __    __ 
   |       \|        \        \       \|        \/      \|  \  |  \
@@ -904,6 +922,10 @@ export default function Play() {
     setIsLoadingActiveTokens(false);
   }, [getActiveTokenIds]);
 
+  useEffect(() => {
+    setSortedTokens(activeTokens);
+  }, [activeTokens]);
+
 
   useEffect(() => {
     if (roundWinner === undefined) {
@@ -940,7 +962,7 @@ export default function Play() {
     // Cleanup function to clear the interval when component unmounts or re-renders
     return () => clearInterval(interval);
   }, []);
-  
+
   useEffect(() => {
     console.log("An UNKNOWN X BEDTIME PRODUCTION")
   }, [], 5000);
@@ -1064,27 +1086,13 @@ export default function Play() {
         </h1>
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col lg:flex lg:flex-col grid grid-cols-8 gap-4 justify-center items-center">
-        <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar ${getGameState !== "Paused" && getGameState !== "Queued" && address ? "max-h-96" : ""} ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+          <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar ${getGameState !== "Paused" && getGameState !== "Queued" && address ? "max-h-96" : ""} ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {!address ?
               <>
                 <>
                   <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Connect First</h1>
                   <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Connect your wallet to view this page! Hope you join the fun soon...</h3>
                   <Image alt='Image' src={hot} width={200} height={200} />
-                  {isWinner && _rewards != 0 &&
-                    <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
-                      onClick={() => {
-                        if (!address) {
-                          noAddressToast();
-                        } else if (_rewards == 0) {
-                          noRewardsToast();
-                        } else {
-                          claimRewards?.();
-                          refetchRewards({ args: [address] });
-                        }
-                      }}
-                    >Claim Rewards</button>
-                  }
                 </>
               </> :
               getGameState == "Playing" || getGameState == "Final Stage" ?
@@ -1105,7 +1113,7 @@ export default function Play() {
                   }
                   <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
                   <ActiveTokensImages ownerAddress={address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
-
+                  
                 </>
                 : getGameState == "Queued" ?
                   <>
@@ -1145,8 +1153,7 @@ export default function Play() {
                     </>
                     : getGameState == "Minting" ?
                       <>
-                        <h1 className={`text-3xl text-center font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Welcome to the Backburner!</h1>
-                        <h2 className={`text-xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
+                        <h1 className={`text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h1>
                         <ActiveTokensImages ownerAddress={address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
                         {isWinner && _rewards != 0 &&
                           <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
@@ -1342,18 +1349,18 @@ export default function Play() {
                               onClick={() => {
                                 if (!address) {
                                   noAddressToast();
-                                } else if (balance < totalCost) {
-                                  noEnoughFundsToast();
-                                } else if (mintAmount > (maxSupply - _roundMints)) {
-                                  gameFullToast();
-                                } else if (mintAmount === 0) {
-                                  mintOneToast();
+                                  // } else if (balance < totalCost) {
+                                  //   noEnoughFundsToast();
+                                  // } else if (mintAmount > (maxSupply - _roundMints)) {
+                                  //   gameFullToast();
+                                  // } else if (mintAmount === 0) {
+                                  //   mintOneToast();
+                                  // }
+                                  // else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
+                                  //   maxPerWalletToast();
                                 }
-                                else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
-                                maxPerWalletToast();
-                                } 
                                 else {
-                                mint?.();
+                                  mint?.();
                                 }
                               }}
                             >Join Round!</button>
@@ -1545,8 +1552,14 @@ export default function Play() {
                   </button>
                 </div>
 
+                <div className='text-3xl sm:text-xl md:text-xl lg:text-xl text-center'>
+                  <h1 className='underline'>Sort By:</h1>
+                  <button className='mr-5' onClick={sortTokensAsc}><HiArrowCircleUp/></button>
+                  <button onClick={sortTokensDesc}><HiArrowCircleDown/></button>
+                </div>
+
                 <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4 justify-center items-center`}>
-                  {activeTokens.filter(tokenId => !explodedTokens.includes(tokenId)).map((tokenId, index) => (
+                  {currentTokens.filter(tokenId => !explodedTokens.includes(tokenId)).map((tokenId, index) => (
                     <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
                       <TokenImage
                         tokenId={tokenId}
@@ -1557,6 +1570,13 @@ export default function Play() {
                         delay={index * 1000}
                       />
                     </div>
+                  ))}
+                </div>
+
+                <div className='text-center'>
+                  {/* Implement the pagination buttons here */}
+                  {Array(Math.ceil(sortedTokens.length / itemsPerPage)).fill().map((_, index) => (
+                    <button className='justify-items-center mx-8 sm:mx-4 mt-4' key={index} onClick={() => setCurrentPage(index + 1)}>{index + 1}</button>
                   ))}
                 </div>
               </div>
