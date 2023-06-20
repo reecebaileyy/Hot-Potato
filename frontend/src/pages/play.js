@@ -49,7 +49,7 @@ export default function Play() {
   const [passArgs, setPassArgs] = useState(null);
   const [mintArgs, setMintArgs] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(32); // You can set items per page as you want
+  const [itemsPerPage, setItemsPerPage] = useState(64); // You can set items per page as you want
   const [sortedTokens, setSortedTokens] = useState([]);
   const menuRef = useRef()
   const divRef = useRef(null);
