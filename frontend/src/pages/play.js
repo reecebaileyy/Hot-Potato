@@ -1068,7 +1068,7 @@ export default function Play() {
             darkMode ? 'dark' : 'light'
           }
         />
-        <nav className="pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
+        <nav className="pt-10 px-5 md:px-10 flex justify-between items-center relative">
           <Link href='/'>
             <Image src={blacklogo} width={150} alt="Logo" />
           </Link>
@@ -1616,6 +1616,7 @@ export default function Play() {
                         shouldRefresh={shouldRefresh}
                         onTokenExploded={handleTokenExploded}
                         delay={index * 300}
+                        className="z-20"
                       />
                     </div>
                   ))}

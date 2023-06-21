@@ -162,15 +162,16 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
         <div className="relative border-transparent rounded flex items-center justify-center">
         <button
             onClick={closeModal}
-            className='absolute top-0 right-0 text-2xl mt-2 mr-2'
+            className='absolute top-0 right-0 text-3xl mt-2 mr-2'
           >
             <BsXCircle/>
           </button>
           <OptimizedImage
             src={`data:image/svg+xml,${encodeURIComponent(getImageString)}`}
             alt={`Token ${tokenId} Image`}
-            width="1000"
-            height="1000"
+            width="800"
+            height="800"
+            className="border-transparent"
           />
         </div>
       </Modal>
