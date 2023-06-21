@@ -20,16 +20,13 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
     const sorted = [...activeTokens].sort((a, b) => Number(a.toString()) - Number(b.toString()));
     setSortedTokens(sorted);
   }
-  
+
   const sortTokensDesc = () => {
     const sorted = [...activeTokens].sort((a, b) => Number(b.toString()) - Number(a.toString()));
     setSortedTokens(sorted);
   }
 
   const currentTokens = sortedTokens?.slice(indexOfFirstToken, indexOfLastToken);
-
-
-
 
   useContractEvent({
     address: '0xc30F158Bc9d42cd30e6061220815E8A17df108df',
@@ -117,22 +114,22 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
   return (
     <div>
       <div className='text-2xl sm:text-xl md:text-xl lg:text-xl text-center'>
-                  <h1 className='underline'>Sort By:</h1>
-                  <button className='mr-5' onClick={sortTokensAsc}><HiArrowCircleUp/></button>
-                  <button onClick={sortTokensDesc}><HiArrowCircleDown/></button>
-                </div>
+        <h1 className='underline'>Sort By:</h1>
+        <button className='mr-5' onClick={sortTokensAsc}><HiArrowCircleUp /></button>
+        <button onClick={sortTokensDesc}><HiArrowCircleDown /></button>
+      </div>
       <div className={`grid grid-cols-3 sm:grid-cols-5 md:grid-cols-5 gap-4 justify-center items-center`}>
         {currentTokens.filter(tokenId => !explodedTokens.includes(tokenId)).map((tokenId, index) => (
-            <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
-              <TokenImage delay={index * 1000} tokenId={Number(tokenId)} onTokenExploded={handleTokenExploded} ABI={ABI} shouldRefresh={shouldRefresh} size={300} />
-            </div>
+          <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
+            <TokenImage delay={index * 1000} tokenId={Number(tokenId)} onTokenExploded={handleTokenExploded} ABI={ABI} shouldRefresh={shouldRefresh} size={300} />
+          </div>
         ))}
       </div>
       <div className='text-center'>
-          {/* Implement the pagination buttons here */}
-          {Array(Math.ceil(sortedTokens.length / itemsPerPage)).fill().map((_, index) => (
-              <button className='justify-items-center mx-4 sm:mx-2 mt-4' key={index} onClick={() => setCurrentPage(index + 1)}>{index + 1}</button>
-          ))}
+        {/* Implement the pagination buttons here */}
+        {Array(Math.ceil(sortedTokens.length / itemsPerPage)).fill().map((_, index) => (
+          <button className='justify-items-center mx-4 sm:mx-2 mt-4' key={index} onClick={() => setCurrentPage(index + 1)}>{index + 1}</button>
+        ))}
       </div>
     </div>
   );
