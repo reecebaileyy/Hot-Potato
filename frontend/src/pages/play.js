@@ -1053,7 +1053,7 @@ export default function Play() {
       </Head>
 
 
-      <div className={`${darkMode ? 'darkmode text-white min-h-screen font-darumadrop' : 'normal min-h-screen font-darumadrop'}`}>
+      <div className={`${darkMode ? 'darkmode bg-fixed text-white min-h-screen font-darumadrop' : 'normal bg-fixed min-h-screen font-darumadrop'}`}>
         <ToastContainer
           position="bottom-left"
           autoClose={5000}
@@ -1347,11 +1347,11 @@ export default function Play() {
                     getGameState == "Minting" && (
                       <>
                         <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Jump in the Heat</h1>
-                        {loadingCurrentGeneration ? (
+                        {/* {loadingCurrentGeneration ? (
                           <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</h3>
                         ) : (
                           <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Round {_currentGeneration}</h3>
-                        )}
+                        )} */}
 
                         {loadingPrice ? (
                           <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: Loading...</p>
