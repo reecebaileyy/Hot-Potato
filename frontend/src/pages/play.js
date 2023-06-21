@@ -938,7 +938,7 @@ export default function Play() {
     if (!isNaN(roundMints)) {
       setRoundMints(roundMints);
     }
-  }, [refetchPotatoTokenId, potatoTokenId]);
+  }, []);
 
 
   useEffect(() => {
