@@ -52,7 +52,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className={`${darkMode ? 'darkmode to-black text-white min-h-screen font-darumadrop' : 'normal min-h-screen font-darumadrop'}`}>
+      <div className={`${darkMode ? 'darkmode bg-fixed to-black text-white min-h-screen font-darumadrop' : 'normal bg-fixed min-h-screen font-darumadrop'}`}>
         <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
           <Link href='/'>
             <Image src={blacklogo} width={150} alt="Logo" />
