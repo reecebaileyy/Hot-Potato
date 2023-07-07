@@ -916,12 +916,11 @@ export default function Play() {
   useEffect(() => {
     const fetchData = async () => {
       await refetchPotatoTokenId?.();
-      setPotatoTokenId(parseInt(potatoTokenId, 10)?.toString());
+      setPotatoTokenId(_potato_token);
       await refetchUserHasPotatoToken({ args: [address] });
       await refetchSuccessfulPasses({ args: [address] });
     }
     fetchData();
-    setPotatoTokenId(_potato_token);
     refetchGameState();
     refetchGetActiveTokenCount({ args: [address] });
     refetchGetExplosionTime();
@@ -1072,7 +1071,7 @@ export default function Play() {
           <Link href='/'>
             <Image src={blacklogo} width={150} alt="Logo" />
           </Link>
-          <div className="xl:hidden 2xl:hidden 3xl:hidden">
+          <div className="xl:hidden 2xl:hidden 3xl:hidden z-50">
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
               <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
             </button>
@@ -1223,7 +1222,7 @@ export default function Play() {
             }
           </div>
 
-          <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+          <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 z-30 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {!getGameState ? <h1 className="text-4xl font-extrabold underline text-center mb-4">Loading...</h1> : null}
             {getGameState == "Playing" || getGameState == "Final Stage" ?
               <>
@@ -1234,7 +1233,7 @@ export default function Play() {
                   <h2 className="text-center font-bold mb-2">Loading Has Potato...</h2>
                 ) : (
                   <h2 className={`text-3xl sm:text-xl md:text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                    {userHasPotatoToken ? <p className='animate-crazy'>YOU HAVE THE POTATO</p> : "YOU DON'T HAVE THE POTATO"}
+                    {userHasPotatoToken ? <p className='animate-crazy text-center'>YOU HAVE THE POTATO</p> : "YOU DON'T HAVE THE POTATO"}
                   </h2>
                 )}
                 {explosion ?
