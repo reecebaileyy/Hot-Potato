@@ -11,7 +11,6 @@ export default function App({ Component, pageProps }) {
   const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
   const transport = webSocket(process.env.NEXT_PUBLIC_ALCHEMY_URL);
 
-// config
   const wagmiConfig = createConfig({
     autoConnect: true,
     connectors: w3mConnectors({
