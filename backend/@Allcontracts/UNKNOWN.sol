@@ -173,7 +173,7 @@ contract UNKNOWN is
         s_subscriptionId = subscriptionId;
     }
 
-/*
+    /*
  _______           __       __ __               ________                              __     __                            
 |       \         |  \     |  \  \             |        \                            |  \   |  \                           
 | ▓▓▓▓▓▓▓\__    __| ▓▓____ | ▓▓\▓▓ _______     | ▓▓▓▓▓▓▓▓__    __ _______   _______ _| ▓▓_   \▓▓ ______  _______   _______ 
@@ -451,9 +451,7 @@ contract UNKNOWN is
                 gameState == GameState.Minting,
             "Game not playing"
         );
-        if (_isExplosionInProgress) {
-            remainingTime = EXPLOSION_TIME - block.timestamp;
-        }
+        remainingTime = EXPLOSION_TIME;
         previousGameState = gameState;
         gameState = GameState.Paused;
         emit GamePaused("Paused");
@@ -465,9 +463,8 @@ contract UNKNOWN is
             previousGameState == GameState.Playing ||
             previousGameState == GameState.FinalRound
         ) {
-            // TODO: Check if there is a valid explosion timer ongoing
-            EXPLOSION_TIME = block.timestamp + remainingTime;
-            emit UpdatedTimer(EXPLOSION_TIME - block.timestamp);
+            EXPLOSION_TIME = remainingTime;
+            emit UpdatedTimer(remainingTime);
         }
         gameState = previousGameState;
         emit GameResumed("The game has resumed");
