@@ -123,9 +123,9 @@ export default function Play() {
     abi: ABI,
     eventName: 'MintingEnded',
     async listener(log) {
-      await refetchGameState?.();
-      await refetchPotatoTokenId?.();
-      await refetchGetActiveTokens?.();
+      await refetchGameState();
+      await refetchPotatoTokenId();
+      await refetchGetActiveTokens();
       setRemainingTime(explosionTime);
       const message = "No more mints";
       setGetGameState("Playing");

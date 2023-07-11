@@ -24,7 +24,7 @@ contract.on('PlayerWon', async (player, event) => {
                 address: player,
                 passes: 0,
                 fails: 0,
-                wins: 1,  // initial value, adjust as needed
+                wins: 1, 
             },
         });
 
