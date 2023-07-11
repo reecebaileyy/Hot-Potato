@@ -16,7 +16,31 @@ import ActiveTokensImages from '../../components/ActiveTokensImages'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 import { HiArrowCircleDown, HiArrowCircleUp } from "react-icons/hi";
-export default function Play() {
+
+
+import { providers, Contract } from 'ethers';
+import { get } from 'mongoose';
+
+
+export async function getServerSideProps(context) {
+  const provider = new providers.WebSocketProvider(process.env.NEXT_PUBLIC_ALCHEMY_URL);
+  const contract = new Contract('0xb6f6CE3AD79c658645682169C0584664cfEc7908', ABI, provider);
+  const initalGameState = await contract.getGameState();
+  const getExplosionTime = await contract.getExplosionTime();
+  const explosionTime = parseInt(getExplosionTime, 10);
+  const roundNumber = await contract.currentGeneration();
+  const gen = parseInt(roundNumber, 10);
+
+
+  return { props: { initalGameState, explosionTime, gen } };
+
+}
+
+
+
+
+
+export default function Play({ initalGameState, explosionTime, gen }) {
 
   /* 
     ______  ________  ______  ________ ________      __    __  ______   ______  __    __  ______  
@@ -30,6 +54,11 @@ export default function Play() {
     \▓▓▓▓▓▓    \▓▓   \▓▓   \▓▓   \▓▓   \▓▓▓▓▓▓▓▓     \▓▓   \▓▓ \▓▓▓▓▓▓  \▓▓▓▓▓▓ \▓▓   \▓▓ \▓▓▓▓▓▓ 
                                                                                    
   */
+  const [getGameState, setGetGameState] = useState(initalGameState);
+  const [prevGameState, setPrevGameState] = useState(initalGameState);
+
+
+
   const [darkMode, setDarkMode] = useState(false);
   const [isOpen, setIsOpen] = useState(false)
   const [events, setEvents] = useState([]);
@@ -44,12 +73,11 @@ export default function Play() {
   const [isLoadingActiveTokens, setIsLoadingActiveTokens] = useState(true);
   const [_potatoTokenId, setPotatoTokenId] = useState(0);
   const [remainingTime, setRemainingTime] = useState(null);
-  const [_getGameState, setGetGameState] = useState("Loading...");
   const [_roundMints, setRoundMints] = useState(0);
   const [passArgs, setPassArgs] = useState(null);
   const [mintArgs, setMintArgs] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(64); // You can set items per page as you want
+  const [itemsPerPage, setItemsPerPage] = useState(64);
   const [sortedTokens, setSortedTokens] = useState([]);
   const menuRef = useRef()
   const divRef = useRef(null);
@@ -100,80 +128,84 @@ export default function Play() {
     ▀▀███████▀████▀██▄████  ████  ████▄ ▀█████▀   █▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀
   */
 
-  useContractEvent({
-    address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
-    abi: ABI,
-    eventName: 'GameStarted',
-    async listener(log) {
-      await refetchGameState();
-      if (address) {
-        await refetchGetActiveTokenCount({ args: [address] });
-      }
-      await refetchGetRoundMints();
-      await refetchGetActiveTokens();
-      setRoundMints(0);
-      const message = "Heating up";
-      setGetGameState("Minting");
-      setEvents(prevEvents => [...prevEvents, message]);
-    },
-  })
+    useContractEvent({
+      address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
+      abi: ABI,
+      eventName: 'GameStarted',
+      async listener(log) {
+        if (address) {
+          await refetchGetActiveTokenCount({ args: [address] });
+        }
+        await refetchGetRoundMints();
+        await refetchGetActiveTokens();
+        setRoundMints(() => 0);
+        setGetGameState(() => "Minting");
+        setPrevGameState(() => "Queued");
+        setEvents(prevEvents => [...prevEvents, "Heating up"]);
+      },
+    });
+    
+    useContractEvent({
+      address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
+      abi: ABI,
+      eventName: 'MintingEnded',
+      async listener(log) {
+        await refetchPotatoTokenId();
+        await refetchGetActiveTokens();
+        setRemainingTime(explosionTime);
+        setGetGameState(() => "Playing");
+        setPrevGameState(() => "Minting");
+        setEvents(prevEvents => [...prevEvents, "No more mints"]);
+      },
+    });
+    
+    useContractEvent({
+      address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
+      abi: ABI,
+      eventName: 'GameResumed',
+      async listener(log) {
+        const prevState = prevGameState
+        setGetGameState(prevState);
+        const gameState = getGameState;
+        setPrevGameState(gameState);
+        console.log(`getGameState: ${getGameState}`)
+        console.log(`prevGameState: ${prevGameState}`)
+        setEvents(prevEvents => [...prevEvents, "Back to it"]);
+      },
+    });
 
   useContractEvent({
-    address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
-    abi: ABI,
-    eventName: 'MintingEnded',
-    async listener(log) {
-      await refetchGameState();
-      await refetchPotatoTokenId();
-      await refetchGetActiveTokens();
-      setRemainingTime(explosionTime);
-      const message = "No more mints";
-      setGetGameState("Playing");
-      setEvents(prevEvents => [...prevEvents, message]);
-    },
-  })
+  address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
+  abi: ABI,
+  eventName: 'GamePaused',
+  async listener(log) {
+    const gameState = getGameState;
+    setPrevGameState(gameState);
+    const state = "Paused";
+    setGetGameState(state);
+    console.log(`getGameState: ${getGameState}`)
+    console.log(`prevGameState: ${prevGameState}`)
+    const message = "Cooling off";
+    setEvents(prevEvents => [...prevEvents, message]);
+  },
+});
+
   
-  useContractEvent({
-    address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
-    abi: ABI,
-    eventName: 'GameResumed',
-    async listener(log) {
-      const message = "Back to it";
-      await refetchGameState();
-      await refetchPotatoTokenId();
-      await refetchRewards({ args: [address] });
-      await refetchGetActiveTokens();
-      setEvents(prevEvents => [...prevEvents, message]);
-    },
-  })
-
-
-  useContractEvent({
-    address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
-    abi: ABI,
-    eventName: 'GamePaused',
-    async listener(log) {
-      await refetchGameState();
-      await refetchRewards({ args: [address] });
-      await refetchGetActiveTokens();
-      const message = "Cooling off";
-      setEvents(prevEvents => [...prevEvents, message]);
-    },
-  })
-
   useContractEvent({
     address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
     abi: ABI,
     eventName: 'GameRestarted',
     async listener(log) {
-      await refetchGameState();
+      // await refetchGameState();
       await refetchRewards({ args: [address] });
+      setPrevGameState(prevState => prevState); // keep the previous state
+      setGetGameState(() => "Queued"); // set new state to "Queued"
       const message = "Game Over";
-      setRoundMints(0);
+      setRoundMints(() => 0);
       setEvents(prevEvents => [...prevEvents, message]);
     },
   })
-
+  
   useContractEvent({
     address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
     abi: ABI,
@@ -205,7 +237,7 @@ export default function Play() {
     async listener(log) {
       try {
         const player = log[0]?.args?.player;
-        await refetchGameState();
+        // await refetchGameState();
         await refetchHallOfFame({ args: [_currentGeneration] });
         setEvents(prevEvents => [...prevEvents, `${player} won! 🎉`]);
         if (player == address) {
@@ -408,21 +440,21 @@ export default function Play() {
 
 
 
-  // GET MINT PRICE
-  const { data: getGameState, refetch: refetchGameState, isLoading: loadingGetGameState } = useContractRead({
-    address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
-    abi: ABI,
-    functionName: 'getGameState',
-    enabled: true,
-  })
+  // // GET MINT PRICE
+  // const { data: getGameState, refetch: refetchGameState, isLoading: loadingGetGameState } = useContractRead({
+  //   address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
+  //   abi: ABI,
+  //   functionName: 'getGameState',
+  //   enabled: true,
+  // })
 
-  // GET MINT PRICE
-  const { data: getExplosionTime, isLoading: loadingExplosionTime, error: loadingError, refetch: refetchGetExplosionTime } = useContractRead({
-    address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
-    abi: ABI,
-    functionName: 'getExplosionTime',
-  })
-  const explosionTime = parseInt(getExplosionTime, 10);
+  // // GET MINT PRICE
+  // const { data: getExplosionTime, isLoading: loadingExplosionTime, error: loadingError, refetch: refetchGetExplosionTime } = useContractRead({
+  //   address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
+  //   abi: ABI,
+  //   functionName: 'getExplosionTime',
+  // })
+  // const explosionTime = parseInt(getExplosionTime, 10);
 
 
   // GET MINT PRICE
@@ -901,9 +933,9 @@ export default function Play() {
       await refetchSuccessfulPasses({ args: [address] });
     }
     fetchData();
-    refetchGameState();
+    // refetchGameState();
     refetchGetActiveTokenCount({ args: [address] });
-    refetchGetExplosionTime();
+    // refetchGetExplosionTime();
     setRemainingTime(explosionTime);
     refetchGetRoundMints();
     refetchGetActiveTokens();
@@ -948,13 +980,13 @@ export default function Play() {
     refetchRewards({ args: [address] });
   }, [address]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      localStorage.clear();
-    }, 1000 * 60 * 30);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     localStorage.clear();
+  //   }, 1000 * 60 * 30);
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -971,16 +1003,16 @@ export default function Play() {
     console.log("An UNKNOWN X BEDTIME PRODUCTION")
   }, [], 5000);
 
-  useEffect(() => {
-    try {
-      if (refetchGetExplosionTime) {
-        refetchGetExplosionTime();
-        setRemainingTime(explosionTime);
-      }
-    } catch (error) {
-      console.error("Error fetching explosion time:", error);
-    }
-  }, [getExplosionTime]);
+  // useEffect(() => {
+  //   try {
+  //     if (refetchGetExplosionTime) {
+  //       refetchGetExplosionTime();
+  //       setRemainingTime(explosionTime);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching explosion time:", error);
+  //   }
+  // }, [getExplosionTime]);
 
 
   useEffect(() => {
@@ -1092,7 +1124,7 @@ export default function Play() {
         </nav>
 
         <h1 className={`${darkMode ? 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto' : 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto'}`}>
-          {!_currentGeneration ? "Loading" : { _currentGeneration } == 0 ? _currentGeneration == 0 ? "Round 1" : _currentGeneration == 1 : `Round ${_currentGeneration}`}
+          { gen === 1 ? "Round 1" : `Round ${gen}`}
         </h1>
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col lg:flex lg:flex-col grid grid-cols-8 gap-4 justify-center items-center">
@@ -1326,12 +1358,6 @@ export default function Play() {
                     getGameState == "Minting" && (
                       <>
                         <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Jump in the Heat</h1>
-                        {/* {loadingCurrentGeneration ? (
-                          <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</h3>
-                        ) : (
-                          <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Round {_currentGeneration}</h3>
-                        )} */}
-
                         {loadingPrice ? (
                           <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: Loading...</p>
                         ) : (
@@ -1530,6 +1556,7 @@ export default function Play() {
                       </>
             }
           </div>
+          
           <div
             ref={divRef}
             className={`hide-scrollbar w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}
@@ -1709,7 +1736,8 @@ export default function Play() {
 
 
         </div>
-      </div >
+      </div>
+
     </>
   )
 }

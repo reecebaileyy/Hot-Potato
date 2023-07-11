@@ -144,7 +144,7 @@ contract UNKNOWN is
     event RequestFulfilled(uint256 requestId, uint256[] randomWords);
     event FailedPass(address indexed player);
     event SuccessfulPass(address indexed player);
-    event PlayerWon(address indexed player, string message);
+    event PlayerWon(address indexed player);
     event PotatoMinted(
         uint32 amount,
         address indexed player,
@@ -812,7 +812,7 @@ contract UNKNOWN is
             assignPotato(_findNextActiveToken());
         } else if (activeAddresses == 1) {
             gameState = GameState.Ended;
-            emit PlayerWon(ownerOf(activeTokens[1]), "Ended");
+            emit PlayerWon(ownerOf(activeTokens[1]));
             winners.push(ownerOf(activeTokens[1]));
             hallOfFame[currentGeneration] = ownerOf(activeTokens[1]);
             totalWins[ownerOf(activeTokens[1])] += 1;
