@@ -250,17 +250,6 @@ export default function Play() {
             passPromise.reject(new Error('Passing failed'));
           }
         }
-        // Send a POST request to the API route to update the database
-        await fetch('/api/update-passes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ address: player }),
-        });
-
-        console.log(`1 pass for ${player}`)
-
       } catch (error) {
         console.error('Error updating successful passes', error);
       }
