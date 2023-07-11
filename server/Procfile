@@ -1,1 +1,1 @@
-Worker: node update-passes.js
+web: node update-passes.js

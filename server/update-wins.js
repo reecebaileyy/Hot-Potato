@@ -11,24 +11,24 @@ const provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_URL);
 
 let contract = new ethers.Contract('0xb6f6CE3AD79c658645682169C0584664cfEc7908', ABI, provider);
 
-contract.on('SuccessfulPass', async (player, event) => {
+contract.on('PlayerWon', async (player, event) => {
     try {
         await prisma.leaderboard.upsert({
             where: { address: player },
             update: {
-                passes: {
+                wins: {
                     increment: 1
                 },
             },
             create: {
                 address: player,
-                passes: 1,
+                passes: 0,
                 fails: 0,
-                wins: 0,
+                wins: 1,  // initial value, adjust as needed
             },
         });
 
-        console.log("Completed upsert");
+        console.log("Completed upsert")
 
     } catch (error) {
         console.error('Error updating successful passes', error);

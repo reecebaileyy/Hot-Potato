@@ -215,15 +215,6 @@ export default function Play() {
           await refetchTotalWins({ args: [address] });
         }
 
-        await fetch('/api/update-wins', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ address: player }),
-        });
-
-
       } catch (error) {
         console.error('Error updating wins', error);
       }
