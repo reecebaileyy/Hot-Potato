@@ -35,7 +35,6 @@ export async function getServerSideProps() {
 
 
 export default function Play({ initalGameState, gen, price, maxSupply }) {
-  const provider = new providers.JsonRpcBatchProvider(process.env.NEXT_PUBLIC_ALCHEMY_URL);
   const displayPrice = ethers.utils.formatEther(price.toString());
   const [_address, setAddress] = useState("");
   const { address } = useAccount();
