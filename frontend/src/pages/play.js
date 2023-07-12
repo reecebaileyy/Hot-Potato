@@ -20,7 +20,7 @@ import { providers, Contract, ethers } from 'ethers';
 
 
 export async function getServerSideProps() {
-  const provider = new providers.JsonRpcBatchProvider(process.env.NEXT_PUBLIC_ALCHEMY_URL);
+  const provider = new ethers.providers.JsonRpcBatchProvider(process.env.NEXT_PUBLIC_ALCHEMY_URL);
   const contract = new Contract('0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07', ABI, provider);
   const initalGameState = await contract.getGameState();
   const roundNumber = await contract.currentGeneration();
