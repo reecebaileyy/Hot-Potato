@@ -94,7 +94,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   const [searchId, setSearchId] = useState('');
 
 
-
   // Pagination logic
   const indexOfLastToken = currentPage * itemsPerPage;
   const indexOfFirstToken = indexOfLastToken - itemsPerPage;
