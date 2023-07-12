@@ -8,8 +8,9 @@ import { polygon, polygonMumbai } from 'wagmi/chains'
 
 export default function App({ Component, pageProps }) {
   const chains = [polygon, polygonMumbai]
+  const [address, setAddress] = useState(null);
   const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
-  const transport = webSocket(process.env.NEXT_PUBLIC_ALCHEMY_URL);
+  const transport = webSocket(process.env.NEXT_PUBLIC_ALCHEMY_URL_WEBSOCKET);
 
   const wagmiConfig = createConfig({
     autoConnect: true,
@@ -42,7 +43,16 @@ export default function App({ Component, pageProps }) {
         chain: polygonMumbai,
         transport: custom(provider)
       })
+      // Convert the provider returned by Web3Modal to an Ethers.js Web3Provider.
+    const web3Provider = new ethers.providers.Web3Provider(provider);
+
+    // Now get the signer from the Web3Provider.
+    const signer = web3Provider.getSigner();
+    const address = await signer.getAddress();
+    setAddress(address);
+      console.log(`address, ${address}`)
       console.log(`userClient, ${userClient}`)
+      
       // Set the new client.
       setClient(userClient)
     }
@@ -57,7 +67,7 @@ export default function App({ Component, pageProps }) {
   return (
     <>
       <WagmiConfig config={wagmiConfig}>
-        <Component {...pageProps} client={client} />
+        <Component {...pageProps} client={client} address={address} />
       </WagmiConfig>
 
       <Web3Modal

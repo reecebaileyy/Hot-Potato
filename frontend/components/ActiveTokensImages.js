@@ -29,7 +29,7 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
   const currentTokens = sortedTokens?.slice(indexOfFirstToken, indexOfLastToken);
 
   useContractEvent({
-    address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
+    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
@@ -44,14 +44,14 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
   });
 
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
+    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
     abi: ABI,
     functionName: 'getActiveTokens',
     enabled: true
   });
 
   const { data: activeTokens, isLoading, refetch: refetchActiveTokens, isError } = useContractRead({
-    address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
+    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
     abi: ABI,
     functionName: 'getActiveTokensOfOwner',
     args: [ownerAddress],
@@ -60,7 +60,7 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
 
 
   const { data: getImageString, isLoading: loadingImage, refetch: refetchImageString, isError: errorImage } = useContractRead({
-    address: '0xb6f6CE3AD79c658645682169C0584664cfEc7908',
+    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],

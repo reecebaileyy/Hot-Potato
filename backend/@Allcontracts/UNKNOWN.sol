@@ -81,7 +81,7 @@ contract UNKNOWN is
     uint256 public TOTAL_PASSES;
     uint256 public potatoTokenId;
     uint256 public lastRequestId;
-    uint32 public currentGeneration = 0;
+    uint32 public currentGeneration = 1;
     uint256 public _price = 0.01 ether;
     uint256 public _maxsupplyPerRound = 10000;
     uint256 public _maxperwallet = 3;
@@ -134,7 +134,7 @@ contract UNKNOWN is
     event GameResumed(string message);
     event GameRestarted(string message);
     event FinalRoundStarted(string message);
-    event PotatoExploded(uint256 tokenId);
+    event PotatoExploded(uint256 tokenId, address player);
     event NewRound(uint256 round);
     event HandsActivated(uint256 count);
     event UpdatedTimer(uint256 time);
@@ -147,8 +147,7 @@ contract UNKNOWN is
     event PlayerWon(address indexed player);
     event PotatoMinted(
         uint32 amount,
-        address indexed player,
-        uint256 indexed tokenId
+        address indexed player
     );
 
     constructor(uint64 subscriptionId)
@@ -200,10 +199,10 @@ contract UNKNOWN is
         uint32 amount = 0;
 
         for (uint256 i = 0; i < count; i++) {
-            amount++;
-            uint64 newTokenId = _mintHand();
-            emit PotatoMinted(amount, msg.sender, newTokenId);
+            amount += 1;
+            _mintHand();
         }
+        emit PotatoMinted(amount, msg.sender);
 
         if (!isPlayer[msg.sender]) {
             isPlayer[msg.sender] = true;
@@ -476,7 +475,6 @@ contract UNKNOWN is
             "Game not paused or ended"
         );
         gameState = GameState.Queued;
-        // Clear the activeTokens array and remove the potato token
         delete activeTokens;
         roundMints = 0;
         delete hands[potatoTokenId];
@@ -523,18 +521,14 @@ contract UNKNOWN is
             require(amount > 0, "No funds to withdraw");
             teamFunds[round] = 0;
 
-            // Addresses to which you want to send the funds
             address nonPayableAddr1 = 0x41447b831CBbffb74883eFF27FC5AaA13BE3CA52;
             address nonPayableAddr2 = 0x57b18277B530Fa0C1748C29F9b1887B7691FF701;
 
-            // Convert them to payable addresses
             address payable teamMember1 = payable(nonPayableAddr1);
             address payable teamMember2 = payable(nonPayableAddr2);
 
-            // Split the amount
             uint256 halfAmount = amount / 2;
 
-            // Send funds to the addresses
             teamMember1.transfer(halfAmount);
             teamMember2.transfer(halfAmount);
 
@@ -547,7 +541,6 @@ contract UNKNOWN is
             require(amount > 0, "No funds to withdraw");
             charityFunds[round] = 0;
 
-            // Send funds to the charity address
             payable(0x376e50f9036D29038b8aC9Bc12C2E9CF9418d451).transfer(
                 amount
             );
@@ -574,13 +567,11 @@ contract UNKNOWN is
         uint8 background;
         uint8 hand_type;
 
-        // Helpers to get Percentages
         uint256 fortyPct = (type(uint64).max / 100) * 40;
         uint256 seventyPct = (type(uint64).max / 100) * 70;
 
         id = uint64(_nextTokenId());
 
-        // Getting Random traits
         uint64 randBackground = uint64(_rarity(_rand(), "BACKGROUND", id));
         background = uint8(
             randBackground >= seventyPct
@@ -691,7 +682,6 @@ contract UNKNOWN is
         emit UpdatedTimer(EXPLOSION_TIME - block.timestamp);
         emit MintingEnded("Playing");
         emit HandsActivated(activeTokens.length);
-        emit PotatoPassed(0, potatoTokenId, ownerOf(potatoTokenId));
     }
 
     function assignPotato(uint256 tokenId) internal {
@@ -716,10 +706,7 @@ contract UNKNOWN is
     }
 
     function _findNextActiveToken() internal view returns (uint256) {
-        // Generate a pseudo-random index based on the currentRandomWord
         uint256 randomIndex = currentRandomWord % activeTokens.length;
-
-        // Find the next active token starting from the random index
         uint256 loopCount = 0;
         while (loopCount < activeTokens.length) {
             uint256 tokenIndex = (randomIndex + loopCount) %
@@ -731,7 +718,6 @@ contract UNKNOWN is
             loopCount++;
         }
 
-        // If no active token (excluding potatoTokenId) is found, return 0 or handle the case as desired
         return 0;
     }
 
@@ -751,23 +737,19 @@ contract UNKNOWN is
     }
 
     function updateExplosionTimer() internal {
-        // Calculate the current explosion duration based on the total number of passes
         uint256 currentDuration = INITIAL_POTATO_EXPLOSION_DURATION -
             (TOTAL_PASSES / DECREASE_INTERVAL) *
             DECREASE_DURATION;
 
-        // Ensure that the duration does not go below 15 seconds
         uint256 minimumDuration = 15 seconds;
         if (currentDuration < minimumDuration) {
             currentDuration = minimumDuration;
         }
 
-        // Initialize the EXPLOSION_TIME if it's not initialized yet
         if (!explosionTimeInitialized) {
             EXPLOSION_TIME = block.timestamp + currentDuration;
             explosionTimeInitialized = true;
         } else {
-            // Update the EXPLOSION_TIME
             EXPLOSION_TIME = block.timestamp + currentDuration;
         }
 
@@ -780,7 +762,6 @@ contract UNKNOWN is
             "Game not playing"
         );
 
-        // 1. +1 for the address of the player who failed to pass the potato kek loser lol
         address failedPlayer = ownerOf(potatoTokenId);
         failedPasses[failedPlayer] += 1;
 
@@ -793,7 +774,7 @@ contract UNKNOWN is
         hands[potatoTokenId].isActive = false;
 
         // 4. Emit an event to notify that the potato exploded and get ready to assign potato to a rand tokenId
-        emit PotatoExploded(potatoTokenId);
+        emit PotatoExploded(potatoTokenId, failedPlayer);
         uint256 indexToAssign = currentRandomWord % activeTokens.length;
 
         // Decrease the count of active tokens for the failed player
