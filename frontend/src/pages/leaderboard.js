@@ -6,6 +6,7 @@ import { DarkModeSwitch } from 'react-toggle-dark-mode';
 import { useState, useRef, useEffect } from 'react'
 import { Web3Button } from '@web3modal/react'
 import blacklogo from '../../public/assets/images/Logo.png'
+import loadingGif from '../../public/assets/images/Passing.gif'
 
 
 
@@ -157,8 +158,14 @@ export default function Home() {
               <button onClick={() => { setSortAsc(!sortAsc); console.log('Toggling sort direction...') }} className={`mr-4 ${darkMode ? 'text-white' : 'text-black'}`}>Sort {sortAsc ? 'Descending' : 'Ascending'}</button>
             </div>
             <div className='overflow-auto'>
-              {isLoading ? ( // Conditional rendering based on isLoading state
-                <p className='text-2xl text-center'>Loading Please Wait...</p> // Display "Loading..." when isLoading is true
+              {isLoading ? ( 
+                <>
+                <div className='flex flex-col items-center justify-center'>
+                <Image src={loadingGif} width={300} alt='loading'/> 
+                <h1 className='animate-pulse text-2xl sm:text-xl md:text-xl'>Loading...</h1>
+                </div>
+                </>
+                
               ) : (
                 <table className="table-auto w-full min-w-full">
                   <thead>
