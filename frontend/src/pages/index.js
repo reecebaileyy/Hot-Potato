@@ -69,9 +69,9 @@ export default function Home() {
               }}>
               <ul ref={menuRef} className={`${darkMode ? 'bg-gray-700 to-black text-white items-center p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl' : 'items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black'}`}>
                 <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/play">Play</Link></li>
-                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/leaderboard">Leaderboard</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://twitter.com/ocHotPotato" target='_blank'>Twitter</Link></li>
                 <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
-                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://opensea.io/" target="_blank">Opensea</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://discord.gg/BSqK5CvDmT" target="_blank">Discord</Link></li>
                 <DarkModeSwitch
                   checked={darkMode}
                   onChange={() => setDarkMode(!darkMode)}
@@ -83,9 +83,9 @@ export default function Home() {
           </div>
           <ul className='flex md:hidden sm:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
             <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/play">Play</Link></li>
-            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/leaderboard">Leaderboard</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://twitter.com/ocHotPotato" target='_blank'>Twitter</Link></li>
             <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
-            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://discord.gg/BSqK5CvDmT" target="_blank">Discord</Link></li>
           </ul>
           <div className='flex gap-2 items-center sm:hidden md:hidden'>
             <DarkModeSwitch
@@ -105,7 +105,7 @@ export default function Home() {
 
         <div className='xl:grid xl:grid-cols-2 lg:grid lg:grid-cols-2 2xl:grid 2xl:grid-cols-2 3xl:grid 3xl:grid-cols-2  sm:flex-col md:flex-col lg:flex-col justify-between items-center mx-12 mb-20'>
           <Image className='justify-self-center' alt="Add alt Here" src={potatoFire} width='auto' height='auto' />
-          <h1 className='text-xl sm:text-base text-center text-white'>Experience OnChain Hot Potato, where thrilling gameplay meets community spirit! After each round, a portion of minting funds goes to a charity chosen by our players, ensuring our game impacts real-world good. As the tension rises and the potato gets tossed, the ultimate victor receives 40% of the minting pool. Leveraging Chainlink VRF, our game guarantees transparent, unbiased gameplay where the outcome is genuinely unpredictable. Track your successes, strategize, and compete with others using our detailed statistics. Enjoy endless rounds of adrenaline-pumping excitement with game resets after each round. Play OnChain Hot Potato today and experience gaming that combines strategy, low gas fees, and community spirit.</h1>
+          <h1 className='text-xl sm:text-base text-center text-white'>Experience OnChain Hot Potato, where thrilling gameplay meets community spirit! After each round, a portion of minting funds goes to a charity chosen by our players, ensuring our game impacts real-world good. As the tension rises and the potato gets tossed, the ultimate victor receives 30% of the minting pool. Leveraging Chainlink VRF, our game guarantees transparent, unbiased gameplay where the outcome is genuinely unpredictable. Track your successes, strategize, and compete with others using our detailed statistics. Enjoy endless rounds of adrenaline-pumping excitement with game resets after each round. Play OnChain Hot Potato today and experience gaming that combines strategy, low gas fees, and community spirit.</h1>
         </div>
 
 
@@ -116,15 +116,6 @@ export default function Home() {
             <h3 className="text-2xl md:text-base sm:text-base text-white">Join the web3 revolution and immerse yourself in<br></br> a fast-paced, exhilarating game of skill and strategy.</h3>
           </div>
         </div>
-
-        {/* <div className='grid grid-cols-7 gap-4 sm:flex sm:flex-col sm:gap-3 md:flex md:flex-col md:gap-3 mt-10 mx-10 items-center'>
-          <h1 className='col-span-7 text-5xl md:text-2xl sm:text-2xl text-white text-center'>Getting Started with OnChain Hot Potato</h1>
-          <h3 className='col-span-7 text-2xl md:text-base sm:text-base text-white text-center mb-10'>It&apos;s simple, fun, and rewarding! Here&apos;s how you can join in on the excitement...</h3>
-          <div className='col-span-7 xl:grid xl:grid-cols-2 lg:grid lg:grid-cols-2 2xl:grid 2xl:grid-cols-2 3xl:grid 3xl:grid-cols-2  sm:flex-col md:flex-col lg:flex-col justify-between items-center mx-12 mb-20'>
-            <h1 className=' text-2xl sm:text-base text-center text-white'>Feel the intense heat as you compete in thrilling, fast-paced, adrenaline-fueled rounds, passing the sizzling potato to your friends or opponents before the timer runs out. With our user-friendly interface and intuitive gameplay, OnChain Hot Potato offers an immersive experience that&apos;s incredibly easy to pick up and play, making it a game you won&apos;t be able to resist. Whether you&apos;re a seasoned gamer or a beginner looking for a captivating challenge, our button-based gameplay will keep you hooked for hours on end, ensuring endless excitement and intense competition.</h1>
-            <Image className='justify-self-center ' alt="Add alt Here" src={potatoBlink} width='auto' height='auto' />
-          </div>
-        </div> */}
 
         <div className="flex items-center my-10 mx-10">
           <div className="flex-grow border-t border-white"></div>
