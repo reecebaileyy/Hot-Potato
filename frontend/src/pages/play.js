@@ -29,15 +29,24 @@ export async function getServerSideProps() {
   const price = parseInt(_price, 10);
   const _maxsupplyPerRound = await contract._maxsupplyPerRound();
   const maxSupply = parseInt(_maxsupplyPerRound, 10);
+
   return { props: { initalGameState, gen, price, maxSupply } };
 
 }
 
 
 export default function Play({ initalGameState, gen, price, maxSupply }) {
-  const displayPrice = ethers.utils.formatEther(price.toString());
+
+  const [loading, setLoading] = useState(true);
   const [_address, setAddress] = useState("");
   const { address } = useAccount();
+
+  useEffect(() => {
+    // check if the props have been loaded
+    if (initalGameState && gen && price && maxSupply) {
+      setLoading(false); // set loading to false when data is fetched
+    }
+  }, [initalGameState, gen, price, maxSupply]);
 
   useEffect(() => {
     if (address) {
@@ -91,6 +100,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   const divRef = useRef(null);
   const endOfDiv = useRef(null);
   const [searchId, setSearchId] = useState('');
+  const displayPrice = ethers.utils.formatEther(price.toString());
 
 
   // Pagination logic
@@ -1060,6 +1070,11 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
    \▓▓   \▓▓   \▓▓   \▓▓      \▓▓\▓▓▓▓▓▓▓▓      \▓▓▓▓▓▓  \▓▓▓▓▓▓  \▓▓▓▓▓▓ 
                                                                      
   */
+
+  if (loading) {
+    console.log("Loading...");
+    return <div>Loading...</div>; // replace this with your loading component
+  }
 
 
 
