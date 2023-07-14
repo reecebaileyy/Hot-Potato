@@ -167,51 +167,64 @@ contract InventoryManager {
         } else if (part == Part.hand_type) {
             if (1 <= id && id <= 3) {
                 sig = "getHand1()";
-            } else if (3 < id && id <= 6) {
+            } else if (3 < id && id <= 5) {
                 sig = "getHand2()";
-            } else if (6 < id && id <= 10) {
+            } else if (5 < id && id <= 7) {
                 sig = "getHand3()";
-            } else if (10 < id && id <= 14) {
+            } else if (7 < id && id <= 9) {
                 sig = "getHand4()";
-            } else if (14 < id && id <= 17) {
-                sig = "getVitiligo()";
-            } else if (17 < id && id <= 19) {
+            } else if (9 < id && id <= 11) {
+                sig = "getFeet1()";
+            } else if (11 < id && id <= 13) {
+                sig = "getFeet2()";
+            } else if (13 < id && id <= 15) {
+                sig = "getFeet3()";
+            } else if (15 < id && id <= 17) {
                 sig = "getBlueSlime()";
-            } else if (19 < id && id <= 22) {
+            } else if (17 < id && id <= 19) {
                 sig = "getGreenSlime()";
-            } else if (22 < id && id <= 25) {
+            } else if (19 < id && id <= 21) {
                 sig = "getBubbleGum()";
-            } else if (25 < id && id <= 27) {
-                sig = "getGreenGoblin()";
-            } else if (27 < id && id <= 28) {
-                sig = "getZombie()";
-            } else if (28 < id && id <= 29) {
+            } else if (21 < id && id <= 23) {
+                sig = "getGoblin()";
+            } else if (23 < id && id <= 25) {
                 sig = "getRedGoblin()";
-            } else if (29 < id && id <= 30) {
+            } else if (25 < id && id <= 26) {
                 sig = "getYellowGoblin()";
-            } else if (30 < id && id <= 31) {
-                sig = "getSully()";
-            } else if (31 < id && id <= 32) {
-                sig = "getPlastic()";
-            } else if (32 < id && id <= 33) {
-                sig = "getTiger()";
-            } else if (33 < id && id <= 34) {
-                sig = "getSkeleton()";
-            } else if (34 < id && id <= 35) {
-                sig = "getSnowTiger()";
-            } else if (35 < id && id <= 36) {
-                sig = "getGorilla()";
-            } else if (36 < id && id <= 37) {
-                sig = "getYeti()";
-            } else if (37 < id && id <= 38) {
+            } else if (26 < id && id <= 27) {
+                sig = "getSurgeon()";
+            } else if (27 < id && id <= 29) {
                 sig = "getSquatch()";
-            } else if (38 < id && id <= 39) {
+            } else if (29 < id && id <= 30) {
+                sig = "getYeti()";
+            } else if (30 < id && id <= 31) {
                 sig = "getSteve()";
-            } else if (39 < id && id <= 40) {
-                sig = "getCosmic()";
-            } else if (40 < id && id <= 41) {
+            } else if (31 < id && id <= 33) {
+                sig = "getZombie()";
+            } else if (33 < id && id <= 35) {
+                sig = "getSkeleton()";
+            } else if (35 < id && id <= 37) {
                 sig = "getPirate()";
-            } else {
+            } else if (37 < id && id <= 39) {
+                sig = "getPlastic()";
+            } else if (39 < id && id <= 41) {
+                sig = "getTigerPaws()";
+            } else if (41 < id && id <= 43) {
+                sig = "getGorilla()";
+            } else if (43 < id && id <= 45) {
+                sig = "getVitiligo()";
+            } else if (45 < id && id <= 46) {
+                sig = "getGolden()";
+            } else if (46 < id && id <= 47) {
+                sig = "getFire()";
+            } else if (47 < id && id <= 48) {
+                sig = "getEarth()";
+            } else if (48 < id && id <= 49) {
+                sig = "getCosmic()";
+            } else if (49 < id && id <= 50) {
+                sig = "getWater()";
+            }
+             else {
                 revert("Invalid Hand Id");
             }
         } else if (part == Part.potato) {
@@ -338,72 +351,69 @@ contract InventoryManager {
         return "Error: Id not found";
     }
 
-    function getHandName(uint8 id) public pure returns (string memory) {
-        if (id <= 41) {
-            if (id < 10) {
-                if (id < 5) {
-                    if (id < 3) {
-                        return id == 1 ? "White" : "White";
-                    }
-                    return id == 3 ? "White" : "Tan";
-                }
-                if (id < 7) {
-                    return id == 5 ? "Tan" : "Tan";
-                }
-                return id == 7 ? "Brown" : id == 8 ? "Brown" : "Brown";
-            }
-            if (id <= 15) {
-                if (id < 13) {
-                    return id == 10 ? "Brown" : id == 11 ? "Black" : "Black";
-                }
-                return id == 13 ? "Black" : id == 14 ? "Black" : "Vitiligio";
-            }
-            if (id <= 20) {
-                if (id < 18) {
-                    return id == 16 ? "Vitiligio" : "Vitiligio";
-                }
-                return
-                    id == 18 ? "Blue Slime" : id == 19
-                        ? "Blue Slime"
-                        : "Green Slime";
-            }
-            if (id <= 25) {
-                if (id < 23) {
-                    return id == 21 ? "Green Slime" : "Green Slime";
-                }
-                return
-                    id == 23 ? "Bubble Gum" : id == 24
-                        ? "Bubble Gum"
-                        : "Bubble Gum";
-            }
-            if (id <= 30) {
-                if (id < 28) {
-                    return id == 26 ? "Green Goblin" : "Green Goblin";
-                }
-                return
-                    id == 28 ? "Zombie" : id == 29 ? "Red Goblin" : "Yellow Goblin";
-            }
-            if (id <= 32) {
-                return id == 31 ? "Sully" : "Plastic";
-            } 
-            if (id <= 34) {
-                return id == 33 ? "Tiger" : "Skeleton";
-            }
-            if (id <= 36) {
-                return id == 35 ? "Snow Tiger" : "Gorilla";
-            }
-            if (id <= 38) {
-                return id == 37 ? "Yeti" : "Squatch";
-            }
-            if (id <= 40) {
-                return id == 39 ? "Steve" : "Cosmic";
-            }
-            if (id == 41) {
-                return "Pirate";
-            }
-        }
+   function getHandName(uint8 id) public pure returns (string memory) {
+    if (1 <= id && id <= 3) {
+        return "Hand1";
+    } else if (3 < id && id <= 5) {
+        return "Hand2";
+    } else if (5 < id && id <= 7) {
+        return "Hand3";
+    } else if (7 < id && id <= 9) {
+        return "Hand4";
+    } else if (9 < id && id <= 11) {
+        return "Feet1";
+    } else if (11 < id && id <= 13) {
+        return "Feet2";
+    } else if (13 < id && id <= 15) {
+        return "Feet3";
+    } else if (15 < id && id <= 17) {
+        return "BlueSlime";
+    } else if (17 < id && id <= 19) {
+        return "GreenSlime";
+    } else if (19 < id && id <= 21) {
+        return "BubbleGum";
+    } else if (21 < id && id <= 23) {
+        return "Goblin";
+    } else if (23 < id && id <= 25) {
+        return "RedGoblin";
+    } else if (25 < id && id <= 26) {
+        return "YellowGoblin";
+    } else if (26 < id && id <= 27) {
+        return "Surgeon";
+    } else if (27 < id && id <= 29) {
+        return "Squatch";
+    } else if (29 < id && id <= 30) {
+        return "Yeti";
+    } else if (30 < id && id <= 31) {
+        return "Steve";
+    } else if (31 < id && id <= 33) {
+        return "Zombie";
+    } else if (33 < id && id <= 35) {
+        return "Skeleton";
+    } else if (35 < id && id <= 37) {
+        return "Pirate";
+    } else if (37 < id && id <= 39) {
+        return "Plastic";
+    } else if (39 < id && id <= 41) {
+        return "TigerPaws";
+    } else if (41 < id && id <= 43) {
+        return "Gorilla";
+    } else if (43 < id && id <= 45) {
+        return "Vitiligo";
+    } else if (45 < id && id <= 46) {
+        return "Golden";
+    } else if (46 < id && id <= 47) {
+        return "Fire";
+    } else if (47 < id && id <= 48) {
+        return "Earth";
+    } else if (48 < id && id <= 49) {
+        return "Cosmic";
+    } else if (49 < id && id <= 50) {
+        return "Water";
+    } else {
         return "Error: Id not found";
     }
+}
 }
 
 /// @title Base64

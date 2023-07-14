@@ -24,7 +24,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   };
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
@@ -39,7 +39,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   });
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
@@ -50,7 +50,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   });
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'PotatoExploded',
     async listener(log) {
@@ -72,7 +72,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   });
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'PotatoPassed',
     async listener(log) {
@@ -89,7 +89,7 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   });
 
   const { data: getImageString, isLoading, refetch: refetchImageString, isError } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'getImageString',
     args: [tokenId],
@@ -100,14 +100,14 @@ const TokenImage = ({ tokenId, ABI, shouldRefresh, size = 500, onTokenExploded, 
   });
 
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'getActiveTokens',
     enabled: true
   });
 
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'potatoTokenId',
     enabled: true

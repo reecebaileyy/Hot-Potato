@@ -81,7 +81,7 @@ contract UNKNOWN is
     uint256 public TOTAL_PASSES;
     uint256 public potatoTokenId;
     uint256 public lastRequestId;
-    uint32 public currentGeneration = 1;
+    uint32 public currentGeneration = 0;
     uint256 public _price = 0.01 ether;
     uint256 public _maxsupplyPerRound = 10000;
     uint256 public _maxperwallet = 3;
@@ -145,12 +145,11 @@ contract UNKNOWN is
     event FailedPass(address indexed player);
     event SuccessfulPass(address indexed player);
     event PlayerWon(address indexed player);
-    event PotatoMinted(
-        uint32 amount,
-        address indexed player
-    );
+    event PotatoMinted(uint32 amount, address indexed player);
 
-    constructor(uint64 subscriptionId)
+    constructor(
+        uint64 subscriptionId
+    )
         payable
         ERC721A("UNKNOWN", "UNKNOWN")
         VRFConsumerBaseV2(0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed)
@@ -291,11 +290,9 @@ contract UNKNOWN is
         return winners;
     }
 
-    function getActiveTokensOfOwner(address user)
-        public
-        view
-        returns (uint256[] memory)
-    {
+    function getActiveTokensOfOwner(
+        address user
+    ) public view returns (uint256[] memory) {
         uint256[] memory ownedActiveTokens = new uint256[](activeTokens.length);
         uint256 counter = 0;
         for (uint256 index = 1; index < activeTokens.length; index++) {
@@ -337,15 +334,9 @@ contract UNKNOWN is
         return false;
     }
 
-    function getPlayerStats(address player)
-        public
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    function getPlayerStats(
+        address player
+    ) public view returns (uint256, uint256, uint256) {
         return (
             successfulPasses[player],
             failedPasses[player],
@@ -357,12 +348,9 @@ contract UNKNOWN is
         return activeTokens.length - 1;
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721A)
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721A) returns (string memory) {
         require(
             _exists(tokenId),
             "ERC721Metadata: URI query for nonexistent token"
@@ -386,11 +374,9 @@ contract UNKNOWN is
         return ownerOf(potatoTokenId);
     }
 
-    function getImageString(uint256 tokenId)
-        public
-        view
-        returns (string memory)
-    {
+    function getImageString(
+        uint256 tokenId
+    ) public view returns (string memory) {
         require(_exists(tokenId), "Not a valid pair of hands");
 
         Hand memory hand = hands[tokenId];
@@ -498,11 +484,10 @@ contract UNKNOWN is
         metadataHandler = MetadataHandler(addy);
     }
 
-    function withdrawCategoryFunds(uint256 round, string memory category)
-        external
-        onlyOwner
-        nonReentrant
-    {
+    function withdrawCategoryFunds(
+        uint256 round,
+        string memory category
+    ) external onlyOwner nonReentrant {
         uint256 amount;
         if (
             keccak256(abi.encodePacked((category))) ==
@@ -567,27 +552,27 @@ contract UNKNOWN is
         uint8 background;
         uint8 hand_type;
 
-        uint256 fortyPct = (type(uint64).max / 100) * 40;
         uint256 seventyPct = (type(uint64).max / 100) * 70;
+        uint256 ninetyPct = (type(uint64).max / 100) * 90;
 
         id = uint64(_nextTokenId());
 
         uint64 randBackground = uint64(_rarity(_rand(), "BACKGROUND", id));
         background = uint8(
-            randBackground >= seventyPct
+            randBackground >= ninetyPct
                 ? (randBackground % 3) + 18 //Legendary 18-20
-                : randBackground >= fortyPct
+                : randBackground >= seventyPct
                 ? (randBackground % 6) + 12 //Rare 12-17
                 : (randBackground % 11) + 1 //Common 1-11
         );
 
         uint64 randHandType = uint64(_rarity(_rand(), "HAND_TYPE", id));
         hand_type = uint8(
-            randHandType >= seventyPct
-                ? (randHandType % 7) + 35 //Legendary 35-41
-                : randHandType >= fortyPct
-                ? (randHandType % 10) + 26 //Rare 26-35
-                : (randHandType % 25) + 1 //Common 1-25
+            randHandType >= ninetyPct
+                ? (randHandType % 5) + 46 //Legendary 46-50
+                : randHandType >= seventyPct
+                ? (randHandType % 15) + 31 //Rare 31-45
+                : (randHandType % 30) + 1 //Common 1-30
         );
 
         _safeMint(msg.sender, 1);
@@ -655,10 +640,10 @@ contract UNKNOWN is
         return requestId;
     }
 
-    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords)
-        internal
-        override
-    {
+    function fulfillRandomWords(
+        uint256 requestId,
+        uint256[] memory randomWords
+    ) internal override {
         require(statuses[requestId].exists, "request not found");
         statuses[requestId].fulfilled = true;
         statuses[requestId].randomWord = randomWords;
@@ -824,11 +809,9 @@ contract UNKNOWN is
         _isExplosionInProgress = false;
     }
 
-    function _indexOfTokenInActiveTokens(uint256 tokenId)
-        internal
-        view
-        returns (uint256)
-    {
+    function _indexOfTokenInActiveTokens(
+        uint256 tokenId
+    ) internal view returns (uint256) {
         require(activeTokens.length > 1, "Not enough active tokens");
         for (uint256 i = 1; i < activeTokens.length; i++) {
             if (activeTokens[i] == tokenId) {

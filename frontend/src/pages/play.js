@@ -21,7 +21,7 @@ import { providers, Contract, ethers } from 'ethers';
 
 export async function getServerSideProps() {
   const provider = new ethers.providers.JsonRpcBatchProvider(process.env.NEXT_PUBLIC_ALCHEMY_URL);
-  const contract = new Contract('0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07', ABI, provider);
+  const contract = new Contract('0xAb989B312e6e493c88Ac97b3808855afdf1C359D', ABI, provider);
   const initalGameState = await contract.getGameState();
   const roundNumber = await contract.currentGeneration();
   const gen = parseInt(roundNumber, 10);
@@ -37,16 +37,8 @@ export async function getServerSideProps() {
 
 export default function Play({ initalGameState, gen, price, maxSupply }) {
 
-  const [loading, setLoading] = useState(true);
   const [_address, setAddress] = useState("");
   const { address } = useAccount();
-
-  useEffect(() => {
-    // check if the props have been loaded
-    if (initalGameState && gen && price && maxSupply) {
-      setLoading(false); // set loading to false when data is fetched
-    }
-  }, [initalGameState, gen, price, maxSupply]);
 
   useEffect(() => {
     if (address) {
@@ -140,7 +132,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   */
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'GameStarted',
     async listener(log) {
@@ -157,7 +149,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   });
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'MintingEnded',
     async listener(log) {
@@ -171,7 +163,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   });
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'GameResumed',
     async listener(log) {
@@ -186,7 +178,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   });
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'GamePaused',
     async listener(log) {
@@ -203,7 +195,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'GameRestarted',
     async listener(log) {
@@ -218,7 +210,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   })
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'FinalRoundStarted',
     async listener(log) {
@@ -242,7 +234,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   */
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'PlayerWon',
     async listener(log) {
@@ -265,7 +257,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   });
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'SuccessfulPass',
     async listener(log) {
@@ -301,7 +293,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   ▄████▄      ▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀    ▄███▄ ▀▀  ▄████▄████▄████  ████▄ ▀████
   */
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'PotatoMinted',
     async listener(log) {
@@ -339,7 +331,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   ▄████▄ ▄███▄ ▀█████▀  ▀████▀███▄████  ████▄ ▀████▀███▄
   */
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'NewRound',
     async listener(log) {
@@ -369,7 +361,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   */
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'UpdatedTimer',
     listener(log) {
@@ -392,7 +384,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
                       ▄████▄
   */
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'PotatoExploded',
     async listener(log) {
@@ -428,7 +420,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   */
 
   useContractEvent({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     eventName: 'PotatoPassed',
     async listener(log) {
@@ -465,7 +457,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // // GET MINT PRICE
   // const { data: getGameState, refetch: refetchGameState, isLoading: loadingGetGameState } = useContractRead({
-  //   address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+  //   address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
   //   abi: ABI,
   //   functionName: 'getGameState',
   //   enabled: true,
@@ -473,7 +465,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // // GET Explosion time
   const { data: getExplosionTime, isLoading: loadingExplosionTime, error: loadingError, refetch: refetchGetExplosionTime } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'getExplosionTime',
   })
@@ -482,14 +474,14 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // GET MINT PRICE
   const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: '_price',
   })
 
   // GET NUMBER OF MINTS DURING THE ROUND
   const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'addressActiveTokenCount',
     args: [_address],
@@ -498,7 +490,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   // const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useContractRead({
-  //   address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+  //   address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
   //   abi: ABI,
   //   functionName: '_maxsupplyPerRound',
   // })
@@ -506,7 +498,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // GET TOKENS OWNED BY USER
   const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'userHasPotatoToken',
     args: [_address],
@@ -515,7 +507,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // GET POTATO HOLDER
   const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'getPotatoOwner',
   })
@@ -523,7 +515,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // GET POTATO TOKEN ID
   const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'potatoTokenId',
   })
@@ -532,7 +524,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // GET ACTIVE TOKENS
   const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'getActiveTokens',
   })
@@ -540,14 +532,14 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // GET CURRENT GENERATION
   const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'currentGeneration',
   })
   const _currentGeneration = parseInt(currentGeneration, 10);
 
   const { data: getRoundMints, isLoading: loadingGetRoundMints, refetch: refetchGetRoundMints } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'roundMints',
   })
@@ -555,27 +547,27 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
 
   const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: '_owner',
   })
   const _ownerAddress = _owner?.toString();
 
   const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'getActiveTokenIds',
   })
 
   const { data: allWinners, isLoading: loadingWinners, refetch: refetchWinner } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'getAllWinners',
   })
   const isWinner = allWinners?.includes(_address)
 
   const { data: rewards, isLoading: loadingRewards, refetch: refetchRewards } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'rewards',
     args: [_address],
@@ -583,7 +575,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   const _rewards = parseInt(rewards, 10);
 
   const { data: _totalWins, isLoading: loadingTotalWins, refetch: refetchTotalWins } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'totalWins',
     args: [_address],
@@ -593,7 +585,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
 
   const { data: _successfulPasses, isLoading: loadingSuccessfulPasses, refetch: refetchSuccessfulPasses } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'successfulPasses',
     args: [_address],
@@ -601,7 +593,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   const successfulPasses = parseInt(_successfulPasses, 10);
 
   const { data: hallOfFame, isLoading: loadingHGallOfFame, refetch: refetchHallOfFame } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'hallOfFame',
     args: [_currentGeneration],
@@ -609,21 +601,21 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   const roundWinner = hallOfFame?.toString();
 
   const { data: _maxperwallet, isLoading: loadingMaxPerWallet, refetch: refetchMaxPerWallet } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: '_maxperwallet',
   })
   const maxPerWallet = parseInt(_maxperwallet, 10);
 
   const { data: isTokenActive, isLoading: loadingIsTokenActive, refetch: refetchIsTokenActive } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: '_isTokenActive',
     args: [tokenId],
   })
 
   const { data: _activeAddresses, isLoading: loadingActiveAddresses, refetch: refetchActiveAddresses } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'activeAddresses',
   })
@@ -631,7 +623,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
 
   const { data: ownerOf, isLoading: loadingOwnerOf, refetch: refetchOwnerOf } = useContractRead({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'ownerOf',
     args: [tokenId],
@@ -663,7 +655,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // MINT HAND
   const { config } = usePrepareContractWrite({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'mintHand',
     args: [mintAmount.toString()],
@@ -678,7 +670,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
 
   const { config: configPass } = usePrepareContractWrite({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'passPotato',
     args: [tokenId],
@@ -691,7 +683,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // CLAIM REWARDS
   const { config: withdrawWinnersFunds } = usePrepareContractWrite({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'withdrawWinnersFunds',
     enabled: _address === isWinner,
@@ -708,7 +700,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // CHECK EXPLOSION
   const { config: configCheck } = usePrepareContractWrite({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'checkExplosion',
     enabled: getGameState === "Playing" || getGameState === "Final Stage",
@@ -730,7 +722,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
   */
   // START GAME
   const { config: startGame } = usePrepareContractWrite({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'startGame',
     enabled: _address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && getGameState === "Queued",
@@ -742,7 +734,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // END MINTING
   const { config: endMinting } = usePrepareContractWrite({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'endMinting',
     enabled: getGameState === "Minting" && _address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F',
@@ -751,7 +743,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // PAUSE GAME
   const { config: pauseGame } = usePrepareContractWrite({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'pauseGame',
     enabled: _address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Minting" || getGameState === "Playing" || getGameState === "Final Stage"),
@@ -760,7 +752,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // RESUME GAME
   const { config: resumeGame } = usePrepareContractWrite({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'resumeGame',
     enabled: _address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && getGameState === "Paused",
@@ -769,7 +761,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
 
   // RESTART GAME 
   const { config: restartGame } = usePrepareContractWrite({
-    address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
+    address: '0xAb989B312e6e493c88Ac97b3808855afdf1C359D',
     abi: ABI,
     functionName: 'restartGame',
     enabled: _address === '0x0529ed359EE75799Fd95b7BC8bDC8511AC1C0A0F' && (getGameState === "Paused" || getGameState === "Ended"),
@@ -1071,12 +1063,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
                                                                      
   */
 
-  if (loading) {
-    console.log("Loading...");
-    return <div>Loading...</div>; // replace this with your loading component
-  }
-
-
 
   return (
     <>
@@ -1148,7 +1134,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
         </nav>
 
         <h1 className={`${darkMode ? 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto' : 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto'}`}>
-          {gen === 1 ? "Round 1" : `Round ${gen}`}
+          {gen === 0 ? null : `Round ${gen}`}
         </h1>
 
         <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col lg:flex lg:flex-col grid grid-cols-8 gap-4 justify-center items-center">
@@ -1312,7 +1298,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
                   }
                 </div>
 
-                <Link href="https://mumbai.polygonscan.com/address/0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07" target='_blank' className="underline">
+                <Link href="https://mumbai.polygonscan.com/address/0xAb989B312e6e493c88Ac97b3808855afdf1C359D" target='_blank' className="underline">
                   Smart Contract
                 </Link>
               </>
@@ -1325,7 +1311,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
                     <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
                       Discord
                     </Link>
-                    <Link href="https://mumbai.polygonscan.com/address/0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                    <Link href="https://mumbai.polygonscan.com/address/0xAb989B312e6e493c88Ac97b3808855afdf1C359D" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
                     <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
                   </div>
                 </>
@@ -1344,7 +1330,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
                       <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
                         Discord
                       </Link>
-                      <Link href="https://mumbai.polygonscan.com/address/0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                      <Link href="https://mumbai.polygonscan.com/address/0xAb989B312e6e493c88Ac97b3808855afdf1C359D" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
                       <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
                     </div>
                   </>
@@ -1435,7 +1421,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
                           <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
                             Discord
                           </Link>
-                          <Link href="https://mumbai.polygonscan.com/address/0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                          <Link href="https://mumbai.polygonscan.com/address/0xAb989B312e6e493c88Ac97b3808855afdf1C359D" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
                           <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
                         </div>
                       </>
