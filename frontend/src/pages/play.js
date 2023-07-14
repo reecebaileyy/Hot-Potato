@@ -1262,7 +1262,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
                   <Image className='rounded-full' alt='Explosion' src={Explosion} width={200} height={200} /> :
                   <Image alt='Image' src={potatoBlink} width={200} height={200} />
                 }
-                {remainingTime == 0 ? <p className='text-2xl'>TIME REMAINING: 0</p> : !remainingTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {remainingTime}</p>}
+                {remainingTime == 0 ? <p className='text-2xl'>TIME REMAINING: 0</p> : <p className='text-2xl'>TIME REMAINING: {remainingTime}</p>}
                 <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
                   onClick={() => {
                     refetchGetExplosionTime();
