@@ -1244,7 +1244,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
             }
           </div>
 
-          <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 z-30 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+          <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {!getGameState ? <h1 className="text-4xl font-extrabold underline text-center mb-4">Loading...</h1> : null}
             {getGameState == "Playing" || getGameState == "Final Stage" ?
               <>

@@ -8,7 +8,7 @@ const ActiveTokensImages = ({ ownerAddress, ABI, shouldRefresh, tokenId }) => {
 
   const [explodedTokens, setExplodedTokens] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(24);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
   const [sortedTokens, setSortedTokens] = useState([]);
 
   // Pagination logic

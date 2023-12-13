@@ -81,7 +81,7 @@ contract UNKNOWN is
     uint256 public TOTAL_PASSES;
     uint256 public potatoTokenId;
     uint256 public lastRequestId;
-    uint32 public currentGeneration = 0;
+    uint32  public currentGeneration = 0;
     uint256 public _price = 0.01 ether;
     uint256 public _maxsupplyPerRound = 10000;
     uint256 public _maxperwallet = 3;
