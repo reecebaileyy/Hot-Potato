@@ -32,44 +32,46 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className={`${darkMode ? 'darkmode bg-fixed to-black text-white min-h-screen font-darumadrop' : 'normal bg-fixed min-h-screen font-darumadrop'}`}>
-        <nav className="py-2 pt-10 px-5 md:px-10 flex justify-between items-center relative z-20">
-          <div className="flex items-center">
-            <Link href='/' passHref>
-              <a>
-                <Image src={blacklogo} width={150} alt="Logo" />
-              </a>
-            </Link>
-          </div>
-          <div className="hidden lg:flex xl:flex 2xl:flex 3xl:flex justify-center flex-grow">
-            <ul className='flex justify-center space-x-12 text-xl md:text-2xl'>
-              <li><Link href="/play">Play</Link></li>
-              <li><Link href="/leaderboard">Leaderboard</Link></li>
-              <li><Link href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
-              <li><Link href="https://opensea.io" target="_blank">Opensea</Link></li>
-            </ul>
-          </div>
-          <div className="flex items-center justify-end">
-            <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
-              <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
-                <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z" /></svg>
-              </button>
-            </div>
-            {/* Invisible Spacer for Mobile View to Center Links */}
-            <div className="flex items-center sm:hidden md:hidden lg:hidden">
-              <DarkModeSwitch
-                checked={darkMode}
-                onChange={() => setDarkMode(!darkMode)}
-                size={30}
-              />
+        <nav className="py-2 pt-10 px-5 md:px-10 flex flex-row justify-between items-center relative z-20">
+          <Link href='/'>
+            <Image src={blacklogo} width={50} alt="Logo" />
+          </Link>
+          <div className="lg:hidden xl:hidden 2xl:hidden 3xl:hidden">
+            <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
+              <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
+            </button>
+            <div className={`fixed inset-0 flex justify-center items-center  bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}
+              onClick={(e) => {
+                if (!menuRef.current.contains(e.target)) {
+                  setIsOpen(false)
+                }
+              }}>
+              <ul ref={menuRef} className={`${darkMode ? 'bg-gray-700 to-black text-white items-center p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl' : 'items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black'}`}>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/play">Play</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/leaderboard">Leaderboard</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://opensea.io/" target="_blank">Opensea</Link></li>
+                <DarkModeSwitch
+                  checked={darkMode}
+                  onChange={() => setDarkMode(!darkMode)}
+                  size={30}
+                />
+                <button className='text-white bg-slate-800 p-2 rounded-lg' onClick={login}>Login</button>
+              </ul>
             </div>
           </div>
-          <div className={`fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`} onClick={(e) => { if (!menuRef.current.contains(e.target)) { setIsOpen(false) } }}>
-            <ul ref={menuRef} className={`${darkMode ? 'bg-gray-700 to-black text-white items-center p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl' : 'items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black'}`}>
-              <li><Link href="/play">Play</Link></li>
-              <li><Link href="/leaderboard">Leaderboard</Link></li>
-              <li><Link href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
-              <li><Link href="https://opensea.io" target="_blank">Opensea</Link></li>
-            </ul>
+          <ul className='flex md:hidden sm:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/play">Play</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/leaderboard">Leaderboard</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
+          </ul>
+          <div className='flex items-center sm:hidden md:hidden'>
+            <DarkModeSwitch
+              checked={darkMode}
+              onChange={() => setDarkMode(!darkMode)}
+              size={30}
+            />
           </div>
         </nav>
 
@@ -78,7 +80,7 @@ export default function Home() {
         <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center space-y-5">
           <h1 className='text-6xl sm:text-4xl text-white'>Onchain Hot Potato</h1>
           <p className='text-3xl sm:text-2xl text-white'>Hold, Pass, Survive...</p>
-          <Link className='z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black' href="/play">Play Now</Link>
+          <button className='z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black' onClick={login}>Play Now</button>
         </header>
 
         <div className='xl:grid xl:grid-cols-2 lg:grid lg:grid-cols-2 2xl:grid 2xl:grid-cols-2 3xl:grid 3xl:grid-cols-2  sm:flex-col md:flex-col lg:flex-col justify-between items-center mx-12 mb-20'>
