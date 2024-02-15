@@ -1,14 +1,22 @@
 import '../styles/globals.css';
 import type { AppProps } from 'next/app';
-import HPlogo from '../assets/HPLogoPX.png';
 import Head from 'next/head';
 import { PrivyProvider } from '@privy-io/react-auth';
-import {useLoginWithSMS} from '@privy-io/expo';
 import { useRouter } from 'next/router';
+
+import { PrivyWagmiConnector } from '@privy-io/wagmi-connector';
+import { mainnet, goerli } from '@wagmi/chains';
+import { configureChains } from 'wagmi';
+import { alchemyProvider } from 'wagmi/providers/alchemy'
+import { publicProvider } from 'wagmi/providers/public';
+
+
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
-
+  const configureChainsConfig = configureChains([mainnet, goerli], [alchemyProvider({ apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY })],
+  )
+  console.log("TEST", process.env.NEXT_PUBLIC_ALCHEMY_API_KEY)
   return (
     <>
       <Head>
@@ -27,30 +35,14 @@ function MyApp({ Component, pageProps }: AppProps) {
       </Head>
       <PrivyProvider
         appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ''}
-        config={{
-          loginMethods: ['email', 'sms', 'discord', 'twitter', 'google'],
-          captchaEnabled: true,
-          embeddedWallets: {
-            createOnLogin: 'users-without-wallets',
-            requireUserPasswordOnCreate: true,
-          },
-          mfa: {
-            noPromptOnMfaRequired: false
-          },
-          appearance: {
-            theme: "dark",
-            accentColor: "#676FFF",
-            logo: HPlogo.src, // Convert HPlogo to a string
-            showWalletLoginFirst: false,
-          },    
-        }}
         onSuccess={() => router.push('/dashboard')}
       >
-        <Component {...pageProps} />
+        <PrivyWagmiConnector wagmiChainsConfig={configureChainsConfig}>
+          <Component {...pageProps} />
+        </PrivyWagmiConnector>
       </PrivyProvider>
     </>
   );
 }
-
 
 export default MyApp;

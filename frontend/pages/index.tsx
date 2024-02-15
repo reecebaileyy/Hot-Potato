@@ -1,12 +1,9 @@
 import Portal from '../components/graphics/portal';
 import {usePrivy} from '@privy-io/react-auth';
 import Head from 'next/head';
-import { useMfaEnrollment } from '@privy-io/react-auth';
 
 export default function LoginPage() {
   const {login} = usePrivy();
-  const { showMfaEnrollmentModal } = useMfaEnrollment();
-
 
   return (
     <>
