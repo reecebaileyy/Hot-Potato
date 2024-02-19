@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePrivy } from '@privy-io/react-auth';
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
 import { useState, useRef, useEffect } from 'react'
+import { useAccount } from 'wagmi'
 import potatoBlink from '../../public/assets/images/potatoBlink.gif'
 import landscape from '../../public/assets/images/landscape.jpg'
 import potato from '../../public/assets/images/potato.png'
@@ -17,6 +18,7 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef()
+  const { address } = useAccount();
   const { login, logout } = usePrivy();
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function Home() {
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
               <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
             </button>
-            <div className={`fixed inset-0 flex justify-center items-center  bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}
+            <div className={`fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}
               onClick={(e) => {
                 if (!menuRef.current.contains(e.target)) {
                   setIsOpen(false)
@@ -80,7 +82,8 @@ export default function Home() {
         <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center space-y-5">
           <h1 className='text-6xl sm:text-4xl text-white'>Onchain Hot Potato</h1>
           <p className='text-3xl sm:text-2xl text-white'>Hold, Pass, Survive...</p>
-          <button className='z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black' onClick={login}>Play Now</button>
+          <button className={`z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black  ${address ? 'hidden' : ''}`} onClick={login}>Play Now</button>
+          <button className={`z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black  ${address ? '' : 'hidden'}`} onClick={logout}>Logout</button>
         </header>
 
         <div className='xl:grid xl:grid-cols-2 lg:grid lg:grid-cols-2 2xl:grid 2xl:grid-cols-2 3xl:grid 3xl:grid-cols-2  sm:flex-col md:flex-col lg:flex-col justify-between items-center mx-12 mb-20'>

@@ -3,8 +3,8 @@ import Head from 'next/head';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { useRouter } from 'next/router';
 import { PrivyWagmiConnector } from '@privy-io/wagmi-connector';
-import { mainnet, goerli } from '@wagmi/chains';
-import { configureChains } from 'wagmi';
+import { mainnet, goerli, polygonMumbai } from '@wagmi/chains';
+import { configureChains, sepolia } from 'wagmi';
 import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
 
@@ -12,7 +12,7 @@ import { publicProvider } from 'wagmi/providers/public';
 export default function App({ Component, pageProps }) {
   const router = useRouter();
   const configureChainsConfig = configureChains(
-    [mainnet, goerli], 
+    [mainnet, goerli, sepolia, polygonMumbai], 
     [alchemyProvider({ apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || publicProvider() })],
   )
 
@@ -35,6 +35,9 @@ export default function App({ Component, pageProps }) {
 
       <PrivyProvider
         appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ''}
+        config={{
+        defaultChain: polygonMumbai,
+    }}
         onSuccess={() => router.push('/play')}
       >
         <PrivyWagmiConnector wagmiChainsConfig={configureChainsConfig}>
