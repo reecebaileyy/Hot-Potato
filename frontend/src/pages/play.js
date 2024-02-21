@@ -72,9 +72,8 @@ export default function Play({ }) {
             <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
           </div>
         </nav>
-
-        <h1 className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl 3xl:text-10xl text-center pt-20">Work in Progress!</h1>
-        <h2 className="text-2xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl text-center pt-5">Please check back later!</h2>
+        
+        
       </div>
 
     </>
