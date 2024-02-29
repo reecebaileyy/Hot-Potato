@@ -5,7 +5,6 @@ import { usePrivy } from '@privy-io/react-auth';
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
 import { useState, useRef, useEffect } from 'react'
 import { useAccount } from 'wagmi'
-import potatoBlink from '../../public/assets/images/potatoBlink.gif'
 import landscape from '../../public/assets/images/landscape.jpg'
 import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/Logo.png'
