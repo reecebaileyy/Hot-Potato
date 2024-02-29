@@ -11,21 +11,19 @@ import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/Logo.png'
 import potatoFire from '../../public/assets/images/Burning.gif'
 import CHAINLINK from '../../public/assets/images/CHAINLINK.png'
-import localforage from 'localforage';
 
 export default function Home() {
-
+  const { ready, authenticated, login, logout, user } = usePrivy();
+  const disableLogout = !ready || (ready && !authenticated);
+  const disableLogin = !ready || (ready && authenticated);
+  const { address } = useAccount();
   const [darkMode, setDarkMode] = useState(false);
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef()
-  const { address } = useAccount();
-  const { login, logout } = usePrivy();
 
-  useEffect(() => {
-    console.log("An UNKNOWN X BEDTIME PRODUCTION")
-  }, [], 5000);
+  
 
-  return (
+  if (ready) return (
     <>
       <Head>
         <title>HOT POTATO</title>
@@ -58,7 +56,11 @@ export default function Home() {
                   onChange={() => setDarkMode(!darkMode)}
                   size={30}
                 />
-                <button className='text-white bg-slate-800 p-2 rounded-lg' onClick={login}>Login</button>
+                {user ? (
+                  <button disabled={disableLogout} className={`text-white bg-slate-800 p-2 rounded-lg ${!user ? 'hidden' : ''}`} onClick={logout}>Logout</button>
+                ) : (
+                  <button disabled={disableLogin} className={`text-white bg-slate-800 p-2 rounded-lg ${user ? 'hidden' : ''}`} onClick={login}>Play Now</button>
+                )}
               </ul>
             </div>
           </div>
@@ -82,8 +84,11 @@ export default function Home() {
         <header className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center space-y-5">
           <h1 className='text-6xl sm:text-4xl text-white'>Onchain Hot Potato</h1>
           <p className='text-3xl sm:text-2xl text-white'>Hold, Pass, Survive...</p>
-          <button className={`z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black  ${address ? 'hidden' : ''}`} onClick={login}>Play Now</button>
-          <button className={`z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black  ${address ? '' : 'hidden'}`} onClick={logout}>Logout</button>
+          {user ? (
+            <button disabled={disableLogout} className={`z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black  ${user ? '' : 'hidden'}`} onClick={logout}>Logout</button>
+          ) : (
+            <button disabled={disableLogin} className={`z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black  ${!user ? '' : 'hidden'}`} onClick={login} >Play Now</button>
+          )}
         </header>
 
         <div className='xl:grid xl:grid-cols-2 lg:grid lg:grid-cols-2 2xl:grid 2xl:grid-cols-2 3xl:grid 3xl:grid-cols-2  sm:flex-col md:flex-col lg:flex-col justify-between items-center mx-12 mb-20'>
@@ -103,7 +108,13 @@ export default function Home() {
         <div className="flex items-center my-10 mx-10">
           <div className="flex-grow border-t border-white"></div>
           <span className="px-4 text-6xl sm:text-2xl text-white">Hold, Pass, Survive...</span>
-          <div className="flex-grow border-t border-white"></div>
+          <div className="flex-grow border-t border-white">
+            {user ? (
+              <button disabled={disableLogout} className={`z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black  ${user ? 'hidden' : ''}`} onClick={logout}>Logout</button>
+            ) : (
+              <button disabled={disableLogin} className={`z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black  ${!user ? '' : 'hidden'}`} onClick={login} >Play Now</button>
+            )}
+          </div>
         </div>
 
 

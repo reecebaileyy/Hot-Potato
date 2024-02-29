@@ -45,11 +45,8 @@ module.exports = {
       'nv': { 'min': '640', 'max': '1536' }                   // Wide Boi (lg)
     },
     fontFamily: {
-      darumadrop: ['"DarumadropOne"', 'sans-serif'],
+      darumadrop: ['"Minecraft"', 'sans-serif'],
       modern: ['"Modern"', 'display'],
     },
-  },
-  plugins: [
-    require('flowbite/plugin')
-  ]
+  }
 }

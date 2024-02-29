@@ -3,19 +3,21 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'DarumadropOne';
-  src: url('/assets/fonts/DarumadropOne-Regular.ttf') format('truetype');
+  font-family: 'Minecraft';
+  src: url('/assets/fonts/Minecraft.ttf') format('truetype');
 }
 
 .normal {
   background-image: url('../../public/assets/images/WebBackground.png');
-  /* Additional background properties can be added here */
-}
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;}
 
 .darkmode {
   background-image: url('../../public/assets/images/WebBackgroundDark.png');
-  /* Additional background properties can be added here */
-}
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;}
 
 .nav-transparent {
   background-color: transparent !important;
