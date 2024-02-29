@@ -108,11 +108,7 @@ export default function Home() {
           <div className="flex-grow border-t border-white"></div>
           <span className="px-4 text-6xl sm:text-2xl text-white">Hold, Pass, Survive...</span>
           <div className="flex-grow border-t border-white">
-            {user ? (
-              <button disabled={disableLogout} className={`z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black  ${user ? 'hidden' : ''}`} onClick={logout}>Logout</button>
-            ) : (
-              <button disabled={disableLogin} className={`z-10 items-center text-lg sm:text-xl md:text-2xl text-white bg-red-500 px-5 py-3 rounded-lg hover:bg-gradient-to-br from-gray-700 via-gray-800 to-black  ${!user ? '' : 'hidden'}`} onClick={login} >Play Now</button>
-            )}
+            
           </div>
         </div>
 
