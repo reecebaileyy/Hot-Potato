@@ -6,15 +6,22 @@
   font-family: 'Minecraft';
   src: url('/assets/fonts/Minecraft.ttf') format('truetype');
 }
+.video {   
+  object-fit: cover;   
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  z-index: -1; 
+}
 
 .normal {
-  background-image: url('../../public/assets/images/WebBackground.png');
+  background-image: url('../../public/assets/images/HPBackgroundVideo.mp4');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;}
 
 .darkmode {
-  background-image: url('../../public/assets/images/WebBackgroundDark.png');
+  background-image: url('../../public/assets/images/HPBackgroundVideo.mp4');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;}

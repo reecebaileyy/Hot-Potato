@@ -2,12 +2,9 @@ import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePrivy } from '@privy-io/react-auth';
-import { DarkModeSwitch } from 'react-toggle-dark-mode';
 import { useState, useRef, useEffect } from 'react'
 import { useAccount } from 'wagmi'
-import landscape from '../../public/assets/images/landscape.jpg'
 import Play_Basic from '../../public/assets/images/Play_Basic.png'
-import Passing from '../../public/assets/images/Passing.gif'
 import Discord_Basic from '../../public/assets/images/Discord_Basic.png'
 import Discord_Hover from '../../public/assets/images/Discord_Hover.png'
 import Play_Hover from '../../public/assets/images/Play_Hover.png'
@@ -15,10 +12,7 @@ import Docs_Basic from '../../public/assets/images/Docs_Basic.png'
 import Docs_Hover from '../../public/assets/images/Docs_Hover.png'
 import X_Basic from '../../public/assets/images/X_Basic.png'
 import X_Hover from '../../public/assets/images/X_Hover.png'
-import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/Logo.png'
-import potatoFire from '../../public/assets/images/Burning.gif'
-import CHAINLINK from '../../public/assets/images/CHAINLINK.png'
 
 export default function Home() {
   const { ready, authenticated, login, logout, user } = usePrivy();
@@ -44,22 +38,16 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className={`${darkMode ? 'grid darkmode bg-fixed to-black text-white min-h-screen font-darumadrop' : 'grid normal bg-fixed min-h-screen font-darumadrop'}`}>
-
-        <DarkModeSwitch
-          className='fixed top-5 right-5'
-          checked={darkMode}
-          onChange={() => setDarkMode(!darkMode)}
-          size={30}
-        />
+      <video className="absolute top-0 left-0 w-full h-full object-cover z-[-1]" src={require('../../public/assets/images/HPBackgroundVideo.mp4')} autoPlay muted loop />
 
         <div className='grid place-content-center min-h-screen'>
           <div className="px-5 md:px-0 flex flex-col gap-0.5 items-center justify-center text-center space-y-5">
             <Link href='/'>
               <Image src={blacklogo} width={300} alt="Logo" />
             </Link>
-            <div className='flex flex-row gap-4'>
+            <div className='flex sm:md:flex-col gap-4'>
               {user ? (
-                <button disabled={disableLogout} onClick={logout} ><Image src={Play_Hover} width={200} alt="Logo" /></button>) : (
+                <button disabled={disableLogout} onClick={logout} ><Image src={Play_Hover} width={200} alt="Logo"/></button>) : (
                 <button disabled={disableLogin} onClick={login} ><Image
                   width={200}
                   src={playSrc}
@@ -69,7 +57,7 @@ export default function Home() {
                 /></button>
               )}
               <Link href='/play'>
-              <Image
+                <Image
                   width={200}
                   src={discordSrc}
                   alt="Logo"
@@ -78,7 +66,7 @@ export default function Home() {
                 />
               </Link>
               <Link href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">
-              <Image
+                <Image
                   width={200}
                   src={docsSrc}
                   alt="Logo"
@@ -87,7 +75,7 @@ export default function Home() {
                 />
               </Link>
               <Link href="https://twitter.com/0xHotPotatoGame">
-              <Image
+                <Image
                   width={200}
                   src={xSrc}
                   alt="Logo"
