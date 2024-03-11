@@ -45,7 +45,7 @@ export default function Home() {
             <Link href='/'>
               <Image src={blacklogo} width={300} alt="Logo" />
             </Link>
-            <div className='flex sm:md:flex-col gap-4'>
+            <div className='flex sm:flex-col md:flex-col gap-4'>
               {user ? (
                 <button disabled={disableLogout} onClick={logout} ><Image src={Play_Hover} width={200} alt="Logo"/></button>) : (
                 <button disabled={disableLogin} onClick={login} ><Image
