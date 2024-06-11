@@ -1,14 +1,19 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomiclabs/hardhat-ethers");
+require('@openzeppelin/hardhat-upgrades');
 require('dotenv').config();
+
+console.log("Private Key:", process.env.PRIVATE_KEY); // Debugging line
+console.log("Infura URL:", process.env.INFURA_URL); //
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  defaultNetwork: "mumbai",
+  defaultNetwork: "blast_sepolia",
   networks: {
     hardhat: {
     },
-    mumbai: {
-      url: process.env.ALCHEMY_URL,
+    blast_sepolia: {
+      url: process.env.INFURA_URL,
       accounts: [process.env.PRIVATE_KEY]
     }
   },
