@@ -1,4 +1,6 @@
 //SPDX-License-Identifier: Unlicense
+
+// In my smart cotnract when I only want the minting phase of the game state to only occur once. And once this passes this will never be called again. Also I want users to be able to put money in the smart contract when the game is in queued. This is a choice because at the end of the game the winner gets a percentage of the roundFunds. Please allow users to send money to the contract when the game state is in Queue. And add is to the roundFunds
 pragma solidity ^0.8.7;
 import "hardhat/console.sol";
 import "./Base64.sol";
