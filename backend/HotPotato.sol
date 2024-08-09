@@ -9,6 +9,7 @@ import "erc721a/contracts/extensions/ERC721AQueryable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@api3/airnode-protocol/contracts/rrp/requesters/RrpRequesterV0.sol";
 
 interface MetadataHandler {
     function getTokenURI(
@@ -46,12 +47,20 @@ enum GameState {
     Ended
 }
 
-contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
+contract UNKNOWN is
+    ERC721A,
+    ERC721AQueryable,
+    ReentrancyGuard,
+    Ownable,
+    RrpRequesterV0
+{
     using Strings for uint256;
 
     MetadataHandler public metadataHandler;
 
     address public _owner;
+    address public airnode;
+    address public sponsorWallet;
 
     uint256 public TOTAL_PASSES;
     uint256 public potatoTokenId;
@@ -62,11 +71,14 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
     uint256 public maxPerWallet = 1;
     uint256 public activeAddresses = 0;
     uint256 private _currentIndex = 1;
+    uint256 public qrngUint256;
     bytes32 internal entropySauce;
+    bytes32 public endpointIdUint256;
 
     mapping(uint256 => Hand) public hands;
     mapping(address => bool) public hasMinted;
     mapping(address => uint256) public successfulPasses;
+    mapping(uint256 => uint256) public lastPassTime;
     mapping(address => uint256) public failedPasses;
     mapping(address => uint256) public totalWins;
     mapping(GameState => string) private gameStateStrings;
@@ -78,6 +90,8 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
     mapping(uint256 => uint256) public charityFunds;
     mapping(uint256 => uint256) public roundFunds;
     mapping(address => uint256) public addressActiveTokenCount;
+    mapping(bytes32 => bool) public waitingFulfillment;
+    mapping(address => bool) public hasBet;
 
     GameState internal gameState;
     GameState internal previousGameState;
@@ -96,9 +110,15 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
     event NewRound(uint256 round);
     event PotatoPassed(uint256 tokenIdFrom, uint256 tokenIdTo, address yielder);
     event PlayerWon(address indexed player);
+    event RequestedUint256(bytes32 indexed requestId);
+    event ReceivedUint256(bytes32 indexed requestId, uint256 response);
 
-    constructor() payable ERC721A("UNKNOWN", "UNKNOWN") Ownable(msg.sender) {
-        activeTokens.push(0);
+    constructor(address _airnodeRrp)
+        payable
+        ERC721A("UNKNOWN", "UNKNOWN")
+        Ownable(msg.sender)
+        RrpRequesterV0(_airnodeRrp)
+    {
         gameState = GameState.Queued;
         gameStateStrings[GameState.Queued] = "Queued";
         gameStateStrings[GameState.Minting] = "Minting";
@@ -131,7 +151,46 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
         _mintHand();
 
         hasMinted[msg.sender] = true;
+        hasBet[msg.sender] = true;
         roundFunds[currentGeneration] += msg.value;
+    }
+
+    function joinGame(uint256[] calldata tokenIds)
+        external
+        payable
+        nonReentrant
+    {
+        require(gameState == GameState.Queued, "Game is not in Queued state");
+
+        // Iterate through each tokenId provided
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+
+            require(ownerOf(tokenId) == msg.sender, "You do not own this NFT");
+            require(hands[tokenId].burnt == true, "NFT is not burnt");
+
+            // Switch the burnt trait to false, allowing the NFT to rejoin the game
+            hands[tokenId].burnt = false;
+
+            // Add the token to active tokens
+            activeTokens.push(tokenId);
+
+            // Increment the active addresses if this is the first active token for the owner
+            if (addressActiveTokenCount[msg.sender] == 0) {
+                activeAddresses += 1;
+            }
+
+            // Increment the count of active tokens for this owner
+            addressActiveTokenCount[msg.sender] += 1;
+        }
+
+        // Handle the betting aspect (only once, not per token)
+        if (msg.value > 0) {
+            hasBet[msg.sender] = true; // Mark the address as having placed a bet
+            roundFunds[currentGeneration] += msg.value; // Add the bet to the round's funds
+        }
+
+        emit PlayerReadyUp(msg.sender);
     }
 
     function passPotato(uint256 tokenIdTo) public {
@@ -142,18 +201,27 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
             msg.sender == ownerOf(potatoTokenId),
             "You don't have the potato yet"
         );
+        
+        if (block.timestamp - lastPassTime[potatoTokenId] > 2 days) {
+            processExplosion();
+        }
 
-        // Check Timer First
 
-        // Do some VRF2 Logic here
+        uint256 passCount = successfulPasses[ownerOf(potatoTokenId)];
+        uint256 explosionChance = 5 + (2 * passCount); // 5% base chance + 2% per pass
+        require(explosionChance <= 100, "Explosion chance cannot exceed 100%");
+        uint256 randomNumber = qrngUint256 % 100;
 
-        // If User Completes the pass before the timer and also the chance of the potato exploding
+        if (randomNumber < explosionChance) {
+            processExplosion();
+        }
+
+        // SUCCESSFULL PASS
         uint256 newPotatoTokenId = tokenIdTo;
         hands[potatoTokenId].hasPotato = false;
         potatoTokenId = newPotatoTokenId;
-
         hands[potatoTokenId].hasPotato = true;
-
+        lastPassTime[potatoTokenId] = block.timestamp;
         TOTAL_PASSES += 1;
         successfulPasses[msg.sender] += 1;
 
@@ -262,7 +330,6 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
             gameState == GameState.Minting || gameState == GameState.Queued,
             "Game already started"
         );
-
         // Reset activeAddresses to count current owners
         activeAddresses = 0;
 
@@ -297,7 +364,11 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
         activeAddresses = uniqueOwnersCount;
 
         //Assign Potato to random Token with ChainLinkVRF2
-
+        require(qrngUint256 > 0, "No Random Number Found Yet");
+        potatoTokenId = assignPotato();
+        require(potatoTokenId > 0, "Failed to assign potato");
+        hands[potatoTokenId].hasPotato = true;
+        lastPassTime[potatoTokenId] = block.timestamp;
         gameState = GameState.Playing;
         emit GameStarted("Playing");
     }
@@ -310,6 +381,20 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
         previousGameState = gameState;
         gameState = GameState.Paused;
         emit GamePaused("Paused");
+    }
+
+    function makeRequestUint256() public onlyOwner {
+        bytes32 requestId = airnodeRrp.makeFullRequest(
+            airnode,
+            endpointIdUint256,
+            address(this),
+            sponsorWallet,
+            address(this),
+            this.fulfillUint256.selector,
+            ""
+        );
+        waitingFulfillment[requestId] = true;
+        emit RequestedUint256(requestId);
     }
 
     function resumeGame() external onlyOwner {
@@ -490,8 +575,20 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
             );
     }
 
-    function assignPotato() internal {
-        // ChainLinkVRF2 Logic to assign a active token the potato
+    function assignPotato() internal view returns (uint256) {
+        // Ensure that we have active tokens
+        require(activeTokens.length > 0, "No active tokens available");
+
+        // Use the random number to pick an index from the active tokens
+        uint256 randomIndex = qrngUint256 % activeTokens.length;
+
+        // Get the token ID from the active tokens array
+        uint256 selectedTokenId = activeTokens[randomIndex];
+
+        // Double-check that the selected token is still active
+        require(!hands[selectedTokenId].burnt, "Selected token is not active");
+
+        return selectedTokenId;
     }
 
     function _isTokenActive(uint256 tokenId) public view returns (bool) {
@@ -512,11 +609,19 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
 
         // 3. Remove the exploded NFT from the activeTokens array
         hands[potatoTokenId].burnt = true;
+        for (uint256 i = 0; i < activeTokens.length; i++) {
+            if (activeTokens[i] == potatoTokenId) {
+                activeTokens[i] = activeTokens[activeTokens.length - 1];
+                activeTokens.pop();
+                break;
+            }
+        }
 
         // 4. Emit an event to notify that the potato exploded and get ready to assign potato to a rand tokenId
         emit PotatoExploded(potatoTokenId, failedPlayer);
+        potatoTokenId = assignPotato();
 
-        // ChainLinkVRF2 Logic here
+        hands[potatoTokenId].hasPotato = true;
 
         // Decrease the count of active tokens for the failed player
         addressActiveTokenCount[failedPlayer] -= 1;
@@ -535,15 +640,24 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
         if (!hasActiveTokens) {
             activeAddresses -= 1;
         }
-        // 5. Check if the game should move to the final round or end
-        if (activeAddresses == 1) {
-            gameState = GameState.Ended;
-            emit PlayerWon(ownerOf(activeTokens[1]));
-            winners.push(ownerOf(activeTokens[1]));
-            totalWins[ownerOf(activeTokens[1])] += 1;
-            rewards[ownerOf(activeTokens[1])] +=
-                (roundFunds[currentGeneration] * 4) /
-                10;
+
+        // 5. Check if there are still active betters
+        uint256 activeBetters = 0;
+        address lastBetter;
+        for (uint256 i = 0; i < activeTokens.length; i++) {
+            address tokenOwner = ownerOf(activeTokens[i]);
+            if (!hands[activeTokens[i]].burnt && hasBet[tokenOwner]) {
+                activeBetters += 1;
+                lastBetter = tokenOwner;
+
+                if (activeBetters >= 2) {
+                    break; // Exit the loop early if we find at least 2 active betters
+                }
+            }
+        }
+
+        if (activeBetters < 2) {
+            rewards[lastBetter] += (roundFunds[currentGeneration] * 4) / 10;
             projectFunds[currentGeneration] +=
                 (roundFunds[currentGeneration] * 1) /
                 10;
@@ -553,9 +667,36 @@ contract UNKNOWN is ERC721A, ERC721AQueryable, ReentrancyGuard, Ownable {
             charityFunds[currentGeneration] +=
                 (roundFunds[currentGeneration] * 2) /
                 10;
-        } else {
-            assignPotato();
         }
+
+        // 5. Check if the game should move to the final round or end
+        if (activeAddresses == 1) {
+            gameState = GameState.Ended;
+            emit PlayerWon(ownerOf(activeTokens[1]));
+            winners.push(ownerOf(activeTokens[1]));
+            totalWins[ownerOf(activeTokens[1])] += 1;
+        }
+    }
+
+    function setRequestParameters(
+        address _airnode,
+        bytes32 _endpointIdUint256,
+        address _sponsorWallet
+    ) external {
+        airnode = _airnode;
+        endpointIdUint256 = _endpointIdUint256;
+        sponsorWallet = _sponsorWallet;
+    }
+
+    function fulfillUint256(bytes32 requestId, bytes calldata data)
+        external
+        onlyAirnodeRrp
+    {
+        require(waitingFulfillment[requestId], "Request ID not known");
+        waitingFulfillment[requestId] = false;
+        qrngUint256 = abi.decode(data, (uint256));
+        // Do what you want with `qrngUint256` here...
+        emit ReceivedUint256(requestId, qrngUint256);
     }
 
     function _startTokenId() internal view virtual override returns (uint256) {
