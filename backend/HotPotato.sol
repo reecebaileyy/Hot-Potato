@@ -201,31 +201,28 @@ contract UNKNOWN is
             msg.sender == ownerOf(potatoTokenId),
             "You don't have the potato yet"
         );
-        
-        if (block.timestamp - lastPassTime[potatoTokenId] > 2 days) {
-            processExplosion();
-        }
-
 
         uint256 passCount = successfulPasses[ownerOf(potatoTokenId)];
         uint256 explosionChance = 5 + (2 * passCount); // 5% base chance + 2% per pass
         require(explosionChance <= 100, "Explosion chance cannot exceed 100%");
         uint256 randomNumber = qrngUint256 % 100;
 
-        if (randomNumber < explosionChance) {
+        if (block.timestamp - lastPassTime[potatoTokenId] > 2 days) {
             processExplosion();
+        } else if (randomNumber < explosionChance) {
+            processExplosion();
+        } else {
+            // SUCCESSFULL PASS
+            uint256 newPotatoTokenId = tokenIdTo;
+            hands[potatoTokenId].hasPotato = false;
+            potatoTokenId = newPotatoTokenId;
+            hands[potatoTokenId].hasPotato = true;
+            lastPassTime[potatoTokenId] = block.timestamp;
+            TOTAL_PASSES += 1;
+            successfulPasses[msg.sender] += 1;
+
+            emit PotatoPassed(potatoTokenId, tokenIdTo, ownerOf(potatoTokenId));
         }
-
-        // SUCCESSFULL PASS
-        uint256 newPotatoTokenId = tokenIdTo;
-        hands[potatoTokenId].hasPotato = false;
-        potatoTokenId = newPotatoTokenId;
-        hands[potatoTokenId].hasPotato = true;
-        lastPassTime[potatoTokenId] = block.timestamp;
-        TOTAL_PASSES += 1;
-        successfulPasses[msg.sender] += 1;
-
-        emit PotatoPassed(potatoTokenId, tokenIdTo, ownerOf(potatoTokenId));
     }
 
     function withdrawWinnersFunds() external nonReentrant {
@@ -609,11 +606,15 @@ contract UNKNOWN is
 
         // 3. Remove the exploded NFT from the activeTokens array
         hands[potatoTokenId].burnt = true;
-        for (uint256 i = 0; i < activeTokens.length; i++) {
-            if (activeTokens[i] == potatoTokenId) {
-                activeTokens[i] = activeTokens[activeTokens.length - 1];
-                activeTokens.pop();
-                break;
+        if (activeTokens.length > 0) {
+            for (uint256 i = 0; i < activeTokens.length; i++) {
+                if (activeTokens[i] == potatoTokenId) {
+                    if (i != activeTokens.length - 1) {
+                        activeTokens[i] = activeTokens[activeTokens.length - 1];
+                    }
+                    activeTokens.pop();
+                    break;
+                }
             }
         }
 
