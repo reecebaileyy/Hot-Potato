@@ -63,11 +63,11 @@ contract UNKNOWN is
     address public sponsorWallet;
 
     uint256 public TOTAL_PASSES;
+    uint256 public passesWhileActive = 0;
     uint256 public potatoTokenId;
     uint32 public currentGeneration = 0;
     uint256 public price = 0.01 ether;
     uint256 public maxSupply = 1000;
-    //Users will be able to mint 1 at initial mint then when the games begin people can list their hand if they want.
     uint256 public maxPerWallet = 1;
     uint256 public activeAddresses = 0;
     uint256 private _currentIndex = 1;
@@ -199,28 +199,25 @@ contract UNKNOWN is
         require(msg.sender != ownerOf(tokenIdTo), "Cannot pass potato to self");
         require(
             msg.sender == ownerOf(potatoTokenId),
-            "You don't have the potato yet"
+            "You don't have the potato"
         );
 
-        uint256 passCount = successfulPasses[ownerOf(potatoTokenId)];
-        uint256 explosionChance = 5 + (2 * passCount); // 5% base chance + 2% per pass
-        require(explosionChance <= 100, "Explosion chance cannot exceed 100%");
+        uint256 explosionChance = 5 + (90 * passesWhileActive);
         uint256 randomNumber = qrngUint256 % 100;
 
-        if (block.timestamp - lastPassTime[potatoTokenId] > 2 days) {
-            processExplosion();
-        } else if (randomNumber < explosionChance) {
+        if (
+            block.timestamp - lastPassTime[potatoTokenId] > 2 days ||
+            randomNumber < explosionChance
+        ) {
             processExplosion();
         } else {
-            // SUCCESSFULL PASS
-            uint256 newPotatoTokenId = tokenIdTo;
             hands[potatoTokenId].hasPotato = false;
-            potatoTokenId = newPotatoTokenId;
+            potatoTokenId = tokenIdTo;
             hands[potatoTokenId].hasPotato = true;
             lastPassTime[potatoTokenId] = block.timestamp;
             TOTAL_PASSES += 1;
             successfulPasses[msg.sender] += 1;
-
+            passesWhileActive += 1;
             emit PotatoPassed(potatoTokenId, tokenIdTo, ownerOf(potatoTokenId));
         }
     }
@@ -573,16 +570,11 @@ contract UNKNOWN is
     }
 
     function assignPotato() internal view returns (uint256) {
-        // Ensure that we have active tokens
         require(activeTokens.length > 0, "No active tokens available");
 
-        // Use the random number to pick an index from the active tokens
         uint256 randomIndex = qrngUint256 % activeTokens.length;
-
-        // Get the token ID from the active tokens array
         uint256 selectedTokenId = activeTokens[randomIndex];
 
-        // Double-check that the selected token is still active
         require(!hands[selectedTokenId].burnt, "Selected token is not active");
 
         return selectedTokenId;
@@ -601,33 +593,32 @@ contract UNKNOWN is
         address failedPlayer = ownerOf(potatoTokenId);
         failedPasses[failedPlayer] += 1;
 
-        // 2. Remove the potato from the exploded NFT & set Burn trait
         hands[potatoTokenId].hasPotato = false;
-
-        // 3. Remove the exploded NFT from the activeTokens array
         hands[potatoTokenId].burnt = true;
+        passesWhileActive = 0;
+
         if (activeTokens.length > 0) {
-            for (uint256 i = 0; i < activeTokens.length; i++) {
+            uint256 lastIndex = activeTokens.length - 1;
+            for (uint256 i = 0; i <= lastIndex; i++) {
                 if (activeTokens[i] == potatoTokenId) {
-                    if (i != activeTokens.length - 1) {
-                        activeTokens[i] = activeTokens[activeTokens.length - 1];
-                    }
+                    activeTokens[i] = activeTokens[lastIndex];
                     activeTokens.pop();
                     break;
                 }
             }
         }
 
-        // 4. Emit an event to notify that the potato exploded and get ready to assign potato to a rand tokenId
         emit PotatoExploded(potatoTokenId, failedPlayer);
-        potatoTokenId = assignPotato();
 
-        hands[potatoTokenId].hasPotato = true;
+        if (activeTokens.length > 0) {
+            potatoTokenId = assignPotato();
+            hands[potatoTokenId].hasPotato = true;
+        } else {
+            potatoTokenId = 0;
+        }
 
-        // Decrease the count of active tokens for the failed player
         addressActiveTokenCount[failedPlayer] -= 1;
 
-        // Check if the failed player owns any active (not burnt) tokens
         bool hasActiveTokens = false;
         uint256[] memory tokens = tokensOwnedByUser[failedPlayer];
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -637,12 +628,10 @@ contract UNKNOWN is
             }
         }
 
-        // If the failed player has no more active tokens, decrease the count of active addresses
         if (!hasActiveTokens) {
             activeAddresses -= 1;
         }
 
-        // 5. Check if there are still active betters
         uint256 activeBetters = 0;
         address lastBetter;
         for (uint256 i = 0; i < activeTokens.length; i++) {
@@ -652,7 +641,7 @@ contract UNKNOWN is
                 lastBetter = tokenOwner;
 
                 if (activeBetters >= 2) {
-                    break; // Exit the loop early if we find at least 2 active betters
+                    break;
                 }
             }
         }
@@ -670,7 +659,6 @@ contract UNKNOWN is
                 10;
         }
 
-        // 5. Check if the game should move to the final round or end
         if (activeAddresses == 1) {
             gameState = GameState.Ended;
             emit PlayerWon(ownerOf(activeTokens[1]));
@@ -683,7 +671,7 @@ contract UNKNOWN is
         address _airnode,
         bytes32 _endpointIdUint256,
         address _sponsorWallet
-    ) external {
+    ) external onlyOwner {
         airnode = _airnode;
         endpointIdUint256 = _endpointIdUint256;
         sponsorWallet = _sponsorWallet;
