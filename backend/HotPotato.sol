@@ -92,11 +92,11 @@ contract UNKNOWN is
     mapping(address => uint256) public addressActiveTokenCount;
     mapping(bytes32 => bool) public waitingFulfillment;
     mapping(address => bool) public hasBet;
+    mapping(uint256 => bool) public isActiveToken;
 
     GameState internal gameState;
     GameState internal previousGameState;
 
-    uint256[] public activeTokens;
     address[] public players;
     address[] public winners;
 
@@ -148,11 +148,12 @@ contract UNKNOWN is
         require(totalSupply() + 1 <= maxSupply, "Max supply reached");
         // decide on price :)
 
-        _mintHand();
+        uint64 id = _mintHand();
 
         hasMinted[msg.sender] = true;
         hasBet[msg.sender] = true;
         roundFunds[currentGeneration] += msg.value;
+        isActiveToken[id] = true;
     }
 
     function joinGame(uint256[] calldata tokenIds)
@@ -172,8 +173,8 @@ contract UNKNOWN is
             // Switch the burnt trait to false, allowing the NFT to rejoin the game
             hands[tokenId].burnt = false;
 
-            // Add the token to active tokens
-            activeTokens.push(tokenId);
+            // Mark token as active
+            isActiveToken[tokenId] = true;
 
             // Increment the active addresses if this is the first active token for the owner
             if (addressActiveTokenCount[msg.sender] == 0) {
@@ -210,7 +211,9 @@ contract UNKNOWN is
             randomNumber < explosionChance
         ) {
             processExplosion();
-        } else {
+        }
+
+        if (gameState == GameState.Playing) {
             hands[potatoTokenId].hasPotato = false;
             potatoTokenId = tokenIdTo;
             hands[potatoTokenId].hasPotato = true;
@@ -423,7 +426,6 @@ contract UNKNOWN is
         }
 
         delete players;
-        delete activeTokens; // Clear and reinitialize active tokens array
         roundFunds[currentGeneration] = 0;
 
         emit GameRestarted("Queued");
@@ -526,7 +528,6 @@ contract UNKNOWN is
         );
 
         _safeMint(msg.sender, 1);
-        activeTokens.push(id);
 
         activeAddresses += 1;
         players.push(msg.sender);
@@ -570,14 +571,29 @@ contract UNKNOWN is
     }
 
     function assignPotato() internal view returns (uint256) {
-        require(activeTokens.length > 0, "No active tokens available");
+        require(activeAddresses > 0, "No active addresses available");
 
-        uint256 randomIndex = qrngUint256 % activeTokens.length;
-        uint256 selectedTokenId = activeTokens[randomIndex];
+        uint256 randomIndex = qrngUint256 % activeAddresses;
+        uint256 currentIndex = 0;
 
-        require(!hands[selectedTokenId].burnt, "Selected token is not active");
+        for (
+            uint256 tokenId = _startTokenId();
+            tokenId < _nextTokenId();
+            tokenId++
+        ) {
+            if (
+                _exists(tokenId) &&
+                isActiveToken[tokenId] &&
+                !hands[tokenId].burnt
+            ) {
+                if (currentIndex == randomIndex) {
+                    return tokenId;
+                }
+                currentIndex++;
+            }
+        }
 
-        return selectedTokenId;
+        revert("Failed to assign potato");
     }
 
     function _isTokenActive(uint256 tokenId) public view returns (bool) {
@@ -588,83 +604,102 @@ contract UNKNOWN is
     }
 
     function processExplosion() internal {
-        require(gameState == GameState.Playing, "Game not playing");
+    require(gameState == GameState.Playing, "Game not playing");
 
-        address failedPlayer = ownerOf(potatoTokenId);
-        failedPasses[failedPlayer] += 1;
+    address failedPlayer = ownerOf(potatoTokenId);
+    failedPasses[failedPlayer] += 1;
 
-        hands[potatoTokenId].hasPotato = false;
-        hands[potatoTokenId].burnt = true;
-        passesWhileActive = 0;
+    hands[potatoTokenId].hasPotato = false;
+    hands[potatoTokenId].burnt = true;
+    passesWhileActive = 0;
 
-        if (activeTokens.length > 0) {
-            uint256 lastIndex = activeTokens.length - 1;
-            for (uint256 i = 0; i <= lastIndex; i++) {
-                if (activeTokens[i] == potatoTokenId) {
-                    activeTokens[i] = activeTokens[lastIndex];
-                    activeTokens.pop();
-                    break;
-                }
-            }
+    isActiveToken[potatoTokenId] = false;
+
+    emit PotatoExploded(potatoTokenId, failedPlayer);
+
+    // Find a new potato holder
+    uint256 newPotatoTokenId = findNextActiveToken();
+    if (newPotatoTokenId != 0) {
+        potatoTokenId = newPotatoTokenId;
+        hands[potatoTokenId].hasPotato = true;
+        lastPassTime[potatoTokenId] = block.timestamp;
+    } else {
+        // No more active tokens, end the game
+        potatoTokenId = 0;
+        gameState = GameState.Ended;
+        return;
+    }
+
+    addressActiveTokenCount[failedPlayer] -= 1;
+
+    bool hasActiveTokens = false;
+    uint256[] memory tokens = tokensOwnedByUser[failedPlayer];
+    for (uint256 i = 0; i < tokens.length; i++) {
+        if (!hands[tokens[i]].burnt) {
+            hasActiveTokens = true;
+            break;
         }
+    }
 
-        emit PotatoExploded(potatoTokenId, failedPlayer);
+    if (!hasActiveTokens) {
+        activeAddresses -= 1;
+    }
 
-        if (activeTokens.length > 0) {
-            potatoTokenId = assignPotato();
-            hands[potatoTokenId].hasPotato = true;
-        } else {
-            potatoTokenId = 0;
-        }
+    uint256 activeBetters = 0;
+    address lastBetter;
+    for (
+        uint256 tokenId = _startTokenId();
+        tokenId < _nextTokenId();
+        tokenId++
+    ) {
+        address tokenOwner = ownerOf(tokenId);
+        if (isActiveToken[tokenId] && hasBet[tokenOwner]) {
+            activeBetters += 1;
+            lastBetter = tokenOwner;
 
-        addressActiveTokenCount[failedPlayer] -= 1;
-
-        bool hasActiveTokens = false;
-        uint256[] memory tokens = tokensOwnedByUser[failedPlayer];
-        for (uint256 i = 0; i < tokens.length; i++) {
-            if (!hands[tokens[i]].burnt) {
-                hasActiveTokens = true;
+            if (activeBetters >= 2) {
                 break;
             }
         }
+    }
 
-        if (!hasActiveTokens) {
-            activeAddresses -= 1;
-        }
+    if (activeBetters < 2) {
+        rewards[lastBetter] += (roundFunds[currentGeneration] * 4) / 10;
+        projectFunds[currentGeneration] +=
+            (roundFunds[currentGeneration] * 1) /
+            10;
+        teamFunds[currentGeneration] +=
+            (roundFunds[currentGeneration] * 3) /
+            10;
+        charityFunds[currentGeneration] +=
+            (roundFunds[currentGeneration] * 2) /
+            10;
+    }
 
-        uint256 activeBetters = 0;
-        address lastBetter;
-        for (uint256 i = 0; i < activeTokens.length; i++) {
-            address tokenOwner = ownerOf(activeTokens[i]);
-            if (!hands[activeTokens[i]].burnt && hasBet[tokenOwner]) {
-                activeBetters += 1;
-                lastBetter = tokenOwner;
+    if (activeAddresses == 1) {
+        gameState = GameState.Ended;
+        emit PlayerWon(ownerOf(potatoTokenId)); // Corrected reference
+        winners.push(ownerOf(potatoTokenId));
+        totalWins[ownerOf(potatoTokenId)] += 1;
+    }
+}
 
-                if (activeBetters >= 2) {
-                    break;
-                }
+
+    function findNextActiveToken() internal view returns (uint256) {
+        for (
+            uint256 tokenId = _startTokenId();
+            tokenId < _nextTokenId();
+            tokenId++
+        ) {
+            if (
+                _exists(tokenId) &&
+                !hands[tokenId].burnt &&
+                isActiveToken[tokenId]
+            ) {
+                return tokenId;
             }
         }
-
-        if (activeBetters < 2) {
-            rewards[lastBetter] += (roundFunds[currentGeneration] * 4) / 10;
-            projectFunds[currentGeneration] +=
-                (roundFunds[currentGeneration] * 1) /
-                10;
-            teamFunds[currentGeneration] +=
-                (roundFunds[currentGeneration] * 3) /
-                10;
-            charityFunds[currentGeneration] +=
-                (roundFunds[currentGeneration] * 2) /
-                10;
-        }
-
-        if (activeAddresses == 1) {
-            gameState = GameState.Ended;
-            emit PlayerWon(ownerOf(activeTokens[1]));
-            winners.push(ownerOf(activeTokens[1]));
-            totalWins[ownerOf(activeTokens[1])] += 1;
-        }
+        return 0;
     }
 
     function setRequestParameters(
