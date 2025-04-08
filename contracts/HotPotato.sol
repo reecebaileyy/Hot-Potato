@@ -225,11 +225,7 @@ contract HotPotatoGame is ERC721ACQueryable, Ownable, ERC2981 {
         require(activeTokenIds.length > 0, "No active tokens");
         uint256 index = uint256(
             keccak256(
-                abi.encodePacked(
-                    block.timestamp,
-                    _nonce,
-                    activeTokenIds.length
-                )
+                abi.encodePacked(block.timestamp, _nonce, activeTokenIds.length)
             )
         ) % activeTokenIds.length;
         return activeTokenIds[index];
@@ -284,6 +280,12 @@ contract HotPotatoGame is ERC721ACQueryable, Ownable, ERC2981 {
             }
         }
         return uniqueCount;
+    }
+
+    /// @notice Returns the address of the NFT owner currently holding the hot potato trait.
+    function getPotatoHolder() external view returns (address) {
+        require(gameStarted, "Game not started yet");
+        return ownerOf(currentPotatoToken);
     }
 
     // --- Bidding Functions ---

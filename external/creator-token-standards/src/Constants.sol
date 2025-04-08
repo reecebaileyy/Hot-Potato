@@ -1,111 +1,62 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-/**
- * @dev Constant definitions for receiver constraints used by the transfer validator.
- */
-/// @dev No constraints on the receiver of a token.
-uint256 constant RECEIVER_CONSTRAINTS_NONE = 0;
+/// @dev Constant bytes32 value of 0x000...000
+bytes32 constant ZERO_BYTES32 = bytes32(0);
 
-/// @dev Token receiver cannot have deployed code.
-uint256 constant RECEIVER_CONSTRAINTS_NO_CODE = 1;
+/// @dev Constant value of 0
+uint256 constant ZERO = 0;
+/// @dev Constant value of 1
+uint256 constant ONE = 1;
 
-/// @dev Token receiver must be a verified EOA with the EOA Registry.
-uint256 constant RECEIVER_CONSTRAINTS_EOA = 2;
+/// @dev Constant value representing an open order in storage
+uint8 constant ORDER_STATE_OPEN = 0;
+/// @dev Constant value representing a filled order in storage
+uint8 constant ORDER_STATE_FILLED = 1;
+/// @dev Constant value representing a cancelled order in storage
+uint8 constant ORDER_STATE_CANCELLED = 2;
 
-/// @dev Token is a soulbound token and cannot be transferred.
-uint256 constant RECEIVER_CONSTRAINTS_SBT = 3;
+/// @dev Constant value representing the ERC721 token type for signatures and transfer hooks
+uint256 constant TOKEN_TYPE_ERC721 = 721;
+/// @dev Constant value representing the ERC1155 token type for signatures and transfer hooks
+uint256 constant TOKEN_TYPE_ERC1155 = 1155;
+/// @dev Constant value representing the ERC20 token type for signatures and transfer hooks
+uint256 constant TOKEN_TYPE_ERC20 = 20;
 
-/**
- * @dev Constant definitions for caller constraints used by the transfer validator.
- */
-/// @dev No constraints on the caller of a token transfer.
-uint256 constant CALLER_CONSTRAINTS_NONE = 0;
+/// @dev Constant value to mask the upper bits of a signature that uses a packed `vs` value to extract `s`
+bytes32 constant UPPER_BIT_MASK = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-/// @dev Caller of a token transfer must not be on the blacklist unless it is an OTC transfer.
-uint256 constant CALLER_CONSTRAINTS_OPERATOR_BLACKLIST_ENABLE_OTC = 1;
+/// @dev EIP-712 typehash used for validating signature based stored approvals
+bytes32 constant UPDATE_APPROVAL_TYPEHASH =
+    keccak256("UpdateApprovalBySignature(uint256 tokenType,address token,uint256 id,uint256 amount,uint256 nonce,address operator,uint256 approvalExpiration,uint256 sigDeadline,uint256 masterNonce)");
 
-/// @dev Caller of a token transfer must be on the whitelist unless it is an OTC transfer.
-uint256 constant CALLER_CONSTRAINTS_OPERATOR_WHITELIST_ENABLE_OTC = 2;
+/// @dev EIP-712 typehash used for validating a single use permit without additional data
+bytes32 constant SINGLE_USE_PERMIT_TYPEHASH =
+    keccak256("PermitTransferFrom(uint256 tokenType,address token,uint256 id,uint256 amount,uint256 nonce,address operator,uint256 expiration,uint256 masterNonce)");
 
-/// @dev Caller of a token transfer must be on the whitelist.
-uint256 constant CALLER_CONSTRAINTS_OPERATOR_WHITELIST_DISABLE_OTC = 3;
+/// @dev EIP-712 typehash used for validating a single use permit with additional data
+string constant SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB =
+    "PermitTransferFromWithAdditionalData(uint256 tokenType,address token,uint256 id,uint256 amount,uint256 nonce,address operator,uint256 expiration,uint256 masterNonce,";
 
-/// @dev Token is a soulbound token and cannot be transferred.
-uint256 constant CALLER_CONSTRAINTS_SBT = 4;
+/// @dev EIP-712 typehash used for validating an order permit that updates storage as it fills
+string constant PERMIT_ORDER_ADVANCED_TYPEHASH_STUB =
+    "PermitOrderWithAdditionalData(uint256 tokenType,address token,uint256 id,uint256 amount,uint256 salt,address operator,uint256 expiration,uint256 masterNonce,";
 
+/// @dev Pausable flag for stored approval transfers of ERC721 assets
+uint256 constant PAUSABLE_APPROVAL_TRANSFER_FROM_ERC721 = 1 << 0;
+/// @dev Pausable flag for stored approval transfers of ERC1155 assets
+uint256 constant PAUSABLE_APPROVAL_TRANSFER_FROM_ERC1155 = 1 << 1;
+/// @dev Pausable flag for stored approval transfers of ERC20 assets
+uint256 constant PAUSABLE_APPROVAL_TRANSFER_FROM_ERC20 = 1 << 2;
 
-/**
- * @dev Constant definitions for transfer security levels used by the transfer validator
- *      to define what receiver and caller constraints are applied to a transfer.
- */
+/// @dev Pausable flag for single use permit transfers of ERC721 assets
+uint256 constant PAUSABLE_PERMITTED_TRANSFER_FROM_ERC721 = 1 << 3;
+/// @dev Pausable flag for single use permit transfers of ERC1155 assets
+uint256 constant PAUSABLE_PERMITTED_TRANSFER_FROM_ERC1155 = 1 << 4;
+/// @dev Pausable flag for single use permit transfers of ERC20 assets
+uint256 constant PAUSABLE_PERMITTED_TRANSFER_FROM_ERC20 = 1 << 5;
 
-/// @dev Recommend Security Level -
-///        Caller Constraints: Operator Whitelist
-///        Receiver Constraints: None
-///        OTC: Allowed
-uint8 constant TRANSFER_SECURITY_LEVEL_RECOMMENDED = 0;
-
-/// @dev Security Level One -
-///        Caller Constraints: None
-///        Receiver Constraints: None
-///        OTC: Allowed
-uint8 constant TRANSFER_SECURITY_LEVEL_ONE = 1;
-
-/// @dev Security Level Two -
-///        Caller Constraints: Operator Blacklist
-///        Receiver Constraints: None
-///        OTC: Allowed
-uint8 constant TRANSFER_SECURITY_LEVEL_TWO = 2;
-
-/// @dev Security Level Three -
-///        Caller Constraints: Operator Whitelist
-///        Receiver Constraints: None
-///        OTC: Allowed
-uint8 constant TRANSFER_SECURITY_LEVEL_THREE = 3;
-
-/// @dev Security Level Four -
-///        Caller Constraints: Operator Whitelist
-///        Receiver Constraints: None
-///        OTC: Not Allowed
-uint8 constant TRANSFER_SECURITY_LEVEL_FOUR = 4;
-
-/// @dev Security Level Five -
-///        Caller Constraints: Operator Whitelist
-///        Receiver Constraints: No Code
-///        OTC: Allowed
-uint8 constant TRANSFER_SECURITY_LEVEL_FIVE = 5;
-
-/// @dev Security Level Six -
-///        Caller Constraints: Operator Whitelist
-///        Receiver Constraints: Verified EOA
-///        OTC: Allowed
-uint8 constant TRANSFER_SECURITY_LEVEL_SIX = 6;
-
-/// @dev Security Level Seven -
-///        Caller Constraints: Operator Whitelist
-///        Receiver Constraints: No Code
-///        OTC: Not Allowed
-uint8 constant TRANSFER_SECURITY_LEVEL_SEVEN = 7;
-
-/// @dev Security Level Eight -
-///        Caller Constraints: Operator Whitelist
-///        Receiver Constraints: Verified EOA
-///        OTC: Not Allowed
-uint8 constant TRANSFER_SECURITY_LEVEL_EIGHT = 8;
-
-/// @dev Security Level Nine -
-///        Soulbound Token, No Transfers Allowed
-uint8 constant TRANSFER_SECURITY_LEVEL_NINE = 9;
-
-/// @dev List type is a blacklist.
-uint8 constant LIST_TYPE_BLACKLIST = 0;
-
-/// @dev List type is a whitelist.
-uint8 constant LIST_TYPE_WHITELIST = 1;
-
-/// @dev List type is authorizers.
-uint8 constant LIST_TYPE_AUTHORIZERS = 2;
-
-/// @dev Constant value for the no error selector.
-bytes4 constant SELECTOR_NO_ERROR = bytes4(0x00000000);
+/// @dev Pausable flag for order fill transfers of ERC1155 assets
+uint256 constant PAUSABLE_ORDER_TRANSFER_FROM_ERC1155 = 1 << 6;
+/// @dev Pausable flag for order fill transfers of ERC20 assets
+uint256 constant PAUSABLE_ORDER_TRANSFER_FROM_ERC20 = 1 << 7;
