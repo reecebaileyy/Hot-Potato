@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
 import { useState, useRef, useEffect } from 'react'
-import { Web3Button } from '@web3modal/react'
+import ConnectWalletButton from '../components/ConnectWalletButton'
 import ABI from '../abi/UNKNOWN.json'
 import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent, useEnsName, WagmiProvider } from 'wagmi'
 import hot from '../../public/assets/images/hot.png'
@@ -20,22 +20,13 @@ import { providers, Contract, ethers } from 'ethers';
 
 
 export async function getServerSideProps() {
-  const provider = new providers.JsonRpcBatchProvider(process.env.NEXT_PUBLIC_ALCHEMY_URL);
-  const contract = new Contract('0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07', ABI, provider);
-  const initalGameState = await contract.getGameState();
-  const roundNumber = await contract.currentGeneration();
-  const gen = parseInt(roundNumber, 10);
-  const _price = await contract._price();
-  const price = parseInt(_price, 10);
-  const _maxsupplyPerRound = await contract._maxsupplyPerRound();
-  const maxSupply = parseInt(_maxsupplyPerRound, 10);
-  return { props: { initalGameState, gen, price, maxSupply } };
-
+  return { props: { initalGameState: null, gen: 1, price: 0, maxSupply: 0 } };
 }
 
 
+
 export default function Play({ initalGameState, gen, price, maxSupply }) {
-  const provider = new providers.JsonRpcBatchProvider(process.env.NEXT_PUBLIC_ALCHEMY_URL);
+  const provider = new providers.JsonRpcBatchProvider("https://polygon-amoy.g.alchemy.com/v2/MWZtAtBqsyQ3eWkDLVGqYFhcrjKzfKui");
   const displayPrice = ethers.utils.formatEther(price.toString());
   const [_address, setAddress] = useState("");
   const { address } = useAccount();
@@ -1114,7 +1105,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
                   onChange={() => setDarkMode(!darkMode)}
                   size={30}
                 />
-                <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
+                <ConnectWalletButton className='text-white bg-slate-800 p-2 rounded-lg' />
               </ul>
             </div>
           </div>
@@ -1130,7 +1121,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
               onChange={() => setDarkMode(!darkMode)}
               size={30}
             />
-            <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
+            <ConnectWalletButton className='text-white bg-slate-800 p-2 rounded-lg' />
           </div>
         </nav>
 

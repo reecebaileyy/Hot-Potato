@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
 import { useState, useRef, useEffect } from 'react'
-import { Web3Button } from '@web3modal/react'
+import ConnectWalletButton from '../components/ConnectWalletButton'
 import blacklogo from '../../public/assets/images/Logo.png'
 
 
@@ -125,7 +125,7 @@ export default function Home() {
                   onChange={() => setDarkMode(!darkMode)}
                   size={30}
                 />
-                <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
+                <ConnectWalletButton className='text-white bg-slate-800 p-2 rounded-lg' />
               </ul>
             </div>
           </div>
@@ -141,7 +141,7 @@ export default function Home() {
               onChange={() => setDarkMode(!darkMode)}
               size={30}
             />
-            <Web3Button className='text-white bg-slate-800 p-2 rounded-lg' />
+            <ConnectWalletButton className='text-white bg-slate-800 p-2 rounded-lg' />
           </div>
         </nav>
 
