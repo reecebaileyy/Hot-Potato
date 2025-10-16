@@ -5,7 +5,7 @@ import { DarkModeSwitch } from 'react-toggle-dark-mode';
 import { useState, useRef, useEffect } from 'react'
 import ConnectWalletButton from '../components/ConnectWalletButton'
 import ABI from '../abi/UNKNOWN.json'
-import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useContractEvent, useEnsName, WagmiProvider } from 'wagmi'
+import { useAccount, useBalance, useContractRead, usePrepareContractWrite, useContractWrite, useWatchContractEvent, useEnsName, WagmiProvider } from 'wagmi'
 import hot from '../../public/assets/images/hot.png'
 import potatoBlink from '../../public/assets/images/potatoBlink.gif'
 import Explosion from '../../public/assets/images/Explosion.gif'
@@ -122,24 +122,25 @@ export default function Play({ initalGameState, gen, price, maxSupply }) {
     ▀▀███████▀████▀██▄████  ████  ████▄ ▀█████▀   █▀█████▀  ▀████████▀██▄ ▀████ ▀█████▀
   */
 
-  useContractEvent({
+  useWatchContractEvent({
     address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
     abi: ABI,
     eventName: 'GameStarted',
-    async listener(log) {
+    onLogs: async (logs) => {
       if (_address) {
-        await refetchGetActiveTokenCount({ args: [_address] });
+        await refetchGetActiveTokenCount({ args: [_address] })
       }
-      await refetchGetRoundMints();
-      await refetchGetActiveTokens();
-      setRoundMints(() => 0);
-      setGetGameState(() => "Minting");
-      setPrevGameState(() => "Queued");
-      setEvents(prevEvents => [...prevEvents, "Heating up"]);
+      await refetchGetRoundMints()
+      await refetchGetActiveTokens()
+      setRoundMints(0)
+      setGetGameState("Minting")
+      setPrevGameState("Queued")
+      setEvents(prev => [...prev, "Heating up"])
     },
+
   });
 
-  useContractEvent({
+  useWatchContractEvent({
     address: '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07',
     abi: ABI,
     eventName: 'MintingEnded',

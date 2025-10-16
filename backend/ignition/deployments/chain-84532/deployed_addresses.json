@@ -1,0 +1,8 @@
+{
+  "HotPotatoModule#BackgroundsContract": "0xd84f534F5b1c8b7C2BCb45552D27D67a6506743f",
+  "HotPotatoModule#GameContract": "0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704",
+  "HotPotatoModule#HandsContract": "0xF74165b3889cD5033118999e6D9e1C9F22434c95",
+  "HotPotatoModule#InventoryContract": "0x5b371396CC800a821286A17661E345F4e5CCa1fd",
+  "HotPotatoModule#PotatoContract": "0xb8088dAAe0C5e46B8463bd0bE85D464431Bfdd99",
+  "HotPotatoModule#VRFHandlerContract": "0x77980889FCC530Fc6b37b3218b7E69B5f3558924"
+}

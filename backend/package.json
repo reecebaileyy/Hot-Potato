@@ -1,15 +1,19 @@
 {
   "name": "hardhat-project",
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
-    "hardhat": "^2.14.0"
+    "@nomicfoundation/hardhat-toolbox-viem": "^4.1.0",
+    "hardhat": "^2.26.3",
+    "hardhat-contract-sizer": "^2.10.1"
   },
   "dependencies": {
-    "@chainlink/contracts": "^0.6.1",
-    "@openzeppelin/contracts": "^4.8.3",
-    "base-64": "^1.0.0",
-    "dotenv": "^16.0.3",
-    "erc721a": "^4.2.3",
-    "hardhat-gas-reporter": "^1.0.9"
+    "@chainlink/contracts": "^1.5.0",
+    "@openzeppelin/contracts": "^5.4.0",
+    "dotenv": "^17.2.3",
+    "erc721a": "^4.3.0"
+  },
+  "scripts": {
+    "deploy": "npx hardhat ignition deploy ignition/modules/Deploy.ts --network baseSepolia",
+    "verify": "npx hardhat ignition verify --network baseSepolia chain-84532 --include-unrelated-contracts"
+
   }
 }

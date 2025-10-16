@@ -12,6 +12,8 @@
     "@prisma/client": "^4.15.0",
     "@privy-io/react-auth": "^3.3.0",
     "@tailwindcss/postcss7-compat": "^2.2.17",
+    "@tanstack/query-core": "^5.90.3",
+    "@tanstack/react-query": "^5.90.3",
     "alchemy-sdk": "^2.9.0",
     "autoprefixer": "^10.4.21",
     "dotenv": "^16.6.1",
