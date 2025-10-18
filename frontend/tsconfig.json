@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "baseUrl": "",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "jsx": "preserve",
+    "types": [
+      "react",
+      "node"
+    ],
+    "target": "esnext",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsxImportSource": "react",
+    "allowSyntheticDefaultImports": true,
+    "incremental": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "src/pages/api/get-previous-game-state.js",
+    "src/pages/api/get-player-data.js"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
