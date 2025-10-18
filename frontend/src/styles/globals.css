@@ -38,25 +38,29 @@
 /* Modern Card Components */
 @layer components {
   .card {
-    @apply bg-white/95 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl;
+    @apply bg-white backdrop-blur-md border border-white rounded-2xl shadow-xl;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.5);
     transition: var(--transition);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.3);
   }
   
   .card:hover {
-    @apply shadow-2xl transform scale-[1.02];
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    @apply shadow-2xl transform scale-105;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.4);
   }
   
   .card-dark {
-    @apply bg-gray-900/95 backdrop-blur-md border border-gray-600/50 rounded-2xl shadow-xl;
+    @apply bg-gray-900 backdrop-blur-md border border-gray-500 rounded-2xl shadow-xl;
+    background-color: rgba(17, 24, 39, 0.95);
+    border-color: rgba(107, 114, 128, 0.7);
     transition: var(--transition);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.2);
   }
   
   .card-dark:hover {
-    @apply shadow-2xl transform scale-[1.02];
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    @apply shadow-2xl transform scale-105;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.3);
   }
   
   .btn-primary {
@@ -72,8 +76,9 @@
   }
   
   .gradient-text {
-    @apply bg-gradient-to-r from-amber-500 via-red-500 to-pink-500 bg-clip-text text-transparent;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    @apply bg-gradient-to-r from-amber-400 via-red-400 to-pink-400 bg-clip-text text-transparent;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 10px rgba(245, 158, 11, 0.2);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
   }
   
   .glass-effect {
@@ -146,7 +151,7 @@
   opacity: 1;
 }
 
-/* Animation Classes */
+/* Enhanced Animation Classes */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -155,6 +160,39 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
@@ -187,8 +225,38 @@
   }
 }
 
-.animate-fadeInUp {
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes scale {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out;
 }
 
 .animate-pulse-slow {
@@ -201,6 +269,14 @@
 
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-scale {
+  animation: scale 3s ease-in-out infinite;
 }
 
 /* Loading States */

@@ -1,6 +1,6 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
 import { useWatchContractEvent } from 'wagmi'
-import { safeParseEventLogs } from '../pages/helpers/viemUtils'
+import { safeParseEventLogs } from '../utils/viemUtils'
 import ABI from '../abi/Game.json'
 
 const CONTRACT_ADDRESS = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as const
@@ -229,116 +229,126 @@ export function useGameEvents(address: string, refetchHallOfFame: () => void, re
   }, [])
 
   // Event watchers enabled for real-time updates
-  if (true) { // Enable event watching for real-time updates
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'GameStarted',
-      onLogs: handleGameStarted,
-    })
+  // Always call hooks at the top level to avoid conditional hook calls
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'GameStarted',
+    onLogs: handleGameStarted,
+    enabled: true, // Enable event watching for real-time updates
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'MintingEnded',
-      onLogs: handleMintingEnded,
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'MintingEnded',
+    onLogs: handleMintingEnded,
+    enabled: true,
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'GameResumed',
-      onLogs: handleGameResumed,
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'GameResumed',
+    onLogs: handleGameResumed,
+    enabled: true,
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'GamePaused',
-      onLogs: handleGamePaused,
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'GamePaused',
+    onLogs: handleGamePaused,
+    enabled: true,
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'GameRestarted',
-      onLogs: handleGameRestarted,
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'GameRestarted',
+    onLogs: handleGameRestarted,
+    enabled: true,
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'FinalRoundStarted',
-      onLogs: handleFinalRoundStarted,
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'FinalRoundStarted',
+    onLogs: handleFinalRoundStarted,
+    enabled: true,
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'PlayerWon',
-      onLogs: handlePlayerWon,
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'PlayerWon',
+    onLogs: handlePlayerWon,
+    enabled: true,
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'SuccessfulPass',
-      onLogs: handleSuccessfulPass,
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'SuccessfulPass',
+    onLogs: handleSuccessfulPass,
+    enabled: true,
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'PotatoMinted',
-      onLogs: handlePotatoMinted,
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'PotatoMinted',
+    onLogs: handlePotatoMinted,
+    enabled: true,
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'NewRound',
-      onLogs: handleNewRound,
-      onError(error) {
-        console.warn('NewRound event error (non-critical):', error.message || error)
-        // Don't log full error to avoid spam
-      },
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'NewRound',
+    onLogs: handleNewRound,
+    enabled: true,
+    onError(error) {
+      console.warn('NewRound event error (non-critical):', error.message || error)
+      // Don't log full error to avoid spam
+    },
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'UpdatedTimer',
-      onLogs: handleUpdatedTimer,
-      onError(error) {
-        console.warn('UpdatedTimer event error (non-critical):', error.message || error)
-        // Don't log full error to avoid spam
-      },
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'UpdatedTimer',
+    onLogs: handleUpdatedTimer,
+    enabled: true,
+    onError(error) {
+      console.warn('UpdatedTimer event error (non-critical):', error.message || error)
+      // Don't log full error to avoid spam
+    },
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'PotatoExploded',
-      onLogs: handlePotatoExploded,
-      onError(error) {
-        console.warn('PotatoExploded event error (non-critical):', error.message || error)
-        // Don't log full error to avoid spam
-      },
-    })
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'PotatoExploded',
+    onLogs: handlePotatoExploded,
+    enabled: true,
+    onError(error) {
+      console.warn('PotatoExploded event error (non-critical):', error.message || error)
+      // Don't log full error to avoid spam
+    },
+  })
 
-    useWatchContractEvent({
-      address: CONTRACT_ADDRESS,
-      abi: ABI,
-      eventName: 'PotatoPassed',
-      onLogs: handlePotatoPassed,
-      onError(error) {
-        console.warn('PotatoPassed event error (non-critical):', error.message || error)
-        // Don't log full error to avoid spam
-      },
-    })
-  } else {
-    console.log('Event watching temporarily disabled during RPC transition')
-  }
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: ABI,
+    eventName: 'PotatoPassed',
+    onLogs: handlePotatoPassed,
+    enabled: true,
+    onError(error) {
+      console.warn('PotatoPassed event error (non-critical):', error.message || error)
+      // Don't log full error to avoid spam
+    },
+  })
 
   // Manual refresh trigger for immediate updates
   const triggerRefresh = useCallback(() => {

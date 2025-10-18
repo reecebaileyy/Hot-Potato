@@ -26,7 +26,8 @@ export function useTokenDataManager(activeTokenIds: number[], shouldRefresh?: bo
   }, [])
 
   // Memoize activeTokenIds to prevent unnecessary re-renders
-  const memoizedActiveTokenIds = useMemo(() => activeTokenIds, [activeTokenIds.join(',')])
+  const activeTokenIdsString = activeTokenIds.join(',')
+  const memoizedActiveTokenIds = useMemo(() => activeTokenIds, [activeTokenIds])
 
   // Centralized contract reads for all tokens with optimized caching
   const contracts = useMemo(() => 

@@ -18,7 +18,7 @@ import { useTokenManagement } from '../hooks/useTokenManagement'
 import { useTokenDataManager } from '../hooks/useTokenDataManager'
 import { usePrivyContractWrites } from '../hooks/usePrivyContractWrites'
 import ErrorDisplay, { SuccessDisplay, LoadingDisplay } from '../components/TransactionNotifications'
-import { createDeferredPromise, type DeferredPromise } from './helpers/deferredPromise'
+import { createDeferredPromise, type DeferredPromise } from '../utils/deferredPromise'
 import Navigation from '../components/Navigation'
 import GameStateComponents from '../components/GameStateComponents'
 import TokenGrid from '../components/TokenGrid'
@@ -95,16 +95,18 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const { wallets } = useWallets()
   
   // Enhanced connection detection that works with Privy embedded wallets
+  const walletsLength = wallets.length
+  const firstWalletAddress = wallets[0]?.address
   const isActuallyConnected = useMemo(() => {
-    return isConnected || (authenticated && wallets.length > 0 && wallets[0].address)
-  }, [isConnected, authenticated, wallets.length, wallets[0]?.address])
+    return isConnected || (authenticated && walletsLength > 0 && firstWalletAddress)
+  }, [isConnected, authenticated, walletsLength, firstWalletAddress])
   
   // Get the actual address from either wagmi or Privy
   const actualAddress = useMemo(() => {
     if (_address) return _address
-    if (wallets.length > 0 && wallets[0].address) return wallets[0].address
+    if (walletsLength > 0 && firstWalletAddress) return firstWalletAddress
     return null
-  }, [_address, wallets.length, wallets[0]?.address])
+  }, [_address, walletsLength, firstWalletAddress])
 
   // Override isWinner calculation to use actualAddress
   const isWinner = useMemo(() => {
@@ -375,7 +377,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     if (additionalData?.explosionTime) {
       setRemainingTime(additionalData.explosionTime);
     }
-  }, [parsedResults?._potato_token, additionalData?.explosionTime]);
+  }, [parsedResults?._potato_token, additionalData?.explosionTime, setRemainingTime]);
 
   useEffect(() => {
     if (additionalData?.getActiveTokenIds) {
@@ -391,11 +393,11 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         setIsLoadingActiveTokens(false);
       }
     }
-  }, [additionalData?.getActiveTokenIds]);
+  }, [additionalData?.getActiveTokenIds, setActiveTokens]);
 
   useEffect(() => {
     setSortedTokens(activeTokens);
-  }, [activeTokens]);
+  }, [activeTokens, setSortedTokens]);
 
   useEffect(() => {
     console.log("An UNKNOWN X BEDTIME PRODUCTION")
@@ -461,7 +463,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [remainingTime]);
+  }, [remainingTime, setRemainingTime]);
 
 
   // Helper functions - Now handled by custom hooks

@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useAccount, useWatchContractEvent, useReadContract, useReadContracts, useBalance, useSimulateContract, useWriteContract, useEnsName } from 'wagmi'
 import { formatUnits, parseEther } from 'viem'
 import { ethers, providers } from 'ethers'
-import { createDeferredPromise, type DeferredPromise } from '../pages/helpers/deferredPromise'
-import { safeParseEventLogs } from '../pages/helpers/viemUtils'
+import { createDeferredPromise, type DeferredPromise } from '../utils/deferredPromise'
+import { safeParseEventLogs } from '../utils/viemUtils'
 import ABI from '../abi/Game.json'
 
 const CONTRACT_ADDRESS = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as const
@@ -105,7 +105,7 @@ export function useGameContract(tokenId: string = '') {
     }
 
     return baseContracts
-  }, [_address, tokenId])
+  }, [_address, tokenId, gameContract])
 
   const { data: readResults, isLoading: loadingReadResults, refetch: refetchReadResults, error: readError } = useReadContracts({
     contracts,
@@ -187,7 +187,7 @@ export function useGameContract(tokenId: string = '') {
       ownerOf: tokenResults[0]?.result?.toString(),
       gameState: gameStateString,
     }
-  }, [readResults, _address, tokenId])
+  }, [readResults, _address, tokenId, loadingReadResults, readError])
   
   const isWinner = useMemo(() => {
     if (!Array.isArray(parsedResults?.allWinners) || !_address) return false

@@ -19,7 +19,7 @@ interface TokenImageProps {
 }
 
 const OptimizedImage: React.FC<React.ComponentProps<typeof Image>> = (props) => (
-  <Image {...props} unoptimized={true} />
+  <Image {...props} unoptimized={true} alt={props.alt || 'Token Image'} />
 )
 
 const TokenImage: React.FC<TokenImageProps> = ({
