@@ -4,7 +4,7 @@ import Head from 'next/head'
 
 import { useState, useEffect, useRef } from 'react'
 import { Abi, formatUnits, parseEther, parseEventLogs } from 'viem'
-import { useAccount, useWatchContractEvent, useReadContract, useBalance, useSimulateContract, useWriteContract, useEnsName } from 'wagmi'
+import { useAccount, useWatchContractEvent, useReadContract, UseReadContractsReturnType, useReadContracts, useBalance, useSimulateContract, useWriteContract, useEnsName } from 'wagmi'
 import ABI from '../abi/Game.json'
 import { toast, ToastContainer } from 'react-toastify'
 import Image from 'next/image'
@@ -110,9 +110,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     eventName: 'GameStarted',
     onLogs: async (logs) => {
-      if (_address) await refetchGetActiveTokenCount()
-      await refetchGetRoundMints()
-      await refetchGetActiveTokens()
       setRoundMints(0)
       setGetGameState('Minting')
       setPrevGameState('Queued')
@@ -126,8 +123,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     eventName: 'MintingEnded',
     onLogs: async () => {
-      await refetchPotatoTokenId()
-      await refetchGetActiveTokens()
       setRemainingTime(explosionTime)
       setGetGameState('Playing')
       setPrevGameState('Minting')
@@ -168,7 +163,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     eventName: 'GameRestarted',
     onLogs: async () => {
-      await refetchRewards()
       setPrevGameState((prev) => prev)
       setGetGameState('Queued')
       setRoundMints(0)
@@ -210,11 +204,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         // Show special logic if the winner is the connected user
         if (player === _address) {
           toast.success("You won! 🎉 Don't forget to claim your rewards!")
-          await Promise.all([
-            refetchWinner?.(),
-            refetchRewards?.(),
-            refetchTotalWins?.(),
-          ])
         }
       } catch (error) {
         console.error('Error updating wins:', error)
@@ -241,7 +230,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
         const deferred = createDeferredPromise<void>()
         if (_address === player) {
-          await refetchSuccessfulPasses()
           setPassPromise(deferred)
           passPromise?.resolve?.()
         } else {
@@ -271,10 +259,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         if (_address === player) {
           console.log(`Player ${player} minted ${amount} tokens`)
         }
-
-        await refetchGetActiveTokenCount?.()
-        await refetchGetActiveTokenIds?.()
-        await refetchGetRoundMints?.()
         setShouldRefresh((prev) => !prev)
         setRoundMints(totalMints)
         setEvents((prev) => [...prev, `${player} just minted ${amount} hands`])
@@ -295,11 +279,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         const decoded = safeParseEventLogs<{ round: bigint }>(ABI, 'NewRound', logs)
         const round = Number(decoded[0]?.args?.round ?? 0)
         console.log('NewRound', round)
-
-        await refetchGetActiveTokens()
-        await refetchGetActiveTokenIds()
         setShouldRefresh((prev) => !prev)
-        await refetchCurrentGeneration()
       } catch (error) {
         console.error('Error updating new round data', error)
       }
@@ -341,14 +321,10 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         const decoded = safeParseEventLogs<{ player: `0x${string}`; tokenId: bigint }>(ABI, 'PotatoExploded', logs)
         const player = decoded[0]?.args?.player
         const tokenId_ = decoded[0]?.args?.tokenId?.toString()
-
         console.log('PotatoExploded', player, tokenId_)
         setExplosion(true)
         setTimeout(() => setExplosion(false), 3050)
-
-        await refetchActiveAddresses()
         console.log('Refetched all data after explosion.')
-
         setEvents((prev) => [...prev, `Token #${tokenId_} just exploded`])
       } catch (error) {
         console.error('Error handling PotatoExploded event', error)
@@ -372,8 +348,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         if (!tokenIdTo) return
 
         console.log('PotatoPassed', tokenIdTo)
-        await refetchUserHasPotatoToken()
-        await refetchPotatoTokenId()
 
         setEvents((prev) => [...prev, `Potato Passed to #${tokenIdTo}`])
         setShouldRefresh((prev) => !prev)
@@ -389,9 +363,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
 
   //Read Hooks
-
-
-
   // // GET MINT PRICE
   // const { data: getGameState, refetch: refetchGameState, isLoading: loadingGetGameState } = useReadContract({
   //   address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
@@ -399,32 +370,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   //   functionName: 'getGameState',
   //   enabled: true,
   // })
-
-  // // GET Explosion time
-  const { data: getExplosionTime, isLoading: loadingExplosionTime, error: loadingError, refetch: refetchGetExplosionTime } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'getExplosionTime',
-  })
-  const explosionTime = getExplosionTime ? parseInt(getExplosionTime as unknown as string, 10) : 0;
-
-
-  // GET MINT PRICE
-  const { data: _price, isLoading: loadingPrice, refetch: refetchPrice } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: '_price',
-  })
-
-  // GET NUMBER OF MINTS DURING THE ROUND
-  const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'addressActiveTokenCount',
-    args: [_address],
-  })
-  const activeTokensCount = getActiveTokenCount ? parseInt(getActiveTokenCount as unknown as string, 10) : 0;
-
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   // const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useReadContract({
   //   address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
@@ -432,103 +377,104 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   //   functionName: '_maxsupplyPerRound',
   // })
   // const maxSupply = parseInt(_maxsupply, 10);
+  // const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useReadContract({
+  //   address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
+  //   abi: ABI,
+  //   functionName: 'userHasPotatoToken',
+  //   args: [_address],
+  // })
 
-  // GET TOKENS OWNED BY USER
-  const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
+
+  const gameContract = {
+    address: CONTRACT_ADDRESS,
     abi: ABI,
-    functionName: 'userHasPotatoToken',
-    args: [_address],
+  } as const
+
+  const { data: readResults, isLoading: loadingReadResults, refetch: refetchReadResults } = useReadContracts({
+    contracts: [
+      {
+        ...gameContract,
+        abi: ABI,
+        functionName: '_price',
+      },
+      {
+        ...gameContract,
+        abi: ABI,
+        functionName: 'potatoTokenId',
+      },
+      {
+        ...gameContract,
+        address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
+        abi: ABI,
+        functionName: 'currentGeneration',
+      },
+      {
+        ...gameContract,
+        abi: ABI,
+        functionName: 'roundMints',
+      },
+      {
+        ...gameContract,
+        abi: ABI,
+        functionName: '_owner',
+      },
+      {
+        ...gameContract,
+        abi: ABI,
+        functionName: 'getAllWinners',
+      },
+      {
+        ...gameContract,
+        abi: ABI,
+        functionName: 'rewards',
+        args: [_address]
+      },
+      {
+        ...gameContract,
+        abi: ABI,
+        functionName: 'totalWins',
+        args: [_address]
+      },
+      {
+        ...gameContract,
+        abi: ABI,
+        functionName: '_maxperwallet',
+      },
+      {
+        ...gameContract,
+        abi: ABI,
+        functionName: '_isTokenActive',
+        args: [tokenId]
+      },
+      {
+        ...gameContract,
+        abi: ABI,
+        functionName: 'ownerOf',
+        args: [tokenId]
+      }
+    ]
   })
-  const hasPotatoToken = userHasPotatoToken?.toString();
 
-  // GET POTATO HOLDER
-  const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'getPotatoOwner',
-  })
-  const _potatoOwner = getPotatoOwner?.toString();
-
-  // GET POTATO TOKEN ID
-  const { data: potatoTokenId, isLoading: loadingPotatoTokenId, refetch: refetchPotatoTokenId } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'potatoTokenId',
-  })
-  const _potato_token = potatoTokenId ? parseInt(potatoTokenId as unknown as string, 10) : 0;
-
-
-  // GET ACTIVE TOKENS
-  const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'getActiveTokens',
-  })
-  const _activeTokens = getActiveTokens as unknown as number[];
-
-  // GET CURRENT GENERATION
-  const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'currentGeneration',
-  })
-  const _currentGeneration = currentGeneration ? parseInt(currentGeneration as unknown as string, 10) : 0;
-
-  const { data: getRoundMints, isLoading: loadingGetRoundMints, refetch: refetchGetRoundMints } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'roundMints',
-  })
-  const totalMints = getRoundMints ? parseInt(getRoundMints as unknown as string, 10) : 0;
-
-
-  const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: '_owner',
-  })
-  const _ownerAddress = _owner?.toString();
-
-  const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'getActiveTokenIds',
-  })
-
-  const { data, isLoading: loadingWinners, refetch: refetchWinner } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'getAllWinners',
-  })
-  const allWinners = data as `0x${string}`[] | undefined
+  const _price = readResults?.[0] ? formatUnits(readResults?.[0] as unknown as bigint, 18) : '0';
+  const _potato_token = readResults?.[1] ? parseInt(readResults?.[1] as unknown as string, 10) : 0;
+  const _currentGeneration = readResults?.[2] ? parseInt(readResults?.[2] as unknown as string, 10) : 0;
+  const totalMints = readResults?.[3] ? parseInt(readResults?.[3] as unknown as string, 10) : 0;
+  const _ownerAddress = readResults?.[4]?.toString();
+  const allWinners = readResults?.[5] as `0x${string}`[] | undefined
   const isWinner = allWinners?.includes(_address as `0x${string}`)
+  const _rewards = readResults?.[6] ? formatUnits(readResults?.[6] as unknown as bigint, 18) : '0';
+  const totalWins = readResults?.[7] ? parseInt(readResults?.[7] as unknown as string, 10) : 0;
+  const maxPerWallet = readResults?.[8] ? parseInt(readResults?.[8] as unknown as string, 10) : 0;
+  const isTokenActive = readResults?.[9] as unknown as boolean;
+  const ownerOf = readResults?.[10]?.toString();
 
-  const { data: rewards, isLoading: loadingRewards, refetch: refetchRewards } = useReadContract({
+  // -----------------------------Single Reads Start--------------------------------
+  const { data: getExplosionTime, isLoading: loadingExplosionTime, error: loadingError, refetch: refetchGetExplosionTime } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
     abi: ABI,
-    functionName: 'rewards',
-    args: [_address],
+    functionName: 'getExplosionTime',
   })
-  const _rewards = rewards ? formatUnits(rewards as unknown as bigint, 18) : '0';
-
-  const { data: _totalWins, isLoading: loadingTotalWins, refetch: refetchTotalWins } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'totalWins',
-    args: [_address],
-  })
-  const totalWins = _totalWins ? parseInt(_totalWins as unknown as string, 10) : 0;
-
-
-
-  const { data: _successfulPasses, isLoading: loadingSuccessfulPasses, refetch: refetchSuccessfulPasses } = useReadContract({
-    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
-    abi: ABI,
-    functionName: 'successfulPasses',
-    args: [_address],
-  })
-  const successfulPasses = _successfulPasses ? parseInt(_successfulPasses as unknown as string, 10) : 0;
+  const explosionTime = getExplosionTime ? parseInt(getExplosionTime as unknown as string, 10) : 0;
 
   const { data: hallOfFame, isLoading: loadingHGallOfFame, refetch: refetchHallOfFame } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
@@ -538,19 +484,27 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   })
   const roundWinner = hallOfFame?.toString();
 
-  const { data: _maxperwallet, isLoading: loadingMaxPerWallet, refetch: refetchMaxPerWallet } = useReadContract({
+  const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
     abi: ABI,
-    functionName: '_maxperwallet',
+    functionName: 'userHasPotatoToken',
+    args: [_address],
   })
-  const maxPerWallet = _maxperwallet ? parseInt(_maxperwallet as unknown as string, 10) : 0;
+  const hasPotatoToken = userHasPotatoToken?.toString();
 
-  const { data: isTokenActive, isLoading: loadingIsTokenActive, refetch: refetchIsTokenActive } = useReadContract({
+  const { data: getPotatoOwner, isLoading: loadingPotatoOwner, refetch: refetchGetPotatoOwner } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
     abi: ABI,
-    functionName: '_isTokenActive',
-    args: [tokenId],
+    functionName: 'getPotatoOwner',
   })
+  const _potatoOwner = getPotatoOwner?.toString();
+
+  const { data: getActiveTokens, isLoading: loadingActiveTokens, refetch: refetchGetActiveTokens } = useReadContract({
+    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
+    abi: ABI,
+    functionName: 'getActiveTokens',
+  })
+  const _activeTokens = getActiveTokens as unknown as number[];
 
   const { data: _activeAddresses, isLoading: loadingActiveAddresses, refetch: refetchActiveAddresses } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
@@ -559,13 +513,30 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   })
   const activeAddresses = _activeAddresses as unknown as `0x${string}`[];
 
-
-  const { data: ownerOf, isLoading: loadingOwnerOf, refetch: refetchOwnerOf } = useReadContract({
+  const { data: _successfulPasses, isLoading: loadingSuccessfulPasses, refetch: refetchSuccessfulPasses } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
     abi: ABI,
-    functionName: 'ownerOf',
-    args: [tokenId],
+    functionName: 'successfulPasses',
+    args: [_address],
   })
+  const successfulPasses = _successfulPasses ? parseInt(_successfulPasses as unknown as string, 10) : 0;
+
+    const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useReadContract({
+    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
+    abi: ABI,
+    functionName: 'addressActiveTokenCount',
+    args: [_address],
+  })
+  const activeTokensCount = getActiveTokenCount ? parseInt(getActiveTokenCount as unknown as string, 10) : 0;
+
+    const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useReadContract({
+    address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
+    abi: ABI,
+    functionName: 'getActiveTokenIds',
+  })
+
+  // -----------------------------Single Reads End---------------------------------
+
 
   const { data: bal, isLoading, isError } = useBalance({
     address: _address as `0x${string}`,
@@ -788,7 +759,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
       try {
         const totalCostBigInt =
-          BigInt((_price as bigint) ?? 0n) * BigInt(newMintAmount || '0') * BigInt(newMintAmount || '0')
+          BigInt((_price) ?? 0n) * BigInt(newMintAmount || '0') * BigInt(newMintAmount || '0')
         setTotalCost(Number(totalCostBigInt))
       } catch {
         setTotalCost(0)
@@ -828,26 +799,11 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   //On Mount
   useEffect(() => {
     const fetchData = async () => {
-      await refetchPotatoTokenId?.();
       setPotatoTokenId(_potato_token);
-      await refetchUserHasPotatoToken();
-      await refetchSuccessfulPasses();
     }
     fetchData();
     // refetchGetExplosionTime();
     setRemainingTime(explosionTime);
-    refetchGetRoundMints();
-    refetchGetActiveTokens();
-    refetchTotalWins();
-    refetchCurrentGeneration();
-    refetchActiveAddresses();
-    if (_address == _ownerAddress) {
-      refetchowner();
-    }
-    const roundMints = parseInt(getRoundMints as unknown as string, 10);
-    if (!isNaN(roundMints)) {
-      setRoundMints(roundMints);
-    }
   }, []);
 
 
@@ -874,30 +830,10 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   }, [roundWinner, refetchHallOfFame]);
 
   useEffect(() => {
-    refetchUserHasPotatoToken();
-    refetchSuccessfulPasses();
-    refetchTotalWins();
-    refetchRewards();
+
   }, [_address]);
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     localStorage.clear();
-  //   }, 1000 * 60 * 30);
 
-  //   return () => clearInterval(interval);
-  // }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (getGameState === "Minting") {
-        refetchGetRoundMints();
-      }
-    }, 3000);
-
-    // Cleanup function to clear the interval when component unmounts or re-renders
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     console.log("An UNKNOWN X BEDTIME PRODUCTION")
@@ -944,7 +880,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     }
   }, [events]);
 
-return (
+  return (
     <>
       <Head>
         <title>HOT POTATO</title>
@@ -1038,7 +974,6 @@ return (
                           noRewardsToast();
                         } else if (claimSim?.request) {
                           writeClaim(claimSim.request);
-                          refetchRewards();
                         }
                       }}
                     >Claim Rewards</button>
@@ -1064,7 +999,6 @@ return (
                             noRewardsToast();
                           } else if (claimSim?.request) {
                             writeClaim(claimSim.request);
-                            refetchRewards();
                           }
                         }}
                       >Claim Rewards</button>
@@ -1082,7 +1016,6 @@ return (
                               noRewardsToast();
                             } else if (claimSim?.request) {
                               writeClaim(claimSim.request);
-                              refetchRewards();
                             }
                           }}
                         >Claim Rewards</button>
@@ -1107,7 +1040,6 @@ return (
                                 noRewardsToast();
                               } else if (claimSim?.request) {
                                 writeClaim(claimSim.request);
-                                refetchRewards();
                               }
                             }}
                           >Claim Rewards</button>
@@ -1124,9 +1056,8 @@ return (
                               } else if (Number(_rewards) == 0) {
                                 noRewardsToast();
                               } else if (claimSim?.request) {
-                                console.log('claiming rewards', rewards, Number(_rewards));
+                                console.log('claiming rewards', _rewards, Number(_rewards));
                                 writeClaim(claimSim.request);
-                                refetchRewards();
                               }
                             }}
                           >Claim Rewards</button>
@@ -1146,7 +1077,7 @@ return (
                   <h2 className="text-center font-bold mb-2">Loading Has Potato...</h2>
                 ) : (
                   <h2 className={`text-3xl sm:text-xl md:text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                    {userHasPotatoToken ? <p className='animate-crazy text-center'>YOU HAVE THE POTATO</p> : <p className='text-center'>YOU DON&apos;T HAVE THE POTATO</p>}
+                    {hasPotatoToken ? <p className='animate-crazy text-center'>YOU HAVE THE POTATO</p> : <p className='text-center'>YOU DON&apos;T HAVE THE POTATO</p>}
                   </h2>
                 )}
                 {explosion ?
@@ -1259,16 +1190,8 @@ return (
                     getGameState == "Minting" && (
                       <>
 
-                        <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: <span className={`text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>{displayPrice}</span> MATIC</p>
-
-
-                        {loadingMaxPerWallet ? (
-                          <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>MAX PER WALLET: Loading...</p>
-                        ) : (
-                          <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>MAX PER WALLET: <span className={`text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>{maxPerWallet}</span></p>
-                        )}
-
-
+                        <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: <span className={`text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>{displayPrice}</span> ETH</p>
+                        <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>MAX PER WALLET: <span className={`text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>{maxPerWallet}</span></p>
 
                         {_address ?
                           <>
@@ -1335,7 +1258,7 @@ return (
                     Successful Passes: {loadingSuccessfulPasses ? "Loading..." : successfulPasses}
                   </p>
                   <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                    Total Wins: {loadingTotalWins ? "Loading..." : totalWins}
+                    Total Wins: {totalWins}
                   </p>
                   {loadingActiveTokenCount ? (
                     <h2 className="text-center font-bold mb-2">Loading Active Token(s)...</h2>
@@ -1363,7 +1286,7 @@ return (
                           noAddressToast();
                         } else if (getGameState !== "Playing" && getGameState !== "Final Stage") {
                           cannotPassToast();
-                        } else if (!userHasPotatoToken) {
+                        } else if (!hasPotatoToken) {
                           ownThePotatoToast();
                         } else if (!isTokenActive) {
                           tokenInactiveToast();
@@ -1388,7 +1311,6 @@ return (
                             noRewardsToast();
                           } else if (claimSim?.request) {
                             writeClaim(claimSim.request);
-                            refetchRewards();
                           }
                         }}>Claim Rewards</button>
                     }
@@ -1428,7 +1350,6 @@ return (
                                 noRewardsToast();
                               } else if (claimSim?.request) {
                                 writeClaim(claimSim.request);
-                                refetchRewards();
                               }
                             }}
                           >Claim Rewards</button>
@@ -1445,7 +1366,6 @@ return (
                               } else if (Number(_rewards) == 0) {
                                 noRewardsToast();
                               } else if (claimSim?.request) {
-                                refetchRewards();
                                 writeClaim(claimSim.request);
                               }
                             }}
@@ -1638,5 +1558,5 @@ return (
 
     </>
   )
-  
+
 }
