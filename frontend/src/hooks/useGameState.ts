@@ -5,9 +5,11 @@ export function useGameState(initialGameState: string | null) {
   const [prevGameState, setPrevGameState] = useState<string | null>(initialGameState)
 
   const updateGameState = useCallback((newState: string) => {
-    setPrevGameState(getGameState)
-    setGetGameState(newState)
-  }, [getGameState])
+    setGetGameState(prevState => {
+      setPrevGameState(prevState)
+      return newState
+    })
+  }, [])
 
   const handleGameStarted = useCallback(() => {
     setGetGameState('Minting')

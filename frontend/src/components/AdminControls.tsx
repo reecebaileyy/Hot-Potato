@@ -3,6 +3,7 @@ import React from 'react'
 interface AdminControlsProps {
   darkMode: boolean
   address: string
+  ownerAddress: string
   gameState: string
   onStartGame: () => void
   onEndMinting: () => void
@@ -14,6 +15,7 @@ interface AdminControlsProps {
 export default function AdminControls({ 
   darkMode, 
   address, 
+  ownerAddress,
   gameState, 
   onStartGame, 
   onEndMinting, 
@@ -21,43 +23,60 @@ export default function AdminControls({
   onResumeGame, 
   onRestartGame 
 }: AdminControlsProps) {
-  if (address !== "0x41b1e204e9c15fF5894bd47C6Dc3a7Fa98C775C7") {
+  if (!address || !ownerAddress || address.toLowerCase() !== ownerAddress.toLowerCase()) {
     return null
   }
 
   return (
-    <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-xl overflow-x-auto`}>
-      <div className="p-4 grid grid-cols-1 md:grid-cols-3 sm:grid-cols-3 gap-4">
+    <div className={`w-full max-w-4xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
+      <div className="text-center mb-8">
+        <h2 className={`text-4xl font-bold gradient-text mb-4`}>🎮 Admin Controls</h2>
+        <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          Manage the game state and settings
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <button
-          className={`bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-3 md:col-span-3 sm:col-span-3`}
+          className={`btn-primary text-lg py-4 md:col-span-2 lg:col-span-3`}
           onClick={onStartGame}
         >
-          Start Game
+          🚀 Start Game
         </button>
+        
         <button
-          className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2 md:col-span-3 sm:col-span-3"
+          className={`btn-secondary text-lg py-4 md:col-span-2 lg:col-span-3`}
           onClick={onEndMinting}
         >
-          End Minting
+          ⏹️ End Minting
         </button>
+        
         <button
-          className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2"
+          className={`btn-outline text-lg py-4`}
           onClick={onPauseGame}
         >
-          Pause Game
+          ⏸️ Pause Game
         </button>
+        
         <button
-          className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2"
+          className={`btn-outline text-lg py-4`}
           onClick={onResumeGame}
         >
-          Resume Game
+          ▶️ Resume Game
         </button>
+        
         <button
-          className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2"
+          className={`btn-outline text-lg py-4`}
           onClick={onRestartGame}
         >
-          Restart Game
+          🔄 Restart Game
         </button>
+      </div>
+      
+      <div className={`mt-6 p-4 rounded-lg ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50'} text-center`}>
+        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          Current Game State: <span className="font-semibold text-amber-500">{gameState}</span>
+        </p>
       </div>
     </div>
   )

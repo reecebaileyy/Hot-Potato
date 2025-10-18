@@ -3,16 +3,21 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense } fr
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
 import { Abi, formatUnits, parseEther, parseEventLogs } from 'viem'
-import { useAccount, useWatchContractEvent, useReadContract, UseReadContractsReturnType, useReadContracts, useBalance, useSimulateContract, useWriteContract, useEnsName } from 'wagmi'
+import { useAccount, useWatchContractEvent, useReadContract, UseReadContractsReturnType, useReadContracts, useBalance, useSimulateContract, useWriteContract, useEnsName, useChainId } from 'wagmi'
+import { usePrivy, useWallets } from '@privy-io/react-auth'
 import ABI from '../abi/Game.json'
 import { toast, ToastContainer } from 'react-toastify'
 import { ethers, providers } from 'ethers'
 import { useGameContract } from '../hooks/useGameContract'
 import { useGameEvents } from '../hooks/useGameEvents'
+
+// Import the event watching flag for debugging
+const DISABLE_EVENT_WATCHING = false
 import { useGameState } from '../hooks/useGameState'
 import { useTokenManagement } from '../hooks/useTokenManagement'
 import { useTokenDataManager } from '../hooks/useTokenDataManager'
-import { useContractWrites } from '../hooks/useContractWrites'
+import { usePrivyContractWrites } from '../hooks/usePrivyContractWrites'
+import ErrorDisplay, { SuccessDisplay, LoadingDisplay } from '../components/TransactionNotifications'
 import { createDeferredPromise, type DeferredPromise } from './helpers/deferredPromise'
 import Navigation from '../components/Navigation'
 import GameStateComponents from '../components/GameStateComponents'
@@ -74,9 +79,38 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const [_potatoTokenId, setPotatoTokenId] = useState<number>(0)
   const [passArgs, setPassArgs] = useState<unknown[] | null>(null)
   const [mintArgs, setMintArgs] = useState<unknown[] | null>(null)
+  
+  // Transaction notification states
+  const [transactionError, setTransactionError] = useState<string | null>(null)
+  const [transactionSuccess, setTransactionSuccess] = useState<string | null>(null)
+  const [transactionLoading, setTransactionLoading] = useState<string | null>(null)
 
   // --- Game Contract Hook (needs tokenId) ---
-  const { gameContract, parsedResults, isWinner, _address, loadingReadResults, refetchReadResults, readError } = useGameContract(tokenId)
+  const { gameContract, parsedResults, isWinner: hookIsWinner, _address, loadingReadResults, refetchReadResults, readError } = useGameContract(tokenId)
+  const chainId = useChainId()
+  const { isConnected } = useAccount()
+  
+  // Privy connection detection
+  const { ready, authenticated } = usePrivy()
+  const { wallets } = useWallets()
+  
+  // Enhanced connection detection that works with Privy embedded wallets
+  const isActuallyConnected = useMemo(() => {
+    return isConnected || (authenticated && wallets.length > 0 && wallets[0].address)
+  }, [isConnected, authenticated, wallets.length, wallets[0]?.address])
+  
+  // Get the actual address from either wagmi or Privy
+  const actualAddress = useMemo(() => {
+    if (_address) return _address
+    if (wallets.length > 0 && wallets[0].address) return wallets[0].address
+    return null
+  }, [_address, wallets.length, wallets[0]?.address])
+
+  // Override isWinner calculation to use actualAddress
+  const isWinner = useMemo(() => {
+    if (!Array.isArray(parsedResults?.allWinners) || !actualAddress) return false
+    return (parsedResults.allWinners as string[]).includes(actualAddress)
+  }, [parsedResults?.allWinners, actualAddress])
 
   // --- Contract Writes Hook (needs mintAmount, price, tokenId) ---
   const {
@@ -102,11 +136,25 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     resuming,
     restartSim,
     writeRestart,
-    restarting
-  } = useContractWrites(mintAmount, parsedResults?._price, tokenId)
+    restarting,
+    isPrivyWallet,
+    walletType
+  } = usePrivyContractWrites(mintAmount, parsedResults?._price, tokenId)
 
   // --- Game Events Hook (needs _address) ---
-  const { events, setEvents, explosion, remainingTime, setRemainingTime } = useGameEvents(_address, () => refetchAdditionalResults())
+  const { 
+    events, 
+    setEvents, 
+    shouldRefresh: eventShouldRefresh, 
+    explosion, 
+    remainingTime, 
+    setRemainingTime, 
+    roundMints, 
+    setRoundMints,
+    triggerRefresh,
+    pollingEnabled,
+    setPollingEnabled
+  } = useGameEvents(actualAddress || '', () => refetchAdditionalResults(), refreshAllImages)
   
   // --- Memoized values ---
   const displayPrice = useMemo(() => ethers.utils.formatEther(BigInt(price || 0)), [price])
@@ -139,31 +187,31 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     ]
 
     // Only add address-dependent calls if we have an address
-    if (_address) {
+    if (actualAddress) {
       contracts.push(
         {
           address: CONTRACT_ADDRESS,
           abi: ABI as Abi,
           functionName: 'userHasPotatoToken' as const,
-          args: [_address] as const,
+          args: [actualAddress] as const,
         },
         {
           address: CONTRACT_ADDRESS,
           abi: ABI as Abi,
           functionName: 'successfulPasses' as const,
-          args: [_address] as const,
+          args: [actualAddress] as const,
         },
         {
           address: CONTRACT_ADDRESS,
           abi: ABI as Abi,
           functionName: 'addressActiveTokenCount' as const,
-          args: [_address] as const,
+          args: [actualAddress] as const,
         }
       )
     }
 
     return contracts
-  }, [_address])
+  }, [actualAddress])
 
   const { data: additionalResults, isLoading: loadingAdditionalResults, refetch: refetchAdditionalResults } = useReadContracts({
     contracts: additionalContracts,
@@ -188,7 +236,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     const baseResults = additionalResults.slice(0, 3)
     
     // Address-dependent results come after base results if address exists
-    const addressResults = _address ? additionalResults.slice(3, 6) : []
+    const addressResults = actualAddress ? additionalResults.slice(3, 6) : []
     
     return {
       explosionTime: baseResults[1]?.result ? parseInt(baseResults[1].result as unknown as string, 10) : 0,
@@ -200,13 +248,13 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
       activeTokensCount: addressResults[2]?.result ? parseInt(addressResults[2].result as unknown as string, 10) : 0,
       gameState: parsedResults?.gameState || 'Unknown',
     }
-  }, [additionalResults, _address, parsedResults?.gameState])
+  }, [additionalResults, actualAddress, parsedResults?.gameState])
 
   const { data: bal, isLoading: balanceLoading, isError } = useBalance({
-    address: _address ? _address as `0x${string}` : undefined,
+    address: actualAddress ? actualAddress as `0x${string}` : undefined,
     chainId: 84532,
     query: {
-      enabled: !!_address, // Only fetch balance when address is available
+      enabled: !!actualAddress, // Only fetch balance when address is available
       staleTime: 60000, // Increased to 60 seconds
       refetchInterval: false,
       refetchOnWindowFocus: false,
@@ -233,6 +281,40 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   })
 
   // Write Hooks - Now handled by useContractWrites hook
+
+  // Enhanced transaction handlers with error handling
+  const handleTransaction = async (transactionFn: () => Promise<any>, action: string, showNotifications: boolean = true) => {
+    try {
+      if (showNotifications) {
+        setTransactionError(null)
+        setTransactionSuccess(null)
+        setTransactionLoading(`Processing ${action}...`)
+      }
+      
+      const result = await transactionFn()
+      
+      if (showNotifications) {
+        setTransactionLoading(null)
+        setTransactionSuccess(`${action} completed successfully!`)
+        
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => setTransactionSuccess(null), 5000)
+      }
+      
+      return result
+    } catch (error: any) {
+      if (showNotifications) {
+        setTransactionLoading(null)
+        const errorMessage = error?.message || error?.toString() || `Failed to ${action.toLowerCase()}`
+        setTransactionError(errorMessage)
+        
+        // Auto-hide error message after 8 seconds
+        setTimeout(() => setTransactionError(null), 8000)
+      }
+      
+      throw error
+    }
+  }
 
   // Toast functions
   function noAddressToast() {
@@ -336,6 +418,16 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     }
   }, [parsedResults?.gameState, getGameState, updateGameState]);
 
+  // Refresh contract data when events trigger shouldRefresh
+  useEffect(() => {
+    if (eventShouldRefresh) {
+      console.log('Event triggered refresh - refetching contract data')
+      refetchReadResults()
+      // Also refresh token images
+      refreshAllImages()
+    }
+  }, [eventShouldRefresh, refetchReadResults, refreshAllImages]);
+
   // --- Optimized timer effect ---
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | undefined;
@@ -392,57 +484,20 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           setIsOpen={setIsOpen} 
         />
 
-        <h1 className={`${darkMode ? 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto' : 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto'}`}>
-          {parsedResults?._currentGeneration ? `Round ${parsedResults._currentGeneration}` : "Round 1"}
-        </h1>
-
-        {/* Debug Test Button */}
-        <div className="w-full flex justify-center mb-4">
-          <button 
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={async () => {
-              console.log('=== MANUAL CONTRACT TEST ===')
-              try {
-                // Test basic network connectivity
-                const provider = new ethers.providers.JsonRpcProvider('https://sepolia.base.org')
-                const network = await provider.getNetwork()
-                console.log('Network:', network)
-                
-                // Test contract existence
-                const code = await provider.getCode('0xD89A2aE68A3696D42327D75C02095b632D1B8f53')
-                console.log('Contract code length:', code.length)
-                console.log('Contract exists:', code !== '0x')
-                
-                // Test basic contract call
-                const contract = new ethers.Contract('0xD89A2aE68A3696D42327D75C02095b632D1B8f53', ABI, provider)
-                try {
-                  const name = await contract.name()
-                  console.log('Contract name:', name)
-                } catch (err) {
-                  console.log('Name call failed:', err)
-                }
-                
-                try {
-                  const gameState = await contract.getGameState()
-                  console.log('Game state:', gameState)
-                } catch (err) {
-                  console.log('Game state call failed:', err)
-                }
-                
-              } catch (error) {
-                console.log('Network test failed:', error)
-              }
-              console.log('================================')
-            }}
-          >
-            Test New Contract
-          </button>
-        </div>
+        {/* Main Content Container */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+          {/* Hero Section */}
+          <div className="text-center mb-8 sm:mb-12 animate-fade-in-up">
+            <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 gradient-text ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {parsedResults?._currentGeneration ? `Round ${parsedResults._currentGeneration}` : "Round 1"}
+            </h1>
+            <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-amber-500 to-red-500 mx-auto rounded-full"></div>
+          </div>
 
         <GameStateComponents
           darkMode={darkMode}
           gameState={getGameState}
-          address={_address}
+          address={actualAddress}
           mintAmount={mintAmount}
           setMintAmount={setMintAmount}
           totalCost={totalCost}
@@ -451,23 +506,29 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           balance={balance}
           mintPending={mintPending}
           onMint={() => {
-                          if (!_address) {
+                          if (!actualAddress) {
                             noAddressToast();
                           } else if ((additionalData?.activeTokensCount || 0) >= (parsedResults?.maxPerWallet ?? 0)) {
                             maxPerWalletToast();
                           } else if (mintSim?.request) {
-                            writeMint(mintSim.request);
+                            handleTransaction(() => writeMint(mintSim.request), 'Mint').then(() => {
+                              // Refresh token images after successful mint
+                              console.log('Mint successful - refreshing token images')
+                              refreshAllImages()
+                            }).catch((error) => {
+                              console.error('Mint failed:', error)
+                            });
                           }
                         }}
           isWinner={isWinner}
           rewards={parsedResults?._rewards || '0'}
           onClaimRewards={() => {
-            if (!_address) {
+            if (!actualAddress) {
               noAddressToast();
             } else if (Number(parsedResults?._rewards || 0) == 0) {
               noRewardsToast();
             } else if (claimSim?.request) {
-              writeClaim(claimSim.request);
+              handleTransaction(() => writeClaim(claimSim.request), 'Claim Rewards');
             }
           }}
         />
@@ -495,74 +556,75 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
         <AdminControls
           darkMode={darkMode}
-          address={_address || ''}
+          address={actualAddress || ''}
+          ownerAddress={parsedResults?._ownerAddress || ''}
           gameState={getGameState || ''}
           onStartGame={() => {
-                    if (!_address) {
+                    if (!actualAddress) {
                       noAddressToast();
                     } else if (getGameState !== "Queued") {
                       startToast();
                     } else if (startSim?.request) {
-                      writeStartGame(startSim.request);
+                      handleTransaction(() => writeStartGame(startSim.request), 'Start Game');
                     }
                   }}
           onEndMinting={() => {
-                    if (!_address) {
+                    if (!actualAddress) {
                       noAddressToast();
                     } else if (getGameState !== "Minting") {
                       endToast();
                     } else if (endMintSim?.request) {
                       console.log("end minting")
-                      writeEndMint(endMintSim.request);
+                      handleTransaction(() => writeEndMint(endMintSim.request), 'End Minting');
                       console.log("end minting success")
                     }
                   }}
           onPauseGame={() => {
-                    if (!_address) {
+                    if (!actualAddress) {
                       noAddressToast();
                     } else if (getGameState !== "Playing" && getGameState !== "Final Stage" && getGameState !== "Minting") {
                       pauseToast();
                     } else if (pauseSim?.request) {
-                      writePause(pauseSim.request);
+                      handleTransaction(() => writePause(pauseSim.request), 'Pause Game');
                     }
                   }}
           onResumeGame={() => {
-                    if (!_address) {
+                    if (!actualAddress) {
                       noAddressToast();
                     } else if (getGameState !== "Paused") {
                       resumeToast();
                     } else if (resumeSim?.request) {
-                      writeResume(resumeSim.request);
+                      handleTransaction(() => writeResume(resumeSim.request), 'Resume Game');
                     }
                   }}
           onRestartGame={() => {
-                    if (!_address) {
+                    if (!actualAddress) {
                       noAddressToast();
                     } else if (getGameState !== "Ended") {
                       restartToast();
                     } else if (restartSim?.request) {
-                      writeRestart(restartSim.request);
+                      handleTransaction(() => writeRestart(restartSim.request), 'Restart Game');
                     }
                   }}
         />
 
-          {getGameState === "Playing" && _address && (
+          {getGameState === "Playing" && actualAddress && (
           <PassPotatoForm
             darkMode={darkMode}
             tokenId={tokenId}
             setTokenId={setTokenId}
             passPending={passPending}
             onPassPotato={() => {
-                    if (!_address) {
+                    if (!actualAddress) {
                       noAddressToast();
                     } else if (additionalData?.hasPotatoToken !== "true") {
                       noPotatoToast();
                     } else if (!parsedResults?.isTokenActive) {
                       notActiveToast();
-                    } else if (parsedResults?.ownerOf !== _address) {
+                    } else if (parsedResults?.ownerOf !== actualAddress) {
                       notOwnerToast();
                     } else if (passSim?.request) {
-                      writePass(passSim.request);
+                      handleTransaction(() => writePass(passSim.request), 'Pass Potato');
                     }
                   }}
           />
@@ -580,6 +642,24 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           successfulPasses={additionalData?.successfulPasses || 0}
           activeTokensCount={additionalData?.activeTokensCount || 0}
           rewards={parsedResults?._rewards || '0'}
+        />
+
+        </div>
+
+        {/* Transaction Notifications */}
+        <ErrorDisplay 
+          error={transactionError} 
+          onClose={() => setTransactionError(null)} 
+          darkMode={darkMode} 
+        />
+        <SuccessDisplay 
+          message={transactionSuccess || ''} 
+          onClose={() => setTransactionSuccess(null)} 
+          darkMode={darkMode} 
+        />
+        <LoadingDisplay 
+          message={transactionLoading || ''} 
+          darkMode={darkMode} 
         />
       </div>
     </>

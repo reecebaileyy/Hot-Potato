@@ -48,8 +48,9 @@ export default function TokenGrid({
   setSearchId
 }: TokenGridProps) {
   // Use centralized token data management
-  const { getTokenData, refreshAll, isLoading: tokenDataLoading } = useTokenDataManager(
-    paginationData.currentTokens.filter(tokenId => !explodedTokens.includes(tokenId))
+  const { getTokenData, refreshAll, refreshImmediate, isLoading: tokenDataLoading } = useTokenDataManager(
+    paginationData.currentTokens.filter(tokenId => !explodedTokens.includes(tokenId)),
+    shouldRefresh
   )
   const SkeletonCard = () => (
     <div className="animate-pulse bg-gray-300 h-32 w-32 rounded-lg"></div>
@@ -84,47 +85,80 @@ export default function TokenGrid({
   }
 
   return (
-    <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-xl`}>
-      <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Active Tokens:</h1>
-      <div className="flex justify-center">
+    <div className={`w-full max-w-7xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
+      <div className="text-center mb-8">
+        <h1 className={`text-5xl font-bold gradient-text mb-4`}>Active Tokens</h1>
+        <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
+          Current active tokens in the game
+        </p>
+        
         <button
           onClick={() => {
-            refreshAll()
+            refreshImmediate()
             onRefreshImages()
           }}
-          className={`mb-6 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
+          className={`btn-secondary mb-6`}
         >
-          Refresh Images
+          🔄 Refresh Images
         </button>
       </div>
 
-      <div className='text-3xl sm:text-xl md:text-xl lg:text-xl text-center'>
-        <h1 className='underline'>Sort By:</h1>
-        <button className='mr-5' onClick={onSortTokensAsc}><HiArrowCircleUp /></button>
-        <button onClick={onSortTokensDesc}><HiArrowCircleDown /></button>
+      {/* Controls Section */}
+      <div className="space-y-6 mb-8">
+        {/* Sort Controls */}
+        <div className="text-center">
+          <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Sort By:</h3>
+          <div className="flex justify-center space-x-4">
+            <button 
+              className={`btn-outline flex items-center space-x-2`}
+              onClick={onSortTokensAsc}
+            >
+              <HiArrowCircleUp className="text-xl" />
+              <span>Ascending</span>
+            </button>
+            <button 
+              className={`btn-outline flex items-center space-x-2`}
+              onClick={onSortTokensDesc}
+            >
+              <HiArrowCircleDown className="text-xl" />
+              <span>Descending</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="max-w-md mx-auto">
+          <form onSubmit={onSearch} className="flex space-x-2">
+            <input
+              type="number"
+              placeholder="Search Token ID"
+              value={searchId}
+              onChange={(e) => setSearchId(e.target.value)}
+              className={`flex-1 px-4 py-3 rounded-xl border-2 focus-ring ${
+                darkMode 
+                  ? 'bg-gray-800 text-white border-gray-600 focus:border-amber-500' 
+                  : 'bg-white text-gray-900 border-gray-300 focus:border-amber-500'
+              }`}
+            />
+            <button
+              type="submit"
+              className={`btn-primary px-6 py-3`}
+            >
+              Search
+            </button>
+          </form>
+        </div>
       </div>
-      <div className='grid grid-cols-8'>
-        <form onSubmit={onSearch} className="col-start-3 col-span-4 flex flex-row justify-center items-center space-x-2 mt-4 mb-4">
-          <input
-            type="number"
-            placeholder="Search Token ID"
-            value={searchId}
-            onChange={(e) => setSearchId(e.target.value)}
-            className={`px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black border-gray-300'}`}
-          />
-          <button
-            type="submit"
-            className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} text-white`}
-          >
-            Search
-          </button>
-        </form>
-      </div>
-      <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4 justify-center items-center`}>
+
+      {/* Token Grid */}
+      <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 mb-8`}>
         {paginationData.currentTokens.filter(tokenId => !explodedTokens.includes(tokenId)).map((tokenId, index) => {
           const tokenData = getTokenData(tokenId)
           return (
-            <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
+            <div 
+              key={index} 
+              className={`${darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50'} rounded-xl p-3 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg border-2 border-transparent hover:border-amber-500/30`}
+            >
               <Suspense fallback={<SkeletonCard />}>
                 <OptimizedTokenImage
                   tokenId={tokenId}
@@ -133,8 +167,8 @@ export default function TokenGrid({
                   isError={tokenData.isError}
                   potatoTokenId={potatoTokenId}
                   onTokenExploded={onTokenExploded}
-                  onRefresh={refreshAll}
-                  delay={index * 100} // Reduced delay
+                  onRefresh={refreshImmediate}
+                  delay={index * 100}
                   className="z-20"
                 />
               </Suspense>
@@ -143,22 +177,43 @@ export default function TokenGrid({
         })}
       </div>
 
-      <div className='text-3xl lg:text-2xl md:text-2xl sm:text-xl text-center'>
-        {currentPage !== 1 &&
-          <button className='justify-items-center mx-8 sm:mx-4 mt-4' onClick={() => setCurrentPage(currentPage - 1)}>&lt;</button>
-        }
-        {paginationData.pages.map((page, index) => (
-          <button
-            className={`justify-items-center mx-8 sm:mx-4 mt- bg-clip-text ${page === currentPage ? (darkMode ? 'text-transparent bg-gradient-to-br from-amber-800 to-red-800' : 'text-transparent bg-gradient-to-b from-yellow-400 to-red-500') : 'text-black'}`}
-            key={index}
-            onClick={() => setCurrentPage(page)}
+      {/* Pagination */}
+      <div className="flex justify-center items-center space-x-2 text-lg">
+        {currentPage !== 1 && (
+          <button 
+            className={`btn-outline px-4 py-2`}
+            onClick={() => setCurrentPage(currentPage - 1)}
           >
-            {page}
+            ← Previous
           </button>
-        ))}
-        {currentPage !== paginationData.pageCount &&
-          <button className='justify-items-center mx-8 sm:mx-4 mt-4' onClick={() => setCurrentPage(currentPage + 1)}>&gt;</button>
-        }
+        )}
+        
+        <div className="flex space-x-2">
+          {paginationData.pages.map((page, index) => (
+            <button
+              className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
+                page === currentPage 
+                  ? 'bg-gradient-to-r from-amber-500 to-red-500 text-white shadow-lg' 
+                  : darkMode 
+                    ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+              key={index}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+        
+        {currentPage !== paginationData.pageCount && (
+          <button 
+            className={`btn-outline px-4 py-2`}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Next →
+          </button>
+        )}
       </div>
     </div>
   )

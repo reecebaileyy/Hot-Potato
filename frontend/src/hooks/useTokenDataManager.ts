@@ -12,7 +12,7 @@ interface TokenData {
   isError: boolean
 }
 
-export function useTokenDataManager(activeTokenIds: number[]) {
+export function useTokenDataManager(activeTokenIds: number[], shouldRefresh?: boolean) {
   const [tokenDataCache, setTokenDataCache] = useState<Map<number, TokenData>>(new Map())
   const [lastRefresh, setLastRefresh] = useState<number>(0)
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -25,20 +25,23 @@ export function useTokenDataManager(activeTokenIds: number[]) {
     refreshTimeoutRef.current = setTimeout(callback, delay)
   }, [])
 
+  // Memoize activeTokenIds to prevent unnecessary re-renders
+  const memoizedActiveTokenIds = useMemo(() => activeTokenIds, [activeTokenIds.join(',')])
+
   // Centralized contract reads for all tokens with optimized caching
   const contracts = useMemo(() => 
-    activeTokenIds.map(tokenId => ({
+    memoizedActiveTokenIds.map(tokenId => ({
       address: CONTRACT_ADDRESS,
       abi: ABI as Abi,
       functionName: 'getImageString' as const,
       args: [tokenId] as const,
-    })), [activeTokenIds]
+    })), [memoizedActiveTokenIds]
   )
 
   const { data: allImageStrings, isLoading, error, refetch } = useReadContracts({
     contracts,
     query: {
-      enabled: activeTokenIds.length > 0,
+      enabled: memoizedActiveTokenIds.length > 0,
       staleTime: 60000, // Increased to 60 seconds
       refetchInterval: false, // Disable automatic refetching
       refetchOnWindowFocus: false, // Disable refetch on window focus
@@ -50,10 +53,10 @@ export function useTokenDataManager(activeTokenIds: number[]) {
 
   // Update cache when data changes
   useEffect(() => {
-    if (allImageStrings && activeTokenIds.length > 0) {
+    if (allImageStrings && memoizedActiveTokenIds.length > 0) {
       const newCache = new Map<number, TokenData>()
       
-      activeTokenIds.forEach((tokenId, index) => {
+      memoizedActiveTokenIds.forEach((tokenId, index) => {
         const imageString = allImageStrings[index]?.result as string
         newCache.set(tokenId, {
           tokenId,
@@ -65,7 +68,7 @@ export function useTokenDataManager(activeTokenIds: number[]) {
       
       setTokenDataCache(newCache)
     }
-  }, [allImageStrings, activeTokenIds])
+  }, [allImageStrings, memoizedActiveTokenIds])
 
   // Get data for a specific token
   const getTokenData = (tokenId: number): TokenData => {
@@ -85,6 +88,21 @@ export function useTokenDataManager(activeTokenIds: number[]) {
     }, 2000)
   }, [debouncedRefresh, refetch])
 
+  // Immediate refresh for critical updates (like after minting)
+  const refreshImmediate = useCallback(() => {
+    console.log('Immediate refresh triggered')
+    setLastRefresh(Date.now())
+    refetch()
+  }, [refetch])
+
+  // Respond to external refresh trigger
+  useEffect(() => {
+    if (shouldRefresh) {
+      console.log('External refresh triggered - refreshing token data')
+      refreshAll()
+    }
+  }, [shouldRefresh, refreshAll])
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -97,7 +115,8 @@ export function useTokenDataManager(activeTokenIds: number[]) {
   return {
     getTokenData,
     refreshAll,
-    isLoading: isLoading && activeTokenIds.length > 0,
+    refreshImmediate,
+    isLoading: isLoading && memoizedActiveTokenIds.length > 0,
     error,
     lastRefresh,
   }

@@ -120,6 +120,18 @@ export function useGameContract(tokenId: string = '') {
     }
   })
 
+  // Debug error logging
+  useEffect(() => {
+    if (readError) {
+      console.log('=== CONTRACT READ ERROR ===')
+      console.log('readError:', readError)
+      console.log('readError type:', typeof readError)
+      console.log('readError message:', readError.message)
+      console.log('readError details:', readError)
+      console.log('===========================')
+    }
+  }, [readError])
+
   // Memoized parsed results
   const parsedResults = useMemo(() => {
     if (!readResults) {
