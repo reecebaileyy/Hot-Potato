@@ -13,6 +13,11 @@
   },
   "scripts": {
     "deploy": "npx hardhat ignition deploy ignition/modules/Deploy.ts --network baseSepolia",
-    "verify": "npx hardhat ignition verify --network baseSepolia chain-84532 --include-unrelated-contracts"
+    "verify": "npx hardhat ignition verify --network baseSepolia chain-84532 --include-unrelated-contracts",
+    "setup-contracts": "npx hardhat run scripts/setup-contracts.ts --network baseSepolia",
+    "set-inventory-manager": "npx hardhat run scripts/set-inventory-manager.ts --network baseSepolia",
+    "set-backgrounds": "npx hardhat run scripts/set-backgrounds.ts --network baseSepolia",
+    "set-hands": "npx hardhat run scripts/set-hands.ts --network baseSepolia",
+    "set-potatoes": "npx hardhat run scripts/set-potatoes.ts --network baseSepolia"
   }
 }
