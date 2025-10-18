@@ -40,7 +40,9 @@ export default function App({ Component, pageProps }: AppProps) {
           logo: '/assets/images/Logo.png',
         },
         embeddedWallets: {
-          createOnLogin: 'users-without-wallets',
+          ethereum: {
+            createOnLogin: 'users-without-wallets',
+          },
         },
         defaultChain: baseSepolia,
         supportedChains: [base, baseSepolia],

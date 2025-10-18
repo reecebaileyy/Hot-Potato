@@ -27,7 +27,13 @@ npx hardhat compile
 npm run deploy
 npm run verify (optional)
 ```
-To Be Continued...
+Then Navigate to the basescan Inventory Manager Contract to set the trait count:
+```bash
+setBackgrounds(20, 0x123)
+setHands(41, 0xabc)
+setPotatoes(1, 0x000) 
+```
+
 
 
 

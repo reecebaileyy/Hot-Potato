@@ -1,5 +1,7 @@
+'use client'
+import React from 'react'
 import { useState, useEffect, useRef } from 'react'
-import { Abi, formatUnits, parseEther } from 'viem'
+import { Abi, formatUnits, parseEther, parseEventLogs } from 'viem'
 import { useAccount, useWatchContractEvent, useReadContract, useBalance, useSimulateContract, useWriteContract, useEnsName } from 'wagmi'
 import ABI from '../abi/Game.json'
 import { toast, ToastContainer } from 'react-toastify'
@@ -8,6 +10,8 @@ import Link from 'next/link'
 import { DarkModeSwitch } from 'react-toggle-dark-mode'
 import { HiArrowCircleUp, HiArrowCircleDown } from 'react-icons/hi'
 import { ethers, providers } from 'ethers'
+import { createDeferredPromise, type DeferredPromise } from './helpers/deferredPromise'
+import { safeParseEventLogs } from './helpers/viemUtils'
 import ConnectWalletButton from '../components/ConnectWalletButton'
 import TokenImage from '../components/TokenImage'
 import ActiveTokensImages from '../components/ActiveTokensImages'
@@ -17,6 +21,7 @@ import Explosion from '../../public/assets/images/Explosion.gif'
 import Burning from '../../public/assets/images/Burning.gif'
 import blacklogo from '../../public/assets/images/Logo.png'
 import { AbiCoder } from 'ethers/lib/utils'
+import { parse } from 'path'
 
 interface PlayProps {
   initalGameState: string | null
@@ -25,7 +30,9 @@ interface PlayProps {
   maxSupply: number
 }
 
-export default function Play({ initalGameState, gen, price, maxSupply }: PlayProps): JSX.Element {
+
+
+export default function Play({ initalGameState, gen, price, maxSupply }: PlayProps): React.JSX.Element {
   // --- Provider (WebSocket) ---
   const provider = new providers.WebSocketProvider(
     process.env.NEXT_PUBLIC_ALCHEMY_RPC_URL!
@@ -43,16 +50,20 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     }
   }, [address])
 
+
   // --- State Hooks ---
+  const CONTRACT = '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704' as `0x${string}`
+  const ADMIN_ADDRESS = "0x41b1e204e9c15fF5894bd47C6Dc3a7Fa98C775C7"
+  const CONTRACT_ADDRESS = '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704' as const
+  const [mintAmount, setMintAmount] = useState<string>('')
   const [getGameState, setGetGameState] = useState<string | null>(initalGameState)
   const [prevGameState, setPrevGameState] = useState<string | null>(initalGameState)
   const [darkMode, setDarkMode] = useState<boolean>(false)
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [events, setEvents] = useState<string[]>([])
   const [tokenId, setTokenId] = useState<string>('')
-  const [mintAmount, setMintAmount] = useState<string>('')
   const [totalCost, setTotalCost] = useState<number>(0)
-  const [passPromise, setPassPromise] = useState<Promise<void> | null>(null)
+  const [passPromise, setPassPromise] = useState<DeferredPromise<void> | null>(null)
   const [shouldRefresh, setShouldRefresh] = useState<boolean>(false)
   const [activeTokens, setActiveTokens] = useState<number[]>([])
   const [explodedTokens, setExplodedTokens] = useState<number[]>([])
@@ -71,9 +82,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const endOfDiv = useRef<HTMLDivElement | null>(null)
   const [searchId, setSearchId] = useState<string>('')
 
-  const CONTRACT = '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704' as `0x${string}`
-  const CONTRACT_ADDRESS = '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704' as const
-  const ADMIN_ADDRESS = "0x41b1e204e9c15fF5894bd47C6Dc3a7Fa98C775C7"
 
   // --- Pagination logic ---
   const indexOfLastToken = currentPage * itemsPerPage
@@ -99,7 +107,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     eventName: 'GameStarted',
     onLogs: async (logs) => {
-      if (_address) await refetchGetActiveTokenCount({ args: [_address] })
+      if (_address) await refetchGetActiveTokenCount()
       await refetchGetRoundMints()
       await refetchGetActiveTokens()
       setRoundMints(0)
@@ -157,7 +165,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     eventName: 'GameRestarted',
     onLogs: async () => {
-      await refetchRewards({ args: [_address] })
+      await refetchRewards()
       setPrevGameState((prev) => prev)
       setGetGameState('Queued')
       setRoundMints(0)
@@ -176,18 +184,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   })
 
 
-  /*
-               ▄▄                                                                           
-  ▀███▀▀▀██▄ ▀███                                        ▄█▀▀▀█▄█ ██            ██          
-    ██   ▀██▄  ██                                       ▄██    ▀█ ██            ██          
-    ██   ▄██   ██  ▄█▀██▄ ▀██▀   ▀██▀ ▄▄█▀██▀███▄███    ▀███▄   ██████ ▄█▀██▄ ██████ ▄██▀███
-    ███████    ██ ██   ██   ██   ▄█  ▄█▀   ██ ██▀ ▀▀      ▀█████▄ ██  ██   ██   ██   ██   ▀▀
-    ██         ██  ▄█████    ██ ▄█   ██▀▀▀▀▀▀ ██        ▄     ▀██ ██   ▄█████   ██   ▀█████▄
-    ██         ██ ██   ██     ███    ██▄    ▄ ██        ██     ██ ██  ██   ██   ██   █▄   ██
-  ▄████▄     ▄████▄████▀██▄   ▄█      ▀█████▀████▄      █▀█████▀  ▀████████▀██▄ ▀██████████▀
-                            ▄█                                                              
-                          ██▀                                                               
-  */
+  // Player Stats
 
   // PlayerWon
   useWatchContractEvent({
@@ -196,20 +193,32 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     eventName: 'PlayerWon',
     onLogs: async (logs) => {
       try {
-        const player = logs[0]?.args?.player
-        await refetchHallOfFame({ args: [_currentGeneration] })
+        // 👇 Decode the logs safely
+        const decoded = safeParseEventLogs<{ player: `0x${string}` }>(ABI, 'PlayerWon', logs)
+        const player = decoded[0]?.args?.player
+        if (!player) return
+
+        console.log('PlayerWon', player)
+
+        // Update leaderboard or UI
+        await refetchHallOfFame()
         setEvents((prev) => [...prev, `${player} won! 🎉`])
+
+        // Show special logic if the winner is the connected user
         if (player === _address) {
           toast.success("You won! 🎉 Don't forget to claim your rewards!")
-          await refetchWinner()
-          await refetchRewards({ args: [_address] })
-          await refetchTotalWins({ args: [_address] })
+          await Promise.all([
+            refetchWinner?.(),
+            refetchRewards?.(),
+            refetchTotalWins?.(),
+          ])
         }
       } catch (error) {
-        console.error('Error updating wins', error)
+        console.error('Error updating wins:', error)
       }
     },
   })
+
 
   // SuccessfulPass
   useWatchContractEvent({
@@ -218,14 +227,22 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     eventName: 'SuccessfulPass',
     onLogs: async (logs) => {
       try {
-        console.log('SuccessfulPass', logs)
-        const player = logs[0]?.args?.player
+        const decoded = safeParseEventLogs<{ player: `0x${string}` }>(ABI, 'SuccessfulPass', logs)
+        const player = decoded[0]?.args?.player
+        if (!player) return
+
+        console.log('SuccessfulPass', player)
+        const myPromise = new Promise<void>((resolve) => {
+          resolve();
+        });
+
+        const deferred = createDeferredPromise<void>()
         if (_address === player) {
-          await refetchSuccessfulPasses({ args: [_address] })
-          setPassPromise(true)
-          if (passPromise) passPromise.resolve()
+          await refetchSuccessfulPasses()
+          setPassPromise(deferred)
+          passPromise?.resolve?.()
         } else {
-          if (passPromise) passPromise.reject(new Error('Passing failed'))
+          passPromise?.reject?.(new Error('Passing failed'))
         }
       } catch (error) {
         console.error('Error updating successful passes', error)
@@ -233,50 +250,47 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     },
   })
 
+
   // PotatoMinted
   useWatchContractEvent({
     address: CONTRACT,
-    abi: ABI as Abi,
+    abi: ABI,
     eventName: 'PotatoMinted',
     onLogs: async (logs) => {
       try {
-        console.log('PotatoMinted', logs)
-
-        const player = logs[0]?.args?.player as string
-        const amount = Number(logs[0]?.args?.amount)
+        const decoded = safeParseEventLogs<{ player: `0x${string}`; amount: bigint }>(ABI, 'PotatoMinted', logs)
+        const player = decoded[0]?.args?.player
+        const amount = Number(decoded[0]?.args?.amount ?? 0)
+        if (!player) return
 
         console.log(`_address: ${_address} player: ${player} amount: ${amount}`)
 
         if (_address === player) {
           console.log(`Player ${player} minted ${amount} tokens`)
-          // Example: Update local state if needed
-          // setActiveTokensCount((prev) => prev + amount)
         }
 
-        await refetchGetActiveTokenCount?.({ args: [_address] })
+        await refetchGetActiveTokenCount?.()
         await refetchGetActiveTokenIds?.()
         await refetchGetRoundMints?.()
-
         setShouldRefresh((prev) => !prev)
         setRoundMints(totalMints)
-        setEvents((prev) => [
-          ...prev,
-          `${player} just minted ${amount} hands`
-        ])
+        setEvents((prev) => [...prev, `${player} just minted ${amount} hands`])
       } catch (error) {
         console.error('Error updating mints', error)
       }
     },
   })
 
+
   // --- NewRound ---
   useWatchContractEvent({
     address: CONTRACT,
-    abi: ABI as Abi,
+    abi: ABI,
     eventName: 'NewRound',
     onLogs: async (logs) => {
       try {
-        const round = Number(logs[0]?.args?.round)
+        const decoded = safeParseEventLogs<{ round: bigint }>(ABI, 'NewRound', logs)
+        const round = Number(decoded[0]?.args?.round ?? 0)
         console.log('NewRound', round)
 
         await refetchGetActiveTokens()
@@ -292,44 +306,47 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     },
   })
 
+
   // --- UpdatedTimer ---
   useWatchContractEvent({
     address: CONTRACT,
-    abi: ABI as Abi,
+    abi: ABI,
     eventName: 'UpdatedTimer',
     onLogs: (logs) => {
-      const time = logs[0]?.args?.time?.toString()
+      const decoded = safeParseEventLogs<{ time: bigint }>(ABI, 'UpdatedTimer', logs)
+      const time = decoded[0]?.args?.time?.toString()
       console.log('UpdatedTimer', time)
-      setRemainingTime(time)
-      setEvents((prev) => [...prev, `${time} seconds till explosion`])
+
+      if (time) {
+        setRemainingTime(parseInt(time, 10))
+        setEvents((prev) => [...prev, `${time} seconds till explosion`])
+      }
     },
     onError(error) {
       console.error('UpdatedTimer event error:', error)
     },
   })
+
+
   // --- PotatoExploded ---
   useWatchContractEvent({
     address: CONTRACT,
-    abi: ABI as Abi,
+    abi: ABI,
     eventName: 'PotatoExploded',
     onLogs: async (logs) => {
       try {
-        console.log('PotatoExploded', logs)
+        const decoded = safeParseEventLogs<{ player: `0x${string}`; tokenId: bigint }>(ABI, 'PotatoExploded', logs)
+        const player = decoded[0]?.args?.player
+        const tokenId_ = decoded[0]?.args?.tokenId?.toString()
 
+        console.log('PotatoExploded', player, tokenId_)
         setExplosion(true)
         setTimeout(() => setExplosion(false), 3050)
-
-        const player = logs[0]?.args?.player?.toString()
-        const tokenId_ = logs[0]?.args?.tokenId?.toString()
-        console.log(`Player exploded: ${player}, Token ID: ${tokenId_}`)
 
         await refetchActiveAddresses()
         console.log('Refetched all data after explosion.')
 
-        setEvents((prev) => [
-          ...prev,
-          `Token #${tokenId_} just exploded`,
-        ])
+        setEvents((prev) => [...prev, `Token #${tokenId_} just exploded`])
       } catch (error) {
         console.error('Error handling PotatoExploded event', error)
       }
@@ -339,20 +356,22 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     },
   })
 
+
   // --- PotatoPassed ---
   useWatchContractEvent({
     address: CONTRACT,
-    abi: ABI as Abi,
+    abi: ABI,
     eventName: 'PotatoPassed',
     onLogs: async (logs) => {
       try {
-        const tokenIdTo = logs[0]?.args?.tokenIdTo?.toString()
-        console.log('PotatoPassed', tokenIdTo)
+        const decoded = safeParseEventLogs<{ tokenIdTo: bigint }>(ABI, 'PotatoPassed', logs)
+        const tokenIdTo = decoded[0]?.args?.tokenIdTo?.toString()
+        if (!tokenIdTo) return
 
-        await refetchUserHasPotatoToken({ args: [_address] })
+        console.log('PotatoPassed', tokenIdTo)
+        await refetchUserHasPotatoToken()
         await refetchPotatoTokenId()
 
-        console.log(`userHasPotatoToken: ${userHasPotatoToken}`)
         setEvents((prev) => [...prev, `Potato Passed to #${tokenIdTo}`])
         setShouldRefresh((prev) => !prev)
       } catch (error) {
@@ -363,6 +382,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
       console.error('PotatoPassed event error:', error)
     },
   })
+
 
 
   //Read Hooks
@@ -383,7 +403,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     functionName: 'getExplosionTime',
   })
-  const explosionTime = parseInt(getExplosionTime, 10);
+  const explosionTime = getExplosionTime ? parseInt(getExplosionTime as unknown as string, 10) : 0;
 
 
   // GET MINT PRICE
@@ -400,7 +420,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     functionName: 'addressActiveTokenCount',
     args: [_address],
   })
-  const activeTokensCount = parseInt(getActiveTokenCount, 10);
+  const activeTokensCount = getActiveTokenCount ? parseInt(getActiveTokenCount as unknown as string, 10) : 0;
 
   // GET NUMBER OF MAX MINTS DURING THE ROUND
   // const { data: _maxsupply, isLoading: loadingMaxSupply, refetch: refetchMaxSupply } = useReadContract({
@@ -433,7 +453,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     functionName: 'potatoTokenId',
   })
-  const _potato_token = parseInt(potatoTokenId, 10);
+  const _potato_token = potatoTokenId ? parseInt(potatoTokenId as unknown as string, 10) : 0;
 
 
   // GET ACTIVE TOKENS
@@ -442,7 +462,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     functionName: 'getActiveTokens',
   })
-  const _activeTokens = parseInt(getActiveTokens, 10);
+  const _activeTokens = getActiveTokens as unknown as number[];
 
   // GET CURRENT GENERATION
   const { data: currentGeneration, isLoading: loadingCurrentGeneration, refetch: refetchCurrentGeneration } = useReadContract({
@@ -450,14 +470,14 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     functionName: 'currentGeneration',
   })
-  const _currentGeneration = parseInt(currentGeneration, 10);
+  const _currentGeneration = currentGeneration ? parseInt(currentGeneration as unknown as string, 10) : 0;
 
   const { data: getRoundMints, isLoading: loadingGetRoundMints, refetch: refetchGetRoundMints } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
     abi: ABI,
     functionName: 'roundMints',
   })
-  const totalMints = parseInt(getRoundMints, 10);
+  const totalMints = getRoundMints ? parseInt(getRoundMints as unknown as string, 10) : 0;
 
 
   const { data: _owner, isLoading: loadingOwner, refetch: refetchowner } = useReadContract({
@@ -473,12 +493,13 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     functionName: 'getActiveTokenIds',
   })
 
-  const { data: allWinners, isLoading: loadingWinners, refetch: refetchWinner } = useReadContract({
+  const { data, isLoading: loadingWinners, refetch: refetchWinner } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
     abi: ABI,
     functionName: 'getAllWinners',
   })
-  const isWinner = allWinners?.includes(_address)
+  const allWinners = data as `0x${string}`[] | undefined
+  const isWinner = allWinners?.includes(_address as `0x${string}`)
 
   const { data: rewards, isLoading: loadingRewards, refetch: refetchRewards } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
@@ -486,7 +507,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     functionName: 'rewards',
     args: [_address],
   })
-  const _rewards = parseInt(rewards, 10);
+  const _rewards = rewards ? formatUnits(rewards as unknown as bigint, 18) : '0';
 
   const { data: _totalWins, isLoading: loadingTotalWins, refetch: refetchTotalWins } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
@@ -494,7 +515,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     functionName: 'totalWins',
     args: [_address],
   })
-  const totalWins = parseInt(_totalWins, 10);
+  const totalWins = _totalWins ? parseInt(_totalWins as unknown as string, 10) : 0;
 
 
 
@@ -504,7 +525,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     functionName: 'successfulPasses',
     args: [_address],
   })
-  const successfulPasses = parseInt(_successfulPasses, 10);
+  const successfulPasses = _successfulPasses ? parseInt(_successfulPasses as unknown as string, 10) : 0;
 
   const { data: hallOfFame, isLoading: loadingHGallOfFame, refetch: refetchHallOfFame } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
@@ -519,7 +540,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     functionName: '_maxperwallet',
   })
-  const maxPerWallet = parseInt(_maxperwallet, 10);
+  const maxPerWallet = _maxperwallet ? parseInt(_maxperwallet as unknown as string, 10) : 0;
 
   const { data: isTokenActive, isLoading: loadingIsTokenActive, refetch: refetchIsTokenActive } = useReadContract({
     address: '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704',
@@ -533,7 +554,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     functionName: 'activeAddresses',
   })
-  const activeAddresses = parseInt(_activeAddresses, 10);
+  const activeAddresses = _activeAddresses as unknown as `0x${string}`[];
 
 
   const { data: ownerOf, isLoading: loadingOwnerOf, refetch: refetchOwnerOf } = useReadContract({
@@ -544,8 +565,8 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   })
 
   const { data: bal, isLoading, isError } = useBalance({
-    address: _address, // user wallet
-    chainId: 84532, // Base Sepolia chain ID
+    address: _address as `0x${string}`,
+    chainId: 84532,
   })
 
   const value = bal?.value ?? 0n
@@ -553,22 +574,11 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
 
   const { data: winnerEnsName, isError: errorWinnerEnsName, isLoading: loadingWinnerEnsName } = useEnsName({
-    address: roundWinner,
+    address: roundWinner as `0x${string}`,
   })
 
 
-  /*
-   __       __ _______  ______ ________ ________      __    __  ______   ______  __    __  ______  
-  |  \  _  |  \       \|      \        \        \    |  \  |  \/      \ /      \|  \  /  \/      \ 
-  | ▓▓ / \ | ▓▓ ▓▓▓▓▓▓▓\\▓▓▓▓▓▓\▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓    | ▓▓  | ▓▓  ▓▓▓▓▓▓\  ▓▓▓▓▓▓\ ▓▓ /  ▓▓  ▓▓▓▓▓▓\
-  | ▓▓/  ▓\| ▓▓ ▓▓__| ▓▓ | ▓▓    | ▓▓  | ▓▓__        | ▓▓__| ▓▓ ▓▓  | ▓▓ ▓▓  | ▓▓ ▓▓/  ▓▓| ▓▓___\▓▓
-  | ▓▓  ▓▓▓\ ▓▓ ▓▓    ▓▓ | ▓▓    | ▓▓  | ▓▓  \       | ▓▓    ▓▓ ▓▓  | ▓▓ ▓▓  | ▓▓ ▓▓  ▓▓  \▓▓    \ 
-  | ▓▓ ▓▓\▓▓\▓▓ ▓▓▓▓▓▓▓\ | ▓▓    | ▓▓  | ▓▓▓▓▓       | ▓▓▓▓▓▓▓▓ ▓▓  | ▓▓ ▓▓  | ▓▓ ▓▓▓▓▓\  _\▓▓▓▓▓▓\
-  | ▓▓▓▓  \▓▓▓▓ ▓▓  | ▓▓_| ▓▓_   | ▓▓  | ▓▓_____     | ▓▓  | ▓▓ ▓▓__/ ▓▓ ▓▓__/ ▓▓ ▓▓ \▓▓\|  \__| ▓▓
-  | ▓▓▓    \▓▓▓ ▓▓  | ▓▓   ▓▓ \  | ▓▓  | ▓▓     \    | ▓▓  | ▓▓\▓▓    ▓▓\▓▓    ▓▓ ▓▓  \▓▓\\▓▓    ▓▓
-   \▓▓      \▓▓\▓▓   \▓▓\▓▓▓▓▓▓   \▓▓   \▓▓▓▓▓▓▓▓     \▓▓   \▓▓ \▓▓▓▓▓▓  \▓▓▓▓▓▓ \▓▓   \▓▓ \▓▓▓▓▓▓ 
-  
-  */
+  // Write Hooks
 
   // MINT HAND
   const {
@@ -580,11 +590,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     address: CONTRACT_ADDRESS,
     functionName: 'mintHand',
     args: [BigInt(mintAmount)], // ensure numeric args
-    value: parseEther(totalCost.toString()), // include ETH if needed
-    enabled: getGameState === 'Minting',
-    onError(error) {
-      console.error('Mint simulation error:', error)
-    },
+    value: parseEther(totalCost.toString())
   })
 
   // Write mutation for mint
@@ -601,13 +607,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     abi: ABI,
     address: CONTRACT_ADDRESS,
     functionName: 'passPotato',
-    args: [BigInt(tokenId)],
-    enabled:
-      (getGameState === 'Playing' || getGameState === 'Final Stage') &&
-      Boolean(userHasPotatoToken),
-    onError(error) {
-      console.error('Pass simulation error:', error)
-    },
+    args: [BigInt(tokenId)]
   })
 
   // Write mutation for passPotato
@@ -616,401 +616,337 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const { data: claimSim, error: claimError } = useSimulateContract({
     abi: ABI,
     address: CONTRACT_ADDRESS,
-    functionName: 'withdrawWinnersFunds',
-    enabled: _address === isWinner,
-    onError(error) {
-      console.error('Sim claim error:', error)
-    },
+    functionName: 'withdrawWinnersFunds'
   })
 
   const { writeContract: writeClaim } = useWriteContract()
-}
+
+  const { data: explosionSim, error: explosionError } = useSimulateContract({
+    abi: ABI,
+    address: "0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704",
+    functionName: 'checkExplosion'
+  })
+
+  const { writeContract: writeCheck } = useWriteContract()
 
 
-const { data: explosionSim, error: explosionError } = useSimulateContract({
-  abi: ABI,
-  address: "0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704",
-  functionName: 'checkExplosion',
-  enabled: getGameState === 'Playing' || getGameState === 'Final Stage',
-  onError(error) {
-    console.error('Sim explosion error:', error)
-  },
-})
+  // OWNER HOOKS
 
-const { writeContract: writeCheck } = useWriteContract()
+  // Simulate startGame
+  const { data: startSim, error: startError } = useSimulateContract({
+    abi: ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: 'startGame'
+  })
 
+  // Write
+  const { writeContract: writeStartGame, isPending: starting } = useWriteContract()
 
-// OWNER HOOKS
+  /// Simulate endMinting
+  const { data: endMintSim, error: endMintError } = useSimulateContract({
+    abi: ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: 'endMinting'
+  })
 
-// Simulate startGame
-const { data: startSim, error: startError } = useSimulateContract({
-  abi: ABI,
-  address: CONTRACT_ADDRESS,
-  functionName: 'startGame',
-  enabled:
-    _address === ADMIN_ADDRESS && getGameState === 'Queued',
-  onError(error) {
-    console.error('Start Game simulation error:', error)
-  },
-})
+  const { writeContract: writeEndMint, isPending: ending } = useWriteContract()
 
-// Write
-const { writeContract: writeStartGame, isPending: starting } = useWriteContract()
+  const { data: pauseSim, error: pauseError } = useSimulateContract({
+    abi: ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: 'pauseGame'
+  })
 
-/// Simulate endMinting
-const { data: endMintSim, error: endMintError } = useSimulateContract({
-  abi: ABI,
-  address: CONTRACT_ADDRESS,
-  functionName: 'endMinting',
-  enabled:
-    getGameState === 'Minting' &&
-    _address === ADMIN_ADDRESS,
-  onError(error) {
-    console.error('End Minting simulation error:', error)
-  },
-})
+  const { writeContract: writePause, isPending: pausing } = useWriteContract()
 
-const { writeContract: writeEndMint, isPending: ending } = useWriteContract()
+  const { data: resumeSim, error: resumeError } = useSimulateContract({
+    abi: ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: 'resumeGame'
+  })
 
-const { data: pauseSim, error: pauseError } = useSimulateContract({
-  abi: ABI,
-  address: CONTRACT_ADDRESS,
-  functionName: 'pauseGame',
-  enabled:
-    _address === ADMIN_ADDRESS &&
-    ['Minting', 'Playing', 'Final Stage'].includes(getGameState),
-  onError(error) {
-    console.error('Pause Game simulation error:', error)
-  },
-})
+  const { writeContract: writeResume, isPending: resuming } = useWriteContract()
 
-const { writeContract: writePause, isPending: pausing } = useWriteContract()
+  const { data: restartSim, error: restartError } = useSimulateContract({
+    abi: ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: 'restartGame'
+  })
 
-const { data: resumeSim, error: resumeError } = useSimulateContract({
-  abi: ABI,
-  address: CONTRACT_ADDRESS,
-  functionName: 'resumeGame',
-  enabled:
-    _address === ADMIN_ADDRESS &&
-    getGameState === 'Paused',
-  onError(error) {
-    console.error('Resume Game simulation error:', error)
-  },
-})
+  const { writeContract: writeRestart, isPending: restarting } = useWriteContract()
 
-const { writeContract: writeResume, isPending: resuming } = useWriteContract()
+  // Toast
 
-const { data: restartSim, error: restartError } = useSimulateContract({
-  abi: ABI,
-  address: CONTRACT_ADDRESS,
-  functionName: 'restartGame',
-  enabled:
-    _address === ADMIN_ADDRESS &&
-    ['Paused', 'Ended'].includes(getGameState),
-  onError(error) {
-    console.error('Restart Game simulation error:', error)
-  },
-})
-
-const { writeContract: writeRestart, isPending: restarting } = useWriteContract()
-
-/*,
-                                          
-███▀▀██▀▀███                         ██   
-█▀   ██   ▀█                         ██   
-     ██      ▄██▀██▄ ▄█▀██▄  ▄██▀████████ 
-     ██     ██▀   ▀███   ██  ██   ▀▀ ██   
-     ██     ██     ██▄█████  ▀█████▄ ██   
-     ██     ██▄   ▄███   ██  █▄   ██ ██   
-   ▄████▄    ▀█████▀▀████▀██▄██████▀ ▀████                                     
-*/
-
-function noAddressToast() {
-  toast.info("Please Connect to Interact")
-}
-
-function startToast() {
-  toast.error("Must Restart Game to Start Again")
-}
-
-function endToast() {
-  toast.error("Minting Already Ended")
-}
-
-function pauseToast() {
-  toast.error("Game Already Paused")
-}
-
-function resumeToast() {
-  toast.error("Game Already Resumed")
-}
-
-function restartToast() {
-  toast.error("Game Already Restarted")
-}
-
-function onlyNumbersToast() {
-  toast.info("Only Numbers Allowed")
-}
-
-function cannotPassToast() {
-  toast.error("The Game Has not started yet")
-}
-
-function ownThePotatoToast() {
-  toast.error("You have to own the Potato to pass it")
-}
-
-function noEnoughFundsToast() {
-  toast.error("You do not have enough funds to mint")
-}
-
-function cannotPassToSelfToast() {
-  toast.error("You cannot pass the Potato to yourself")
-}
-
-function gameFullToast() {
-  toast.error("The Round is already Full")
-}
-
-function tokenInactiveToast() {
-  toast.error("The token you tried to pass to is inactive")
-}
-
-function maxPerWalletToast() {
-  toast.error(`You can only mint xxx Hands per round`);
-}
-
-function mintOneToast() {
-  toast.info("Mint at least 1 to play");
-}
-
-function hasMoreTimeToast() {
-  toast.warn("There is still time left to pass the Potato");
-}
-
-function noRewardsToast() {
-  toast.warn("You have no rewards to claim");
-}
-
-function invalidTokenIdToast() {
-  toast.error("Inactive Token ID");
-}
-
-
-/* 
- __    __  ______  __    __ _______  __       ________ _______   ______  
-|  \  |  \/      \|  \  |  \       \|  \     |        \       \ /      \ 
-| ▓▓  | ▓▓  ▓▓▓▓▓▓\ ▓▓\ | ▓▓ ▓▓▓▓▓▓▓\ ▓▓     | ▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓\  ▓▓▓▓▓▓\
-| ▓▓__| ▓▓ ▓▓__| ▓▓ ▓▓▓\| ▓▓ ▓▓  | ▓▓ ▓▓     | ▓▓__   | ▓▓__| ▓▓ ▓▓___\▓▓
-| ▓▓    ▓▓ ▓▓    ▓▓ ▓▓▓▓\ ▓▓ ▓▓  | ▓▓ ▓▓     | ▓▓  \  | ▓▓    ▓▓\▓▓    \ 
-| ▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓  | ▓▓ ▓▓     | ▓▓▓▓▓  | ▓▓▓▓▓▓▓\_\▓▓▓▓▓▓\
-| ▓▓  | ▓▓ ▓▓  | ▓▓ ▓▓ \▓▓▓▓ ▓▓__/ ▓▓ ▓▓_____| ▓▓_____| ▓▓  | ▓▓  \__| ▓▓
-| ▓▓  | ▓▓ ▓▓  | ▓▓ ▓▓  \▓▓▓ ▓▓    ▓▓ ▓▓     \ ▓▓     \ ▓▓  | ▓▓\▓▓    ▓▓
- \▓▓   \▓▓\▓▓   \▓▓\▓▓   \▓▓\▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓▓\▓▓▓▓▓▓▓▓\▓▓   \▓▓ \▓▓▓▓▓▓ 
-                                                                                             
-*/
-
-// CHANGE ALL OF THIS AND BELOW TO TSX FROM JS!!!!
-
-const refreshAllImages = () => {
-  setShouldRefresh(prevState => !prevState);
-};
-
-const handleInputChangeToken = (e) => {
-  const inputValue = e.target.value;
-  const numericValue = inputValue.replace(/[^0-9]/g, '');
-  if (numericValue !== inputValue) {
-    onlyNumbersToast();
+  function noAddressToast() {
+    toast.info("Please Connect to Interact")
   }
-  else if (inputValue === "") {
-    setTokenId("");
+
+  function startToast() {
+    toast.error("Must Restart Game to Start Again")
   }
-  else if (inputValue !== "") {
-    const _tokenId = parseInt(inputValue);
-    setTokenId(_tokenId);
+
+  function endToast() {
+    toast.error("Minting Already Ended")
   }
-}
 
-const handleInputChangeMint = (e) => {
-  const inputValue = e.target.value;
-  const numericValue = inputValue.replace(/[^0-9]/g, '');
-  if (numericValue !== inputValue) {
-    onlyNumbersToast();
-  } else if (inputValue === "") {
-    setMintAmount("");
-    setTotalCost("0");
-  } else if (inputValue !== "") {
-    const newMintAmount = numericValue; // Keep newMintAmount as a string for UI
-    setMintAmount(newMintAmount);
-    const totalCostBigInt = BigInt(_price) * BigInt(newMintAmount);
-    setTotalCost(totalCostBigInt.toString()); // Convert back to string for UI
+  function pauseToast() {
+    toast.error("Game Already Paused")
   }
-}
 
-const handleTokenExploded = (tokenId) => {
-  setExplodedTokens(prevTokens => [...prevTokens, tokenId]);
-}
-
-const sortTokensAsc = () => {
-  const sorted = [...activeTokens].sort((a, b) => a - b);
-  setSortedTokens(sorted);
-}
-
-const sortTokensDesc = () => {
-  const sorted = [...activeTokens].sort((a, b) => b - a);
-  setSortedTokens(sorted);
-}
-
-const handleSearch = (e) => {
-  e.preventDefault();
-  const tokenIdIndex = sortedTokens.indexOf(searchId);
-  if (tokenIdIndex !== -1) {
-    setCurrentPage(Math.floor(tokenIdIndex / itemsPerPage) + 1);
-  } else {
-    invalidTokenIdToast();
+  function resumeToast() {
+    toast.error("Game Already Resumed")
   }
-};
 
-
-/* 
- _______  ________ ________ _______  ________  ______  __    __ 
-|       \|        \        \       \|        \/      \|  \  |  \
-| ▓▓▓▓▓▓▓\ ▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓\ ▓▓▓▓▓▓▓▓  ▓▓▓▓▓▓\ ▓▓  | ▓▓
-| ▓▓__| ▓▓ ▓▓__   | ▓▓__   | ▓▓__| ▓▓ ▓▓__   | ▓▓___\▓▓ ▓▓__| ▓▓
-| ▓▓    ▓▓ ▓▓  \  | ▓▓  \  | ▓▓    ▓▓ ▓▓  \   \▓▓    \| ▓▓    ▓▓
-| ▓▓▓▓▓▓▓\ ▓▓▓▓▓  | ▓▓▓▓▓  | ▓▓▓▓▓▓▓\ ▓▓▓▓▓   _\▓▓▓▓▓▓\ ▓▓▓▓▓▓▓▓
-| ▓▓  | ▓▓ ▓▓_____| ▓▓     | ▓▓  | ▓▓ ▓▓_____|  \__| ▓▓ ▓▓  | ▓▓
-| ▓▓  | ▓▓ ▓▓     \ ▓▓     | ▓▓  | ▓▓ ▓▓     \\▓▓    ▓▓ ▓▓  | ▓▓
- \▓▓   \▓▓\▓▓▓▓▓▓▓▓\▓▓      \▓▓   \▓▓\▓▓▓▓▓▓▓▓ \▓▓▓▓▓▓ \▓▓   \▓▓
-                                                               
-*/
-
-//On Mount
-useEffect(() => {
-  const fetchData = async () => {
-    await refetchPotatoTokenId?.();
-    setPotatoTokenId(_potato_token);
-    await refetchUserHasPotatoToken({ args: [_address] });
-    await refetchSuccessfulPasses({ args: [_address] });
+  function restartToast() {
+    toast.error("Game Already Restarted")
   }
-  fetchData();
-  // refetchGetExplosionTime();
-  setRemainingTime(explosionTime);
-  refetchGetRoundMints();
-  refetchGetActiveTokens();
-  refetchTotalWins({ args: [_address] });
-  refetchCurrentGeneration();
-  refetchActiveAddresses();
-  if (_address == _ownerAddress) {
-    refetchowner();
+
+  function onlyNumbersToast() {
+    toast.info("Only Numbers Allowed")
   }
-  const roundMints = parseInt(getRoundMints, 10);
-  if (!isNaN(roundMints)) {
-    setRoundMints(roundMints);
+
+  function cannotPassToast() {
+    toast.error("The Game Has not started yet")
   }
-}, []);
 
-
-useEffect(() => {
-  const activeIds = getActiveTokenIds.slice(1).map((tokenId, index) => tokenId?.toString());
-  setActiveTokens(activeIds);
-  setIsLoadingActiveTokens(false);
-}, [getActiveTokenIds]);
-
-useEffect(() => {
-  setSortedTokens(activeTokens);
-}, [activeTokens]);
-
-
-useEffect(() => {
-  if (roundWinner === undefined) {
-    refetchHallOfFame({ args: [_currentGeneration] });
+  function ownThePotatoToast() {
+    toast.error("You have to own the Potato to pass it")
   }
-  if (roundWinner === null) {
-    refetchHallOfFame({ args: [_currentGeneration] });
+
+  function noEnoughFundsToast() {
+    toast.error("You do not have enough funds to mint")
   }
-}, [roundWinner, refetchHallOfFame]);
 
-useEffect(() => {
-  refetchUserHasPotatoToken({ args: [_address] });
-  refetchSuccessfulPasses({ args: [_address] });
-  refetchTotalWins({ args: [_address] });
-  refetchRewards({ args: [_address] });
-}, [_address]);
+  function cannotPassToSelfToast() {
+    toast.error("You cannot pass the Potato to yourself")
+  }
 
-// useEffect(() => {
-//   const interval = setInterval(() => {
-//     localStorage.clear();
-//   }, 1000 * 60 * 30);
+  function gameFullToast() {
+    toast.error("The Round is already Full")
+  }
 
-//   return () => clearInterval(interval);
-// }, []);
+  function tokenInactiveToast() {
+    toast.error("The token you tried to pass to is inactive")
+  }
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    if (getGameState === "Minting") {
-      refetchGetRoundMints();
+  function maxPerWalletToast() {
+    toast.error(`You can only mint xxx Hands per round`);
+  }
+
+  function mintOneToast() {
+    toast.info("Mint at least 1 to play");
+  }
+
+  function hasMoreTimeToast() {
+    toast.warn("There is still time left to pass the Potato");
+  }
+
+  function noRewardsToast() {
+    toast.warn("You have no rewards to claim");
+  }
+
+  function invalidTokenIdToast() {
+    toast.error("Inactive Token ID");
+  }
+
+
+  // --- Handlers (TypeScript version) ---
+
+  const refreshAllImages = (): void => {
+    setShouldRefresh((prevState) => !prevState)
+  }
+
+  const handleInputChangeToken = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const inputValue = e.target.value
+    const numericValue = inputValue.replace(/[^0-9]/g, '')
+
+    if (numericValue !== inputValue) {
+      onlyNumbersToast()
+    } else if (inputValue === '') {
+      setTokenId('')
+    } else {
+      const _tokenId = parseInt(inputValue)
+      if (!isNaN(_tokenId)) setTokenId(_tokenId.toString())
     }
-  }, 3000);
-
-  // Cleanup function to clear the interval when component unmounts or re-renders
-  return () => clearInterval(interval);
-}, []);
-
-useEffect(() => {
-  console.log("An UNKNOWN X BEDTIME PRODUCTION")
-}, [], 5000);
-
-// useEffect(() => {
-//   try {
-//     if (refetchGetExplosionTime) {
-//       refetchGetExplosionTime();
-//       setRemainingTime(explosionTime);
-//     }
-//   } catch (error) {
-//     console.error("Error fetching explosion time:", error);
-//   }
-// }, [getExplosionTime]);
-
-
-useEffect(() => {
-  let timer;
-  if (remainingTime && remainingTime > 0) {
-    timer = setInterval(() => {
-      setRemainingTime((prevTime) => {
-        if (prevTime > 0) {
-          const newTime = prevTime - 1;
-          return newTime;
-        } else {
-          clearInterval(timer);
-          return 0;
-        }
-      });
-    }, 1000);
   }
 
-  return () => clearInterval(timer);
-}, [remainingTime]);
+  const handleInputChangeMint = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const inputValue = e.target.value
+    const numericValue = inputValue.replace(/[^0-9]/g, '')
 
-useEffect(() => {
-  if (endOfDiv.current) {
-    endOfDiv.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    if (numericValue !== inputValue) {
+      onlyNumbersToast()
+    } else if (inputValue === '') {
+      setMintAmount('')
+      setTotalCost(0)
+    } else {
+      const newMintAmount = numericValue // keep as string for UI
+      setMintAmount(newMintAmount)
+
+      try {
+        const totalCostBigInt =
+          BigInt((_price as bigint) ?? 0n) * BigInt(newMintAmount || '0') * BigInt(newMintAmount || '0')
+        setTotalCost(Number(totalCostBigInt))
+      } catch {
+        setTotalCost(0)
+      }
+    }
   }
-}, [events]);
-/*
- __    __ ________ __       __ __             ______   ______   ______  
-|  \  |  \        \  \     /  \  \           /      \ /      \ /      \ 
-| ▓▓  | ▓▓\▓▓▓▓▓▓▓▓ ▓▓\   /  ▓▓ ▓▓          |  ▓▓▓▓▓▓\  ▓▓▓▓▓▓\  ▓▓▓▓▓▓\
-| ▓▓__| ▓▓  | ▓▓  | ▓▓▓\ /  ▓▓▓ ▓▓          | ▓▓   \▓▓ ▓▓___\▓▓ ▓▓___\▓▓
-| ▓▓    ▓▓  | ▓▓  | ▓▓▓▓\  ▓▓▓▓ ▓▓          | ▓▓      \▓▓    \ \▓▓    \ 
-| ▓▓▓▓▓▓▓▓  | ▓▓  | ▓▓\▓▓ ▓▓ ▓▓ ▓▓          | ▓▓   __ _\▓▓▓▓▓▓\_\▓▓▓▓▓▓\
-| ▓▓  | ▓▓  | ▓▓  | ▓▓ \▓▓▓| ▓▓ ▓▓_____     | ▓▓__/  \  \__| ▓▓  \__| ▓▓
-| ▓▓  | ▓▓  | ▓▓  | ▓▓  \▓ | ▓▓ ▓▓     \     \▓▓    ▓▓\▓▓    ▓▓\▓▓    ▓▓
- \▓▓   \▓▓   \▓▓   \▓▓      \▓▓\▓▓▓▓▓▓▓▓      \▓▓▓▓▓▓  \▓▓▓▓▓▓  \▓▓▓▓▓▓ 
-                                                                   
-*/
 
+  const handleTokenExploded = (tokenId: number): void => {
+    setExplodedTokens((prevTokens) => [...prevTokens, tokenId])
+  }
+
+  const sortTokensAsc = (): void => {
+    const sorted = [...activeTokens].sort((a, b) => a - b)
+    setSortedTokens(sorted)
+  }
+
+  const sortTokensDesc = (): void => {
+    const sorted = [...activeTokens].sort((a, b) => b - a)
+    setSortedTokens(sorted)
+  }
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault()
+    const idNum = Number(searchId)
+    const tokenIdIndex = sortedTokens.indexOf(idNum)
+    if (tokenIdIndex !== -1) {
+      setCurrentPage(Math.floor(tokenIdIndex / itemsPerPage) + 1)
+    } else {
+      invalidTokenIdToast()
+    }
+  }
+
+
+
+  // Refresh
+
+  //On Mount
+  useEffect(() => {
+    const fetchData = async () => {
+      await refetchPotatoTokenId?.();
+      setPotatoTokenId(_potato_token);
+      await refetchUserHasPotatoToken();
+      await refetchSuccessfulPasses();
+    }
+    fetchData();
+    // refetchGetExplosionTime();
+    setRemainingTime(explosionTime);
+    refetchGetRoundMints();
+    refetchGetActiveTokens();
+    refetchTotalWins();
+    refetchCurrentGeneration();
+    refetchActiveAddresses();
+    if (_address == _ownerAddress) {
+      refetchowner();
+    }
+    const roundMints = parseInt(getRoundMints as unknown as string, 10);
+    if (!isNaN(roundMints)) {
+      setRoundMints(roundMints);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    const ids = (getActiveTokenIds as unknown as (string | number | bigint)[] | undefined) ?? [];
+    const activeIds = ids.slice(1).map((tokenId) => Number(tokenId));
+    setActiveTokens(activeIds);
+    setIsLoadingActiveTokens(false);
+  }, [getActiveTokenIds]);
+
+
+  useEffect(() => {
+    setSortedTokens(activeTokens);
+  }, [activeTokens]);
+
+
+  useEffect(() => {
+    if (roundWinner === undefined) {
+      refetchHallOfFame();
+    }
+    if (roundWinner === null) {
+      refetchHallOfFame();
+    }
+  }, [roundWinner, refetchHallOfFame]);
+
+  useEffect(() => {
+    refetchUserHasPotatoToken();
+    refetchSuccessfulPasses();
+    refetchTotalWins();
+    refetchRewards();
+  }, [_address]);
+
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     localStorage.clear();
+  //   }, 1000 * 60 * 30);
+
+  //   return () => clearInterval(interval);
+  // }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (getGameState === "Minting") {
+        refetchGetRoundMints();
+      }
+    }, 3000);
+
+    // Cleanup function to clear the interval when component unmounts or re-renders
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    console.log("An UNKNOWN X BEDTIME PRODUCTION")
+  }, []);
+
+  // useEffect(() => {
+  //   try {
+  //     if (refetchGetExplosionTime) {
+  //       refetchGetExplosionTime();
+  //       setRemainingTime(explosionTime);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching explosion time:", error);
+  //   }
+  // }, [getExplosionTime]);
+
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
+
+    if (remainingTime && remainingTime > 0) {
+      timer = setInterval(() => {
+        setRemainingTime((prevTime) => {
+          if (prevTime && prevTime > 0) {
+            const newTime = prevTime - 1;
+            return newTime;
+          } else {
+            if (timer) clearInterval(timer);
+            return 0;
+          }
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [remainingTime]);
+
+
+  useEffect(() => {
+    if (endOfDiv.current) {
+      endOfDiv.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    }
+  }, [events]);
+}
+
+
+
+
+
+//HTML
 
 
 return (
@@ -1107,7 +1043,7 @@ return (
                         noRewardsToast();
                       } else {
                         claimRewards?.();
-                        refetchRewards({ args: [_address] });
+                        refetchRewards();
                       }
                     }}
                   >Claim Rewards</button>
@@ -1128,7 +1064,7 @@ return (
                           noRewardsToast();
                         } else {
                           claimRewards?.();
-                          refetchRewards({ args: [_address] });
+                          refetchRewards();
                         }
                       }}
                     >Claim Rewards</button>
@@ -1146,7 +1082,7 @@ return (
                             noRewardsToast();
                           } else {
                             claimRewards?.();
-                            refetchRewards({ args: [_address] });
+                            refetchRewards();
                           }
                         }}
                       >Claim Rewards</button>
@@ -1165,7 +1101,7 @@ return (
                               noRewardsToast();
                             } else {
                               claimRewards?.();
-                              refetchRewards({ args: [_address] });
+                              refetchRewards();
                             }
                           }}
                         >Claim Rewards</button>
@@ -1184,7 +1120,7 @@ return (
                             } else {
                               console.log('claiming rewards', rewards, _rewards);
                               claimRewards?.();
-                              refetchRewards({ args: [_address] });
+                              refetchRewards();
                             }
                           }}
                         >Claim Rewards</button>
@@ -1446,7 +1382,7 @@ return (
                           noRewardsToast();
                         } else {
                           claimRewards?.();
-                          refetchRewards({ args: [_address] });
+                          refetchRewards();
                         }
                       }}>Claim Rewards</button>
                   }
@@ -1486,7 +1422,7 @@ return (
                               noRewardsToast();
                             } else {
                               claimRewards?.();
-                              refetchRewards({ args: [_address] });
+                              refetchRewards();
                             }
                           }}
                         >Claim Rewards</button>
@@ -1503,7 +1439,7 @@ return (
                             } else if (_rewards == 0) {
                               noRewardsToast();
                             } else {
-                              refetchRewards({ args: [_address] });
+                              refetchRewards();
                               claimRewards?.();
                             }
                           }}
