@@ -11,8 +11,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 const config: Config = createConfig({
   chains: [base, baseSepolia],
   transports: {
-    [base.id]: http('https://mainnet.base.org'),
-    [baseSepolia.id]: http('https://sepolia.base.org'),
+    [base.id]: http(process.env.NEXT_PUBLIC_ALCHEMY_URL || 'https://base-mainnet.public.blastapi.io'),
+    [baseSepolia.id]: http(process.env.NEXT_PUBLIC_ALCHEMY_URL_SEPOLIA || 'https://base-sepolia.public.blastapi.io'),
   },
 })
 

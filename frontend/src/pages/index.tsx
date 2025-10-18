@@ -191,6 +191,8 @@ export default function Home() {
         {/* Rest of your content stays identical */}
         {/* No logic changes required for typing */}
       </div>
+
+      
     </>
   )
 }

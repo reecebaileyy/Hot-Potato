@@ -16,6 +16,7 @@ interface TokenImageProps {
   onTokenExploded?: (tokenId: number) => void;
   delay?: number;
   className?: string;
+  size?: number;
 }
 
 
@@ -49,7 +50,12 @@ const TokenImage: React.FC<TokenImageProps> = ({
     address: CONTRACT_ADDRESS,
     functionName: 'getImageString',
     args: [tokenId],
-  })
+  }) as {
+    data: any;
+    isLoading: boolean;
+    isError: boolean;
+    refetch: () => Promise<any>;
+  }
 
   const { refetch: refetchGetActiveTokens } = useReadContract({
     abi: ABI,
@@ -74,9 +80,10 @@ const TokenImage: React.FC<TokenImageProps> = ({
     eventName: 'PotatoExploded',
     onLogs: async (logs) => {
       try {
-        const tokenId_ = logs[0]?.args?.tokenId?.toString()
+        const log = logs[0] as any
+        const tokenId_ = log?.args?.tokenId?.toString()
         if (tokenId_ && tokenId_ === tokenId.toString()) {
-          onTokenExploded(tokenId)
+          onTokenExploded?.(tokenId)
           await refetchGetActiveTokens?.()
           await refetchPotatoTokenId?.()
         }
@@ -91,8 +98,9 @@ const TokenImage: React.FC<TokenImageProps> = ({
     address: CONTRACT_ADDRESS,
     eventName: 'PotatoPassed',
     onLogs: async (logs) => {
-      const from = logs[0]?.args?.tokenIdFrom
-      const to = logs[0]?.args?.tokenIdTo
+      const log = logs[0] as any
+      const from = log?.args?.tokenIdFrom
+      const to = log?.args?.tokenIdTo
       if (typeof from === 'bigint' && typeof to === 'bigint') {
         await refetchImageString?.()
       }
@@ -104,7 +112,7 @@ const TokenImage: React.FC<TokenImageProps> = ({
     address: CONTRACT_ADDRESS,
     eventName: 'PotatoMinted',
     onLogs: async () => {
-      await refetchImageString?.({ args: [tokenId] })
+      await refetchImageString?.()
       await refetchGetActiveTokens?.()
       await refetchPotatoTokenId?.()
     },
@@ -117,7 +125,7 @@ const TokenImage: React.FC<TokenImageProps> = ({
     onLogs: async () => {
       await refetchGetActiveTokens?.()
       await refetchPotatoTokenId?.()
-      await refetchImageString?.({ args: [tokenId] })
+      await refetchImageString?.()
     },
   })
 
@@ -126,7 +134,7 @@ const TokenImage: React.FC<TokenImageProps> = ({
     const timer = setTimeout(() => {
       refetchPotatoTokenId?.()
       refetchGetActiveTokens?.()
-      refetchImageString?.({ args: [tokenId] })
+      refetchImageString?.()
     }, delay)
 
     return () => clearTimeout(timer)
@@ -141,7 +149,7 @@ const TokenImage: React.FC<TokenImageProps> = ({
         Error loading image.{' '}
         <button
           className="p-2 bg-black text-white rounded-lg"
-          onClick={() => refetchImageString?.({ args: [tokenId] })}
+          onClick={() => refetchImageString()}
         >
           Try Refreshing
         </button>
@@ -191,7 +199,7 @@ const TokenImage: React.FC<TokenImageProps> = ({
       <span>Token ID: {tokenId}</span>
 
       {isError && (
-        <button onClick={() => refetchImageString?.({ args: [tokenId] })}>
+        <button onClick={() => refetchImageString()}>
           Refresh Image
         </button>
       )}
