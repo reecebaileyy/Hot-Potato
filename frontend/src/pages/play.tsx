@@ -1,5 +1,7 @@
 'use client'
 import React from 'react'
+import Head from 'next/head'
+
 import { useState, useEffect, useRef } from 'react'
 import { Abi, formatUnits, parseEther, parseEventLogs } from 'viem'
 import { useAccount, useWatchContractEvent, useReadContract, useBalance, useSimulateContract, useWriteContract, useEnsName } from 'wagmi'
@@ -22,6 +24,7 @@ import Burning from '../../public/assets/images/Burning.gif'
 import blacklogo from '../../public/assets/images/Logo.png'
 import { AbiCoder } from 'ethers/lib/utils'
 import { parse } from 'path'
+import { write } from 'fs'
 
 interface PlayProps {
   initalGameState: string | null
@@ -35,11 +38,11 @@ interface PlayProps {
 export default function Play({ initalGameState, gen, price, maxSupply }: PlayProps): React.JSX.Element {
   // --- Provider (WebSocket) ---
   const provider = new providers.WebSocketProvider(
-    process.env.NEXT_PUBLIC_ALCHEMY_RPC_URL!
+    process.env.NEXT_PUBLIC_ALCHEMY_URL_WEBSOCKET!
   )
 
   // --- Wallet / Account ---
-  const displayPrice = ethers.utils.formatEther(price.toString())
+  const displayPrice = ethers.utils.formatEther(BigInt(price || 0))
   const [_address, setAddress] = useState<string>('')
   const { address } = useAccount()
 
@@ -940,277 +943,261 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
       endOfDiv.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
     }
   }, [events]);
-}
-
-
-
-
-
-//HTML
-
 
 return (
-  <>
-    <Head>
-      <title>HOT POTATO</title>
-      <meta name="description" content="Hold, Pass, Survive..." />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <link rel="icon" href="/favicon.ico" />
-    </Head>
+    <>
+      <Head>
+        <title>HOT POTATO</title>
+        <meta name="description" content="Hold, Pass, Survive..." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
 
 
-    <div className={`${darkMode ? 'darkmode bg-fixed text-white min-h-screen font-darumadrop' : 'normal bg-fixed min-h-screen font-darumadrop'}`}>
-      <ToastContainer
-        position="bottom-left"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme={
-          darkMode ? 'dark' : 'light'
-        }
-      />
-      <nav className="pt-10 px-5 md:px-10 flex justify-between items-center relative">
-        <Link href='/'>
-          <Image src={blacklogo} width={150} alt="Logo" />
-        </Link>
-        <div className="xl:hidden 2xl:hidden 3xl:hidden z-50">
-          <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
-            <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
-          </button>
-          <div className={`fixed inset-0 flex justify-center items-center  bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}
-            onClick={(e) => {
-              if (!menuRef.current.contains(e.target)) {
-                setIsOpen(false)
-              }
-            }}>
-            <ul ref={menuRef} className={`${darkMode ? 'bg-gray-700 text-white items-center p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl' : 'items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black'}`}>
-              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/play">Play</Link></li>
-              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/leaderboard">Leaderboard</Link></li>
-              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
-              <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
-              <DarkModeSwitch
-                checked={darkMode}
-                onChange={() => setDarkMode(!darkMode)}
-                size={30}
-              />
-              <ConnectWalletButton className='text-white bg-slate-800 p-2 rounded-lg' />
-            </ul>
-          </div>
-        </div>
-        <ul className='flex md:hidden sm:hidden lg:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
-          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/play">Play</Link></li>
-          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/leaderboard">Leaderboard</Link></li>
-          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
-          <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
-        </ul>
-        <div className='flex gap-2 items-center sm:hidden lg:hidden md:hidden'>
-          <DarkModeSwitch
-            checked={darkMode}
-            onChange={() => setDarkMode(!darkMode)}
-            size={30}
-          />
-          <ConnectWalletButton className='text-white bg-slate-800 p-2 rounded-lg' />
-        </div>
-      </nav>
-
-      <h1 className={`${darkMode ? 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto' : 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto'}`}>
-        {gen === 1 ? "Round 1" : `Round ${gen}`}
-      </h1>
-
-      <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col lg:flex lg:flex-col grid grid-cols-8 gap-4 justify-center items-center">
-        <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar ${getGameState !== "Paused" && getGameState !== "Queued" && address ? "max-h-96" : ""} ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
-          {!_address ?
-            <>
-              <>
-                <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Connect First</h1>
-                <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Connect your wallet to view this page! Hope you join the fun soon...</h3>
-                <Image alt='Image' src={hot} width={200} height={200} />
-              </>
-            </> :
-            getGameState == "Playing" || getGameState == "Final Stage" ?
-              <>
-                {isWinner && _rewards != 0 &&
-                  <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
-                    onClick={() => {
-                      if (!_address) {
-                        noAddressToast();
-                      } else if (_rewards == 0) {
-                        noRewardsToast();
-                      } else {
-                        claimRewards?.();
-                        refetchRewards();
-                      }
-                    }}
-                  >Claim Rewards</button>
+      <div className={`${darkMode ? 'darkmode bg-fixed text-white min-h-screen font-darumadrop' : 'normal bg-fixed min-h-screen font-darumadrop'}`}>
+        <ToastContainer
+          position="bottom-left"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme={
+            darkMode ? 'dark' : 'light'
+          }
+        />
+        <nav className="pt-10 px-5 md:px-10 flex justify-between items-center relative">
+          <Link href='/'>
+            <Image src={blacklogo} width={150} alt="Logo" />
+          </Link>
+          <div className="xl:hidden 2xl:hidden 3xl:hidden z-50">
+            <button onClick={() => setIsOpen(!isOpen)} className="flex items-center px-3 py-2 border rounded text-white border-white hover:text-white hover:border-white">
+              <svg className="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>Menu</title><path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" /></svg>
+            </button>
+            <div className={`fixed inset-0 flex justify-center items-center  bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}
+              onClick={(e) => {
+                if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                  setIsOpen(false)
                 }
-                <h2 className={`text-2xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
-                <ActiveTokensImages ownerAddress={_address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
+              }}>
+              <ul ref={menuRef} className={`${darkMode ? 'bg-gray-700 text-white items-center p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl' : 'items-center bg-white p-5 rounded-lg flex flex-col space-y-4 text-xl md:text-2xl text-black'}`}>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/play">Play</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="/leaderboard">Leaderboard</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
+                <li><Link className={`${darkMode ? 'text-white hover:text-black justify-center' : 'text-black hover:text-gray-700 justify-center'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
+                <DarkModeSwitch
+                  checked={darkMode}
+                  onChange={() => setDarkMode(!darkMode)}
+                  size={30}
+                />
+                <ConnectWalletButton className='text-white bg-slate-800 p-2 rounded-lg' />
+              </ul>
+            </div>
+          </div>
+          <ul className='flex md:hidden sm:hidden lg:hidden space-x-12 md:space-x-12 text-xl md:text-2xl'>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/play">Play</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="/leaderboard">Leaderboard</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank">Docs</Link></li>
+            <li><Link className={`${darkMode ? 'text-white hover:text-red-500' : 'text-black hover:text-gray-700'}`} href="https://opensea.io" target="_blank">Opensea</Link></li>
+          </ul>
+          <div className='flex gap-2 items-center sm:hidden lg:hidden md:hidden'>
+            <DarkModeSwitch
+              checked={darkMode}
+              onChange={() => setDarkMode(!darkMode)}
+              size={30}
+            />
+            <ConnectWalletButton className='text-white bg-slate-800 p-2 rounded-lg' />
+          </div>
+        </nav>
 
-              </>
-              : getGameState == "Queued" ?
+        <h1 className={`${darkMode ? 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto' : 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto'}`}>
+          {gen === 1 ? "Round 1" : `Round ${gen}`}
+        </h1>
+
+        <div className="p-4 sm:flex sm:flex-col md:flex md:flex-col lg:flex lg:flex-col grid grid-cols-8 gap-4 justify-center items-center">
+          <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar ${getGameState !== "Paused" && getGameState !== "Queued" && address ? "max-h-96" : ""} ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+            {!_address ?
+              <>
                 <>
-                  <Image alt='Image' src={hot} width={200} height={200} className='self-center' />
-                  {isWinner && _rewards != 0 &&
+                  <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Connect First</h1>
+                  <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Connect your wallet to view this page! Hope you join the fun soon...</h3>
+                  <Image alt='Image' src={hot} width={200} height={200} />
+                </>
+              </> :
+              getGameState == "Playing" || getGameState == "Final Stage" ?
+                <>
+                  {isWinner && Number(_rewards) != 0 &&
                     <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
                       onClick={() => {
                         if (!_address) {
                           noAddressToast();
-                        } else if (_rewards == 0) {
+                        } else if (Number(_rewards) == 0) {
                           noRewardsToast();
-                        } else {
-                          claimRewards?.();
+                        } else if (claimSim?.request) {
+                          writeClaim(claimSim.request);
                           refetchRewards();
                         }
                       }}
                     >Claim Rewards</button>
                   }
+                  <h2 className={`text-2xl font-bold underline mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h2>
+                  <ActiveTokensImages
+                    ownerAddress={_address as `0x${string}`}
+                    ABI={ABI}
+                    tokenId={Number(tokenId)}
+                    shouldRefresh={shouldRefresh}
+                  />
+
                 </>
-                : getGameState == "Paused" ?
+                : getGameState == "Queued" ?
                   <>
-                    <Image alt='Image' src={hot} width={200} height={200} />
-                    {isWinner && _rewards != 0 &&
+                    <Image alt='Image' src={hot} width={200} height={200} className='self-center' />
+                    {isWinner && Number(_rewards) != 0 &&
                       <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
                         onClick={() => {
                           if (!_address) {
                             noAddressToast();
-                          } else if (_rewards == 0) {
+                          } else if (Number(_rewards) == 0) {
                             noRewardsToast();
-                          } else {
-                            claimRewards?.();
+                          } else if (claimSim?.request) {
+                            writeClaim(claimSim.request);
                             refetchRewards();
                           }
                         }}
                       >Claim Rewards</button>
                     }
                   </>
-                  : getGameState == "Minting" ?
+                  : getGameState == "Paused" ?
                     <>
-                      <h1 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h1>
-                      <ActiveTokensImages ownerAddress={_address} ABI={ABI} tokenId={tokenId} shouldRefresh={shouldRefresh} />
-                      {isWinner && _rewards != 0 &&
+                      <Image alt='Image' src={hot} width={200} height={200} />
+                      {isWinner && Number(_rewards) != 0 &&
                         <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
                           onClick={() => {
                             if (!_address) {
                               noAddressToast();
-                            } else if (_rewards == 0) {
+                            } else if (Number(_rewards) == 0) {
                               noRewardsToast();
-                            } else {
-                              claimRewards?.();
+                            } else if (claimSim?.request) {
+                              writeClaim(claimSim.request);
                               refetchRewards();
                             }
                           }}
                         >Claim Rewards</button>
                       }
                     </>
-                    : getGameState == "Ended" &&
-                    <>
-                      <Image alt='Image' src={Burning} width={200} height={200} />
-                      {isWinner && _rewards != 0 &&
-                        <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
-                          onClick={() => {
-                            if (!_address) {
-                              noAddressToast();
-                            } else if (_rewards == 0) {
-                              noRewardsToast();
-                            } else {
-                              console.log('claiming rewards', rewards, _rewards);
-                              claimRewards?.();
-                              refetchRewards();
-                            }
-                          }}
-                        >Claim Rewards</button>
-                      }
-                    </>
-          }
-        </div>
+                    : getGameState == "Minting" ?
+                      <>
+                        <h1 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>My Heat Handlers:</h1>
+                        <ActiveTokensImages
+                          ownerAddress={_address as `0x${string}`}
+                          ABI={ABI}
+                          tokenId={Number(tokenId)}
+                          shouldRefresh={shouldRefresh}
+                        />
 
-        <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 z-30 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
-          {!getGameState ? <h1 className="text-4xl font-extrabold underline text-center mb-4">Loading...</h1> : null}
-          {getGameState == "Playing" || getGameState == "Final Stage" ?
-            <>
-              <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>
-                {!_potato_token ? `Loading...` : `Token #${_potato_token} has the potato`}
-              </h1>
-              {loadingHasPotato ? (
-                <h2 className="text-center font-bold mb-2">Loading Has Potato...</h2>
-              ) : (
-                <h2 className={`text-3xl sm:text-xl md:text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                  {userHasPotatoToken ? <p className='animate-crazy text-center'>YOU HAVE THE POTATO</p> : <p className='text-center'>YOU DON&apos;T HAVE THE POTATO</p>}
-                </h2>
-              )}
-              {explosion ?
-                <Image className='rounded-full' alt='Explosion' src={Explosion} width={200} height={200} /> :
-                <Image alt='Image' src={potatoBlink} width={200} height={200} />
-              }
-              {remainingTime == 0 ? <p className='text-2xl'>TIME REMAINING: 0</p> : !remainingTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {remainingTime}</p>}
-              <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
-                onClick={() => {
-                  refetchGetExplosionTime();
-                  if (!_address) {
-                    noAddressToast();
-                  } else {
-                    check?.();
-                    console.log("CHECKED EXPLOSION");
-                  }
-                }}>
-                CHECK EXPLOSION
-              </button>
-              <div className='sm:hidden md:hidden flex flex-col-2 gap-6'>
-                {loadingActiveAddresses ? (
-                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
-                ) : (
-                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{activeAddresses} Players Remaining</p>)
-                }{loadingActiveTokens ? (
-                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
-                ) : (
-                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Hands Remaining</p>)
-                }
-              </div>
-              <div className='lg:hidden xl:hidden 2xl:hidden 3xl:hidden'>
-                {loadingActiveAddresses ? (
-                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
-                ) : (
-                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{activeAddresses} Players Remaining</p>)
-                }{loadingActiveTokens ? (
-                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
-                ) : (
-                  <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Hands Remaining</p>)
-                }
-              </div>
+                        {isWinner && Number(_rewards) != 0 &&
+                          <button className={`${darkMode ? 'w-1/5 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
+                            onClick={() => {
+                              if (!_address) {
+                                noAddressToast();
+                              } else if (Number(_rewards) == 0) {
+                                noRewardsToast();
+                              } else if (claimSim?.request) {
+                                writeClaim(claimSim.request);
+                                refetchRewards();
+                              }
+                            }}
+                          >Claim Rewards</button>
+                        }
+                      </>
+                      : getGameState == "Ended" &&
+                      <>
+                        <Image alt='Image' src={Burning} width={200} height={200} />
+                        {isWinner && Number(_rewards) != 0 &&
+                          <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
+                            onClick={() => {
+                              if (!_address) {
+                                noAddressToast();
+                              } else if (Number(_rewards) == 0) {
+                                noRewardsToast();
+                              } else if (claimSim?.request) {
+                                console.log('claiming rewards', rewards, Number(_rewards));
+                                writeClaim(claimSim.request);
+                                refetchRewards();
+                              }
+                            }}
+                          >Claim Rewards</button>
+                        }
+                      </>
+            }
+          </div>
 
-              <Link href="https://mumbai.polygonscan.com/address/0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704" target='_blank' className="underline">
-                Smart Contract
-              </Link>
-            </>
-            : getGameState == "Queued" ? (
+          <div className={`w-full flex flex-col justify-center items-center col-start-3 col-span-4 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl p-6 mb-8 transition-transform duration-500 ease-in-out transform hover:scale-105 z-30 ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+            {!getGameState ? <h1 className="text-4xl font-extrabold underline text-center mb-4">Loading...</h1> : null}
+            {getGameState == "Playing" || getGameState == "Final Stage" ?
               <>
-                <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Game starting soon</h1>
-                <h3 className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>The game is currently Queued, Come back soon for some sizzlin fun!</h3>
-                <Image alt='Image' src={potatoBlink} width={200} height={200} />
-                <div className='grid grid-cols-3 justify-center gap-4'>
-                  <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
-                    Discord
-                  </Link>
-                  <Link href="https://mumbai.polygonscan.com/address/0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
-                  <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
-                </div>
-              </>
-            ) :
-              getGameState == "Paused" ? (
-                <>
-                  <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Game Paused</h1>
-                  <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>The game is currently paused. Please wait for further updates.</h3>
+                <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>
+                  {!_potato_token ? `Loading...` : `Token #${_potato_token} has the potato`}
+                </h1>
+                {loadingHasPotato ? (
+                  <h2 className="text-center font-bold mb-2">Loading Has Potato...</h2>
+                ) : (
+                  <h2 className={`text-3xl sm:text-xl md:text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
+                    {userHasPotatoToken ? <p className='animate-crazy text-center'>YOU HAVE THE POTATO</p> : <p className='text-center'>YOU DON&apos;T HAVE THE POTATO</p>}
+                  </h2>
+                )}
+                {explosion ?
+                  <Image className='rounded-full' alt='Explosion' src={Explosion} width={200} height={200} /> :
                   <Image alt='Image' src={potatoBlink} width={200} height={200} />
-                  {loadingActiveTokens ? (
-                    <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
+                }
+                {remainingTime == 0 ? <p className='text-2xl'>TIME REMAINING: 0</p> : !remainingTime ? <p className='text-2xl'>Loading...</p> : <p className='text-2xl'>TIME REMAINING: {remainingTime}</p>}
+                <button className={`mt-4 w-1/2 mb-2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500'} text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                  onClick={() => {
+                    refetchGetExplosionTime();
+                    if (!_address) {
+                      noAddressToast();
+                    } else if (explosionSim?.request) {
+                      writeCheck(explosionSim.request);
+                      console.log("CHECKED EXPLOSION");
+                    }
+                  }}>
+                  CHECK EXPLOSION
+                </button>
+                <div className='sm:hidden md:hidden flex flex-col-2 gap-6'>
+                  {loadingActiveAddresses ? (
+                    <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
                   ) : (
-                    <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Active Tokens Remaing</p>)
+                    <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{activeAddresses} Players Remaining</p>)
+                  }{loadingActiveTokens ? (
+                    <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
+                  ) : (
+                    <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Hands Remaining</p>)
                   }
+                </div>
+                <div className='lg:hidden xl:hidden 2xl:hidden 3xl:hidden'>
+                  {loadingActiveAddresses ? (
+                    <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
+                  ) : (
+                    <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{activeAddresses} Players Remaining</p>)
+                  }{loadingActiveTokens ? (
+                    <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
+                  ) : (
+                    <p className={`text-xl text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Hands Remaining</p>)
+                  }
+                </div>
+
+                <Link href="https://mumbai.polygonscan.com/address/0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704" target='_blank' className="underline">
+                  Smart Contract
+                </Link>
+              </>
+              : getGameState == "Queued" ? (
+                <>
+                  <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Game starting soon</h1>
+                  <h3 className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>The game is currently Queued, Come back soon for some sizzlin fun!</h3>
+                  <Image alt='Image' src={potatoBlink} width={200} height={200} />
                   <div className='grid grid-cols-3 justify-center gap-4'>
                     <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
                       Discord
@@ -1220,416 +1207,436 @@ return (
                   </div>
                 </>
               ) :
-                getGameState == "Ended" ? (
+                getGameState == "Paused" ? (
                   <>
-                    <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Game Ended</h1>
-                    <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Thank you for participating. See you in the next game!</h3>
+                    <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Game Paused</h1>
+                    <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>The game is currently paused. Please wait for further updates.</h3>
                     <Image alt='Image' src={potatoBlink} width={200} height={200} />
-                    <h2 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>And congratulations to our Winner:</h2>
-                    {loadingHGallOfFame ? (
-                      <h1
-                        className={`text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text animate-pulse ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}
-                      >
-                        Loading...
-                      </h1>) : (
-                      <Link
-                        href={`https://mumbai.polygonscan.com/address/${roundWinner}`}
-                        target='_blank'
-                        className={`text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text animate-pulse ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}
-                      >
-                        {loadingWinnerEnsName ? (
-                          <span>Loading...</span>
-                        ) : errorWinnerEnsName ? (
-                          <span>{roundWinner}</span>
-                        ) : (
-                          <span>{winnerEnsName}</span>
-                        )
-                        }
-                      </Link>
-                    )
+                    {loadingActiveTokens ? (
+                      <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Loading...</p>
+                    ) : (
+                      <p className={`text-xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{_activeTokens} Active Tokens Remaing</p>)
                     }
+                    <div className='grid grid-cols-3 justify-center gap-4'>
+                      <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
+                        Discord
+                      </Link>
+                      <Link href="https://mumbai.polygonscan.com/address/0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                      <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
+                    </div>
                   </>
                 ) :
-                  getGameState == "Minting" && (
+                  getGameState == "Ended" ? (
                     <>
+                      <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Game Ended</h1>
+                      <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>Thank you for participating. See you in the next game!</h3>
+                      <Image alt='Image' src={potatoBlink} width={200} height={200} />
+                      <h2 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>And congratulations to our Winner:</h2>
+                      {loadingHGallOfFame ? (
+                        <h1
+                          className={`text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text animate-pulse ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}
+                        >
+                          Loading...
+                        </h1>) : (
+                        <Link
+                          href={`https://mumbai.polygonscan.com/address/${roundWinner}`}
+                          target='_blank'
+                          className={`text-2xl sm:text-xs lg:text-base xl:text-base md:text-base font-extrabold underline text-center text-transparent bg-clip-text animate-pulse ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}
+                        >
+                          {loadingWinnerEnsName ? (
+                            <span>Loading...</span>
+                          ) : errorWinnerEnsName ? (
+                            <span>{roundWinner}</span>
+                          ) : (
+                            <span>{winnerEnsName}</span>
+                          )
+                          }
+                        </Link>
+                      )
+                      }
+                    </>
+                  ) :
+                    getGameState == "Minting" && (
+                      <>
 
-                      <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: <span className={`text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>{displayPrice}</span> MATIC</p>
+                        <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>PRICE: <span className={`text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>{displayPrice}</span> MATIC</p>
 
 
-                      {loadingMaxPerWallet ? (
-                        <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>MAX PER WALLET: Loading...</p>
-                      ) : (
-                        <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>MAX PER WALLET: <span className={`text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>{maxPerWallet}</span></p>
-                      )}
+                        {loadingMaxPerWallet ? (
+                          <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>MAX PER WALLET: Loading...</p>
+                        ) : (
+                          <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>MAX PER WALLET: <span className={`text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>{maxPerWallet}</span></p>
+                        )}
 
 
 
-                      {_address ?
-                        <>
-                          <input className="mt-4 w-3/4 bg-white hover:bg-gray-300 text-black px-4 py-2 rounded-lg shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
-                            type="text"
-                            value={mintAmount}
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            onChange={handleInputChangeMint}
-                            placeholder="Enter mint amount" />
-                          <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                        {_address ?
+                          <>
+                            <input className="mt-4 w-3/4 bg-white hover:bg-gray-300 text-black px-4 py-2 rounded-lg shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
+                              type="text"
+                              value={mintAmount}
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              onChange={handleInputChangeMint}
+                              placeholder="Enter mint amount" />
+                            <button className={`mt-4 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-lg font-bold transition-all duration-500 ease-in-out transform hover:scale-110`}
+                              onClick={() => {
+                                if (!_address) {
+                                  noAddressToast();
+                                  // } else if (balance < totalCost) {
+                                  //   noEnoughFundsToast();
+                                  // } else if (mintAmount > (maxSupply - _roundMints)) {
+                                  //   gameFullToast();
+                                  // } else if (mintAmount === 0) {
+                                  //   mintOneToast();
+                                  // }
+                                  // else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
+                                  //   maxPerWalletToast();
+                                }
+                                else if (mintSim?.request) {
+                                  writeMint(mintSim.request);
+                                }
+                              }}
+                            >Join Round!</button>
+                            <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{totalMints}/{maxSupply} MINTED</p>
+                          </>
+                          :
+                          <>
+                            <p className={`text-3xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{totalMints}/{maxSupply} MINTED</p>
+                            <p className={`text-2xl md:text-xl lg:text-3xl text-center font-bold ${darkMode ? 'text-white' : 'text-black'}`}>
+                              Connect first to join the fun!
+                            </p>
+                          </>
+                        }
+                        <div className='grid grid-cols-3 justify-center gap-4'>
+                          <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
+                            Discord
+                          </Link>
+                          <Link href="https://mumbai.polygonscan.com/address/0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
+                          <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
+                        </div>
+                      </>
+
+                    )}
+            {/* Content when address does not exist */}
+          </div>
+
+          <div className={`w-full flex flex-col justify-center items-center p-4 mb-8 col-end-9 col-span-2  md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-xl`}>
+            {!_address ?
+              <>
+                <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Connect First</h1>
+                <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>You must connect your wallet to view this page! Hope you join the fun soon...</h3>
+                <Image alt='Image' src={hot} width={200} height={200} />
+              </> :
+              getGameState == "Playing" || getGameState == "Final Stage" ?
+                <>
+                  <h1 className={`text-xl font-bold mb-2 underline ${darkMode ? 'text-white' : 'text-black'}`}>Game Stats:</h1>
+                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
+                    Successful Passes: {loadingSuccessfulPasses ? "Loading..." : successfulPasses}
+                  </p>
+                  <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
+                    Total Wins: {loadingTotalWins ? "Loading..." : totalWins}
+                  </p>
+                  {loadingActiveTokenCount ? (
+                    <h2 className="text-center font-bold mb-2">Loading Active Token(s)...</h2>
+                  ) : isNaN(activeTokensCount) || activeTokensCount === 0 ? (
+                    <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Active Token(s): 0</h2>
+                  ) : (
+                    <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Active Token(s): {activeTokensCount}</h2>
+                  )}
+                  <div className="grid grid-rows-2 place-items-center justify-center items center">
+                    <input className="mt-4 w-1/2  bg-white hover:bg-gray-300 text-black px-4 py-2 rounded-lg shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
+                      type="text"
+                      value={tokenId}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      onChange={handleInputChangeToken}
+                      placeholder="tokenId" />
+                    <button className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
+                      onClick={() => {
+                        setPassArgs([tokenId]); // Set the args when the button is pressed
+                        console.log("passing")
+                        console.log("passing from", _address)
+                        console.log("Potato Owner is ", getPotatoOwner)
+                        refetchGetPotatoOwner();
+                        if (!_address) {
+                          noAddressToast();
+                        } else if (getGameState !== "Playing" && getGameState !== "Final Stage") {
+                          cannotPassToast();
+                        } else if (!userHasPotatoToken) {
+                          ownThePotatoToast();
+                        } else if (!isTokenActive) {
+                          tokenInactiveToast();
+                        } else if (_address == ownerOf) {
+                          cannotPassToSelfToast();
+                        } else if (passSim?.request) {
+                          writePass(passSim.request);
+                        }
+                      }}
+                    >Pass Potato</button>
+                  </div>
+                </>
+                : getGameState == "Queued" ?
+                  <>
+                    <Image alt='Image' src={hot} width={200} height={200} className='self-center' />
+                    {isWinner && Number(_rewards) != 0 &&
+                      <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
+                        onClick={() => {
+                          if (!_address) {
+                            noAddressToast();
+                          } else if (Number(_rewards) == 0) {
+                            noRewardsToast();
+                          } else if (claimSim?.request) {
+                            writeClaim(claimSim.request);
+                            refetchRewards();
+                          }
+                        }}>Claim Rewards</button>
+                    }
+                  </>
+                  : getGameState == "Minting" ?
+                    <>
+                      <h1 className={`text-3xl text-center font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Welcome to the Backburner!</h1>
+                      <Image alt='Image' src={potatoBlink} width={200} height={200} />
+                      <h3 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>
+                        I have
+                        <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-b from-yellow-400 to-red-500'>
+                          {loadingActiveTokenCount ? ' Loading...' : ` ${activeTokensCount} `}
+                        </span>
+                        {isNaN(activeTokensCount) || activeTokensCount === 1 ? ' pair' : ' pairs'} of hands to handle the heat this round
+                      </h3>
+                      <div className="place-items-center justify-center items center">
+                        <button
+                          className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
+                          onClick={() => {
+                            const tweetText = `I have ${activeTokensCount} ${activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!!\nAre you ready to pass the heat? Check out @ocHotPotato for more information on the project! #OnChainHotPotato`;
+                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
+                          }}
+                        >
+                          Tweet it!
+                        </button>
+                      </div>
+                    </>
+                    : getGameState == "Paused" ?
+                      <>
+                        <Image alt='Image' src={hot} width={200} height={200} />
+                        {isWinner && Number(_rewards) != 0 &&
+                          <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
                             onClick={() => {
                               if (!_address) {
                                 noAddressToast();
-                                // } else if (balance < totalCost) {
-                                //   noEnoughFundsToast();
-                                // } else if (mintAmount > (maxSupply - _roundMints)) {
-                                //   gameFullToast();
-                                // } else if (mintAmount === 0) {
-                                //   mintOneToast();
-                                // }
-                                // else if (activeTokensCount + parseInt(mintAmount) > maxPerWallet) {
-                                //   maxPerWalletToast();
-                              }
-                              else {
-                                mint(data!.request);
+                              } else if (Number(_rewards) == 0) {
+                                noRewardsToast();
+                              } else if (claimSim?.request) {
+                                writeClaim(claimSim.request);
+                                refetchRewards();
                               }
                             }}
-                          >Join Round!</button>
-                          <p className={`text-lg text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{totalMints}/{maxSupply} MINTED</p>
-                        </>
-                        :
-                        <>
-                          <p className={`text-3xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>{totalMints}/{maxSupply} MINTED</p>
-                          <p1 className={`text-2xl md:text-xl lg:text-3xl text-center font-bold ${darkMode ? 'text-white' : 'text-black'}`}>
-                            Connect first to join the fun!
-                          </p1>
-                        </>
-                      }
-                      <div className='grid grid-cols-3 justify-center gap-4'>
-                        <Link href="https://discord.com/" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>
-                          Discord
-                        </Link>
-                        <Link href="https://mumbai.polygonscan.com/address/0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704" target='_blank' className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`}>Smart Contract</Link>
-                        <Link className={`text-lg text-center underline ${darkMode ? 'text-white' : 'text-black'}`} target='_blank' href="https://Twitter.com/ocHotPotato">Twitter</Link>
-                      </div>
-                    </>
-
-                  )}
-          {/* Content when address does not exist */}
-        </div>
-
-        <div className={`w-full flex flex-col justify-center items-center p-4 mb-8 col-end-9 col-span-2  md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-xl`}>
-          {!_address ?
-            <>
-              <h1 className={`text-4xl font-extrabold underline text-center text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Connect First</h1>
-              <h3 className={`text-2xl text-center mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>You must connect your wallet to view this page! Hope you join the fun soon...</h3>
-              <Image alt='Image' src={hot} width={200} height={200} />
-            </> :
-            getGameState == "Playing" || getGameState == "Final Stage" ?
-              <>
-                <h1 className={`text-xl font-bold mb-2 underline ${darkMode ? 'text-white' : 'text-black'}`}>Game Stats:</h1>
-                <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                  Successful Passes: {loadingSuccessfulPasses ? "Loading..." : successfulPasses}
-                </p>
-                <p className={`text-sm text-center mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
-                  Total Wins: {loadingTotalWins ? "Loading..." : totalWins}
-                </p>
-                {loadingActiveTokenCount ? (
-                  <h2 className="text-center font-bold mb-2">Loading Active Token(s)...</h2>
-                ) : isNaN(activeTokensCount) || activeTokensCount === 0 ? (
-                  <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Active Token(s): 0</h2>
-                ) : (
-                  <h2 className={`text-base font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Active Token(s): {activeTokensCount}</h2>
-                )}
-                <div className="grid grid-rows-2 place-items-center justify-center items center">
-                  <input className="mt-4 w-1/2  bg-white hover:bg-gray-300 text-black px-4 py-2 rounded-lg shadow-lg focus:ring-2 focus:ring-blue-500 transition-all duration-500 ease-in-out transform hover:scale-105"
-                    type="text"
-                    value={tokenId}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    onChange={handleInputChangeToken}
-                    placeholder="tokenId" />
-                  <button className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
-                    onClick={() => {
-                      setPassArgs([tokenId]); // Set the args when the button is pressed
-                      console.log("passing")
-                      console.log("passing from", _address)
-                      console.log("Potato Owner is ", getPotatoOwner)
-                      refetchGetPotatoOwner();
-                      if (!_address) {
-                        noAddressToast();
-                      } else if (getGameState !== "Playing" && getGameState !== "Final Stage") {
-                        cannotPassToast();
-                      } else if (!userHasPotatoToken) {
-                        ownThePotatoToast();
-                      } else if (!isTokenActive) {
-                        tokenInactiveToast();
-                      } else if (_address == ownerOf) {
-                        cannotPassToSelfToast();
-                      } else {
-                        pass?.();
-                      }
-                    }}
-                  >Pass Potato</button>
-                </div>
-              </>
-              : getGameState == "Queued" ?
-                <>
-                  <Image alt='Image' src={hot} width={200} height={200} className='self-center' />
-                  {isWinner && _rewards != 0 &&
-                    <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
-                      onClick={() => {
-                        if (!_address) {
-                          noAddressToast();
-                        } else if (_rewards == 0) {
-                          noRewardsToast();
-                        } else {
-                          claimRewards?.();
-                          refetchRewards();
+                          >Claim Rewards</button>
                         }
-                      }}>Claim Rewards</button>
-                  }
-                </>
-                : getGameState == "Minting" ?
-                  <>
-                    <h1 className={`text-3xl text-center font-bold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>Welcome to the Backburner!</h1>
-                    <Image alt='Image' src={potatoBlink} width={200} height={200} />
-                    <h3 className={`text-xl text-center ${darkMode ? 'text-white' : 'text-black'}`}>
-                      I have
-                      <span className='font-extrabold underline text-center text-transparent bg-clip-text bg-gradient-to-b from-yellow-400 to-red-500'>
-                        {loadingActiveTokenCount ? ' Loading...' : ` ${activeTokensCount} `}
-                      </span>
-                      {isNaN(activeTokensCount) || activeTokensCount === 1 ? ' pair' : ' pairs'} of hands to handle the heat this round
-                    </h3>
-                    <div className="place-items-center justify-center items center">
-                      <button
-                        className={`mt-4 w-full ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
-                        onClick={() => {
-                          const tweetText = `I have ${_activeTokensCount} ${_activeTokensCount === 1 ? 'pair' : 'pairs'} of hands to handle the heat this round!!\nAre you ready to pass the heat? Check out @ocHotPotato for more information on the project! #OnChainHotPotato`;
-                          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
-                        }}
-                      >
-                        Tweet it!
-                      </button>
-                    </div>
-                  </>
-                  : getGameState == "Paused" ?
-                    <>
-                      <Image alt='Image' src={hot} width={200} height={200} />
-                      {isWinner && _rewards != 0 &&
-                        <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
-                          onClick={() => {
-                            if (!_address) {
-                              noAddressToast();
-                            } else if (_rewards == 0) {
-                              noRewardsToast();
-                            } else {
-                              claimRewards?.();
-                              refetchRewards();
-                            }
-                          }}
-                        >Claim Rewards</button>
-                      }
-                    </>
-                    : getGameState == "Ended" &&
-                    <>
-                      <Image alt='Image' src={Burning} width={200} height={200} />
-                      {isWinner && _rewards != 0 &&
-                        <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
-                          onClick={() => {
-                            if (!_address) {
-                              noAddressToast();
-                            } else if (_rewards == 0) {
-                              noRewardsToast();
-                            } else {
-                              refetchRewards();
-                              claimRewards?.();
-                            }
-                          }}
-                        >Claim Rewards</button>
-                      }
-                    </>
-          }
-        </div>
-
-        <div
-          ref={divRef}
-          className={`hide-scrollbar w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}
-        >
-
-          <div className="scrollable-div whitespace-nowrap h-full flex items-center space-x-4 pl-4 overflow-auto">
-            {events.map((event, index) => (
-              <div key={index} className={darkMode ? 'text-white' : 'text-black'}>
-                {event}
-              </div>
-            ))}
-            <div ref={endOfDiv}></div>
+                      </>
+                      : getGameState == "Ended" &&
+                      <>
+                        <Image alt='Image' src={Burning} width={200} height={200} />
+                        {isWinner && Number(_rewards) != 0 &&
+                          <button className={`${darkMode ? 'w-1/2 hover:bg-white hover:text-black justify-center items-center md:w-2/3 lg:w-1/2 bg-black shadow rounded-xl' : "w-1/2 leading-8 hover:bg-black hover:text-white col-start-2 col-span-6 justify-center items-center md:w-2/3 lg:w-1/2 bg-white shadow rounded-xl"}`}
+                            onClick={() => {
+                              if (!_address) {
+                                noAddressToast();
+                              } else if (Number(_rewards) == 0) {
+                                noRewardsToast();
+                              } else if (claimSim?.request) {
+                                refetchRewards();
+                                writeClaim(claimSim.request);
+                              }
+                            }}
+                          >Claim Rewards</button>
+                        }
+                      </>
+            }
           </div>
-        </div>
 
+          <div
+            ref={divRef}
+            className={`hide-scrollbar w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}
+          >
 
-        {getGameState !== 'Minting' && getGameState !== 'Queued' && loadingActiveTokenIds ? (
-          <div className="text-center">
-            <h1>Loading...</h1>
-          </div>
-        ) : (
-          getGameState === 'Playing' || getGameState === 'Minting' || getGameState === 'Final Stage' || getGameState === 'Paused' ? (
-            <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-xl`}>
-              <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Active Tokens:</h1>
-              <div className="flex justify-center">
-                <button
-                  onClick={refreshAllImages}
-                  className={`mb-6 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
-                >
-                  Refresh Images
-                </button>
-              </div>
-
-              <div className='text-3xl sm:text-xl md:text-xl lg:text-xl text-center'>
-                <h1 className='underline'>Sort By:</h1>
-                <button className='mr-5' onClick={sortTokensAsc}><HiArrowCircleUp /></button>
-                <button onClick={sortTokensDesc}><HiArrowCircleDown /></button>
-              </div>
-              <div className='grid grid-cols-8'>
-                <form onSubmit={handleSearch} className="col-start-3 col-span-4 flex flex-row justify-center items-center space-x-2 mt-4 mb-4">
-                  <input
-                    type="number"
-                    value={searchId}
-                    onChange={e => setSearchId(e.target.value)}
-                    placeholder="Search by token ID"
-                    className='basis-2/3 border-2 rounded-lg border-gray-200 focus:border-blue-500 focus:outline-none p-1 w-1/2'
-                  />
-                  <button
-                    type="submit"
-                    className={`basis-1/3 px-4 py-2 rounded-lg shadow ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white`}
-                  >
-                    Search
-                  </button>
-                </form>
-              </div>
-              <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4 justify-center items-center`}>
-                {currentTokens.filter(tokenId => !explodedTokens.includes(tokenId)).map((tokenId, index) => (
-                  <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
-                    <TokenImage
-                      tokenId={tokenId}
-                      ABI={ABI}
-                      potatoTokenId={_potatoTokenId}
-                      shouldRefresh={shouldRefresh}
-                      onTokenExploded={handleTokenExploded}
-                      delay={index * 300}
-                      className="z-20"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className='text-3xl lg:text-2xl md:text-2xl sm:text-xl text-center'>
-                {currentPage !== 1 &&
-                  <button className='justify-items-center mx-8 sm:mx-4 mt-4' onClick={() => setCurrentPage(currentPage - 1)}>&lt;</button>
-                }
-                {pages.map((page, index) => (
-                  <button
-                    className={`justify-items-center mx-8 sm:mx-4 mt- bg-clip-text ${page === currentPage ? (darkMode ? 'text-transparent bg-gradient-to-br from-amber-800 to-red-800' : 'text-transparent bg-gradient-to-b from-yellow-400 to-red-500') : 'text-black'}`}
-                    key={index}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
-                {currentPage !== pageCount &&
-                  <button className='justify-items-center mx-8 sm:mx-4 mt-4' onClick={() => setCurrentPage(currentPage + 1)}>&gt;</button>
-                }
-              </div>
+            <div className="scrollable-div whitespace-nowrap h-full flex items-center space-x-4 pl-4 overflow-auto">
+              {events.map((event, index) => (
+                <div key={index} className={darkMode ? 'text-white' : 'text-black'}>
+                  {event}
+                </div>
+              ))}
+              <div ref={endOfDiv}></div>
             </div>
-          ) : null
-        )}
+          </div>
 
-        {_address === _ownerAddress &&
-          <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-xl overflow-x-auto`}>
-            <div className="p-4 grid grid-cols-1 md:grid-cols-3 sm:grid-cols-3 gap-4">
-              <button
-                className={`bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-3 md:col-span-3 sm:col-span-3`}
-                onClick={() => {
-                  if (!_address) {
-                    noAddressToast();
-                  } else if (getGameState !== "Queued") {
-                    startToast();
-                  } else {
-                    _startGame?.();
+
+          {getGameState !== 'Minting' && getGameState !== 'Queued' && loadingActiveTokenIds ? (
+            <div className="text-center">
+              <h1>Loading...</h1>
+            </div>
+          ) : (
+            getGameState === 'Playing' || getGameState === 'Minting' || getGameState === 'Final Stage' || getGameState === 'Paused' ? (
+              <div className={`p-4 col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-xl`}>
+                <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Active Tokens:</h1>
+                <div className="flex justify-center">
+                  <button
+                    onClick={refreshAllImages}
+                    className={`mb-6 w-1/2 ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white px-4 py-2 rounded-lg shadow`}
+                  >
+                    Refresh Images
+                  </button>
+                </div>
+
+                <div className='text-3xl sm:text-xl md:text-xl lg:text-xl text-center'>
+                  <h1 className='underline'>Sort By:</h1>
+                  <button className='mr-5' onClick={sortTokensAsc}><HiArrowCircleUp /></button>
+                  <button onClick={sortTokensDesc}><HiArrowCircleDown /></button>
+                </div>
+                <div className='grid grid-cols-8'>
+                  <form onSubmit={handleSearch} className="col-start-3 col-span-4 flex flex-row justify-center items-center space-x-2 mt-4 mb-4">
+                    <input
+                      type="number"
+                      value={searchId}
+                      onChange={e => setSearchId(e.target.value)}
+                      placeholder="Search by token ID"
+                      className='basis-2/3 border-2 rounded-lg border-gray-200 focus:border-blue-500 focus:outline-none p-1 w-1/2'
+                    />
+                    <button
+                      type="submit"
+                      className={`basis-1/3 px-4 py-2 rounded-lg shadow ${darkMode ? 'bg-gray-800 hover:bg-gradient-to-br from-amber-800 to-red-800' : 'bg-black'} hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white`}
+                    >
+                      Search
+                    </button>
+                  </form>
+                </div>
+                <div className={`grid grid-cols-8 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4 justify-center items-center`}>
+                  {currentTokens.filter(tokenId => !explodedTokens.includes(tokenId)).map((tokenId, index) => (
+                    <div key={index} className="border rounded-lg p-2 text-center justify-center items-center flex flex-col">
+                      <TokenImage
+                        tokenId={tokenId}
+                        ABI={ABI}
+                        potatoTokenId={_potatoTokenId}
+                        shouldRefresh={shouldRefresh}
+                        onTokenExploded={handleTokenExploded}
+                        delay={index * 300}
+                        className="z-20"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className='text-3xl lg:text-2xl md:text-2xl sm:text-xl text-center'>
+                  {currentPage !== 1 &&
+                    <button className='justify-items-center mx-8 sm:mx-4 mt-4' onClick={() => setCurrentPage(currentPage - 1)}>&lt;</button>
                   }
-                }}
-              >
-                Start Game
-              </button>
-              <button
-                className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2 md:col-span-3 sm:col-span-3"
-                onClick={() => {
-                  if (!_address) {
-                    noAddressToast();
-                  } else if (getGameState !== "Minting") {
-                    endToast();
-                  } else {
-                    console.log("end minting")
-                    _endMint?.();
-                    console.log("end minting success")
+                  {pages.map((page, index) => (
+                    <button
+                      className={`justify-items-center mx-8 sm:mx-4 mt- bg-clip-text ${page === currentPage ? (darkMode ? 'text-transparent bg-gradient-to-br from-amber-800 to-red-800' : 'text-transparent bg-gradient-to-b from-yellow-400 to-red-500') : 'text-black'}`}
+                      key={index}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  {currentPage !== pageCount &&
+                    <button className='justify-items-center mx-8 sm:mx-4 mt-4' onClick={() => setCurrentPage(currentPage + 1)}>&gt;</button>
                   }
-                }}
-              >
-                End Minting
-              </button>
-              <button
-                className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2"
-                onClick={() => {
-                  if (!_address) {
-                    noAddressToast();
-                  } else if (getGameState !== "Playing" && getGameState !== "Final Stage" && getGameState !== "Minting") {
-                    pauseToast();
-                  } else {
-                    _pauseGame?.();
-                  }
-                }}
-              >
-                Pause Game
-              </button>
-              <button
-                className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2"
-                onClick={() => {
-                  if (!_address) {
-                    resumeToast()
-                  } else if (getGameState !== "Paused") {
-                    resumeToast()
-                  } else {
-                    console.log("resume")
-                    _resumeGame?.();
-                  }
-                }}
-              >
-                Resume Game
-              </button>
-              <button
-                className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2"
-                onClick={() => {
-                  try {
+                </div>
+              </div>
+            ) : null
+          )}
+
+          {_address === _ownerAddress &&
+            <div className={`w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-gray-700' : 'bg-white'} shadow rounded-xl overflow-x-auto`}>
+              <div className="p-4 grid grid-cols-1 md:grid-cols-3 sm:grid-cols-3 gap-4">
+                <button
+                  className={`bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-3 md:col-span-3 sm:col-span-3`}
+                  onClick={() => {
                     if (!_address) {
                       noAddressToast();
-                    } else if (getGameState !== "Ended" && getGameState !== "Paused" && getGameState !== "Queued") {
-                      restartToast();
-                    } else {
-                      _restartGame?.();
+                    } else if (getGameState !== "Queued") {
+                      startToast();
+                    } else if (startSim?.request) {
+                      writeStartGame(startSim.request);
                     }
-                  } catch (error) {
-                    console.log(error)
-                  }
-                }}
-              >
-                Restart Game
-              </button>
+                  }}
+                >
+                  Start Game
+                </button>
+                <button
+                  className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2 md:col-span-3 sm:col-span-3"
+                  onClick={() => {
+                    if (!_address) {
+                      noAddressToast();
+                    } else if (getGameState !== "Minting") {
+                      endToast();
+                    } else if (endMintSim?.request) {
+                      console.log("end minting")
+                      writeEndMint(endMintSim.request);
+                      console.log("end minting success")
+                    }
+                  }}
+                >
+                  End Minting
+                </button>
+                <button
+                  className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2"
+                  onClick={() => {
+                    if (!_address) {
+                      noAddressToast();
+                    } else if (getGameState !== "Playing" && getGameState !== "Final Stage" && getGameState !== "Minting") {
+                      pauseToast();
+                    } else if (pauseSim?.request) {
+                      writePause(pauseSim.request);
+                    }
+                  }}
+                >
+                  Pause Game
+                </button>
+                <button
+                  className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2"
+                  onClick={() => {
+                    if (!_address) {
+                      resumeToast()
+                    } else if (getGameState !== "Paused") {
+                      resumeToast()
+                    } else if (resumeSim?.request) {
+                      console.log("resume")
+                      writeResume(resumeSim.request);
+                    }
+                  }}
+                >
+                  Resume Game
+                </button>
+                <button
+                  className="bg-black hover:bg-gradient-to-b from-yellow-400 to-red-500 text-white rounded-lg px-4 py-2"
+                  onClick={() => {
+                    try {
+                      if (!_address) {
+                        noAddressToast();
+                      } else if (getGameState !== "Ended" && getGameState !== "Paused" && getGameState !== "Queued") {
+                        restartToast();
+                      } else if (restartSim?.request) {
+                        writeRestart(restartSim.request);
+                      }
+                    } catch (error) {
+                      console.log(error)
+                    }
+                  }}
+                >
+                  Restart Game
+                </button>
+              </div>
             </div>
-          </div>
-        }
+          }
 
 
 
+        </div>
       </div>
-    </div>
 
-  </>
-)
+    </>
+  )
+  
 }

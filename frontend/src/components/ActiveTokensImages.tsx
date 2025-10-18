@@ -37,20 +37,22 @@ const ActiveTokensImages: React.FC<ActiveTokensImagesProps> = ({
     functionName: 'getActiveTokens',
   })
 
-  const {
-    data: activeTokens,
-    isLoading,
-    isError,
-    refetch: refetchActiveTokens,
-  } = useReadContract<TAbi extends Abi,
-  TFunctionName extends string,
-  TArgs extends unknown[],
-  TReturnType>({
-    abi: ABI,
-    address: CONTRACT_ADDRESS,
-    functionName: 'getActiveTokensOfOwner',
-    args: [ownerAddress],
-  });
+const {
+  data: activeTokens,
+  isLoading,
+  isError,
+  refetch: refetchActiveTokens,
+} = useReadContract({
+  abi: ABI,
+  address: CONTRACT_ADDRESS,
+  functionName: 'getActiveTokensOfOwner',
+  args: [ownerAddress],
+}) as {
+    data?: bigint[]
+    isLoading: boolean
+    isError: boolean
+    refetch?: () => Promise<any>
+  }
 
 
   const {
