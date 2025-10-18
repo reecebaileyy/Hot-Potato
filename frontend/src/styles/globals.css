@@ -38,21 +38,25 @@
 /* Modern Card Components */
 @layer components {
   .card {
-    @apply bg-white/90 backdrop-blur-sm border border-white/20 rounded-2xl shadow-xl;
+    @apply bg-white/95 backdrop-blur-md border border-white/30 rounded-2xl shadow-xl;
     transition: var(--transition);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
   }
   
   .card:hover {
     @apply shadow-2xl transform scale-[1.02];
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2);
   }
   
   .card-dark {
-    @apply bg-gray-900/90 backdrop-blur-sm border border-gray-700/50 rounded-2xl shadow-xl;
+    @apply bg-gray-900/95 backdrop-blur-md border border-gray-600/50 rounded-2xl shadow-xl;
     transition: var(--transition);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
   }
   
   .card-dark:hover {
     @apply shadow-2xl transform scale-[1.02];
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.2);
   }
   
   .btn-primary {
@@ -69,6 +73,7 @@
   
   .gradient-text {
     @apply bg-gradient-to-r from-amber-500 via-red-500 to-pink-500 bg-clip-text text-transparent;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
   
   .glass-effect {

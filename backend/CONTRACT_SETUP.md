@@ -48,11 +48,12 @@ The scripts automatically read the deployed contract addresses from:
 `backend/ignition/deployments/chain-84532/deployed_addresses.json`
 
 Current deployed addresses:
-- **Game Contract**: `0xD89A2aE68A3696D42327D75C02095b632D1B8f53`
-- **Inventory Manager**: `0x687EAfD1A7350D3F98295Bc9D6835bf73E43E752`
-- **Backgrounds Contract**: `0x354Cf062BF681dD256518e9980422E142B8C2Fe1`
-- **Hands Contract**: `0xEa302520bf70acBf895D15771412484ec4144daF`
-- **Potatoes Contract**: `0x16c561050a56610Ca0dd107014e549EB2803EC75`
+- **Game Contract**: `0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF`
+- **Inventory Manager**: `0xB8F01a17081d5c6A762EC6a1cE203a3E0Fe8e024`
+- **Backgrounds Contract**: `0x31B56FBCB9cfb54c3015B5EaF106f1Ca49d09166`
+- **Hands Contract**: `0xbA3f05d94b38265525680DAc5286BA0CF77f6fA7`
+- **Potatoes Contract**: `0xB79074E0Fd3694dc7d5b963497F6f9be8af17123`
+- **VRFHandler Contract**: `0x06D44ba41d0689137419279889357166D82A4d19`
 
 ## Usage Instructions
 

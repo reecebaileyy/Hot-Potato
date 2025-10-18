@@ -3,7 +3,7 @@ import { useWatchContractEvent } from 'wagmi'
 import { safeParseEventLogs } from '../pages/helpers/viemUtils'
 import ABI from '../abi/Game.json'
 
-const CONTRACT_ADDRESS = '0xD89A2aE68A3696D42327D75C02095b632D1B8f53' as const
+const CONTRACT_ADDRESS = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as const
 
 // Temporary flag to disable event watching during RPC transition
 const DISABLE_EVENT_WATCHING = false
@@ -228,8 +228,8 @@ export function useGameEvents(address: string, refetchHallOfFame: () => void, re
     }
   }, [])
 
-  // Event watchers disabled - using polling instead for reliability
-  if (false) { // DISABLE_EVENT_WATCHING is now false, but we're using polling instead
+  // Event watchers enabled for real-time updates
+  if (true) { // Enable event watching for real-time updates
     useWatchContractEvent({
       address: CONTRACT_ADDRESS,
       abi: ABI,

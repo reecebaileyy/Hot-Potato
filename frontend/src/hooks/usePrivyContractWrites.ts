@@ -2,9 +2,9 @@ import { useSimulateContract, useWriteContract } from 'wagmi'
 import { parseEther } from 'viem'
 import ABI from '../abi/Game.json'
 
-const CONTRACT_ADDRESS = '0xD89A2aE68A3696D42327D75C02095b632D1B8f53' as const
+const CONTRACT_ADDRESS = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as const
 
-export function usePrivyContractWrites(mintAmount?: string, price?: string, tokenId?: string) {
+export function usePrivyContractWrites(mintAmount?: string, price?: string, tokenId?: string, gameState?: string) {
   console.log('=== USE PRIVY CONTRACT WRITES ===')
   console.log('Using wagmi hooks for all wallet types (including Privy embedded wallets)')
 
@@ -41,41 +41,111 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
   })
   const { writeContract: writeClaim } = useWriteContract()
 
-  // Owner operations
+  // Owner operations - conditional based on game state
   const { data: startSim, error: startError } = useSimulateContract({
     abi: ABI,
     address: CONTRACT_ADDRESS,
-    functionName: 'startGame'
+    functionName: 'startGame',
+    query: {
+      enabled: false, // Disabled due to unknown error signatures in contract
+      retry: 1, // Reduced retries since we're being more selective
+      retryDelay: 1000,
+      staleTime: 30000, // Cache for 30 seconds
+      refetchOnMount: true,
+      refetchOnWindowFocus: false
+    }
   })
   const { writeContract: writeStartGame, isPending: starting } = useWriteContract()
+  
+  // Debug logging for admin operations
+  console.log('=== ADMIN SIMULATIONS DEBUG ===');
+  console.log('gameState:', gameState);
+  console.log('startSim:', startSim);
+  console.log('startError:', startError);
 
   const { data: endMintSim, error: endMintError } = useSimulateContract({
     abi: ABI,
     address: CONTRACT_ADDRESS,
-    functionName: 'endMinting'
+    functionName: 'endMinting',
+    query: {
+      enabled: false, // Disabled due to unknown error signatures in contract
+      retry: 1,
+      retryDelay: 1000,
+      staleTime: 30000,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false
+    }
   })
   const { writeContract: writeEndMint, isPending: ending } = useWriteContract()
 
   const { data: pauseSim, error: pauseError } = useSimulateContract({
     abi: ABI,
     address: CONTRACT_ADDRESS,
-    functionName: 'pauseGame'
+    functionName: 'pauseGame',
+    query: {
+      enabled: false, // Disabled due to unknown error signatures in contract
+      retry: 1,
+      retryDelay: 1000,
+      staleTime: 30000,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false
+    }
   })
   const { writeContract: writePause, isPending: pausing } = useWriteContract()
 
   const { data: resumeSim, error: resumeError } = useSimulateContract({
     abi: ABI,
     address: CONTRACT_ADDRESS,
-    functionName: 'resumeGame'
+    functionName: 'resumeGame',
+    query: {
+      enabled: false, // Disabled due to unknown error signatures in contract
+      retry: 1,
+      retryDelay: 1000,
+      staleTime: 30000,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false
+    }
   })
   const { writeContract: writeResume, isPending: resuming } = useWriteContract()
 
   const { data: restartSim, error: restartError } = useSimulateContract({
     abi: ABI,
     address: CONTRACT_ADDRESS,
-    functionName: 'restartGame'
+    functionName: 'restartGame',
+    query: {
+      enabled: false, // Disabled due to unknown error signatures in contract
+      retry: 1,
+      retryDelay: 1000,
+      staleTime: 30000,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false
+    }
   })
   const { writeContract: writeRestart, isPending: restarting } = useWriteContract()
+  
+  // Debug logging for all admin operations
+  console.log('endMintSim:', endMintSim, 'endMintError:', endMintError);
+  console.log('pauseSim:', pauseSim, 'pauseError:', pauseError);
+  console.log('resumeSim:', resumeSim, 'resumeError:', resumeError);
+  console.log('restartSim:', restartSim, 'restartError:', restartError);
+  
+  // Log any simulation errors only when simulations are enabled and handle unknown signatures gracefully
+  // Note: All admin simulations are disabled due to unknown error signatures in contract
+  if (startError) {
+    console.warn('Start game simulation disabled due to contract error signature issues');
+  }
+  if (endMintError) {
+    console.warn('End minting simulation disabled due to contract error signature issues');
+  }
+  if (pauseError) {
+    console.warn('Pause game simulation disabled due to contract error signature issues');
+  }
+  if (resumeError) {
+    console.warn('Resume game simulation disabled due to contract error signature issues');
+  }
+  if (restartError) {
+    console.warn('Restart game simulation disabled due to contract error signature issues');
+  }
 
   // Simple wrapper functions that just use wagmi directly
   // wagmi automatically handles Privy embedded wallets when properly configured
@@ -106,8 +176,13 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
 
   const enhancedWriteEndMint = async (request: any) => {
     console.log('=== WRITE END MINT ===')
-    console.log('Using wagmi writeContract (works with all wallet types)')
-    return writeEndMint(request)
+    console.log('Using wagmi writeContract with higher gas limit for VRF request')
+    // Add higher gas limit for VRF request
+    const requestWithGas = {
+      ...request,
+      gas: 5000000n // Higher gas limit for VRF request
+    }
+    return writeEndMint(requestWithGas)
   }
 
   const enhancedWritePause = async (request: any) => {

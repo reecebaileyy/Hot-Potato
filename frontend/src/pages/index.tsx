@@ -50,8 +50,8 @@ export default function Home() {
       <div
         className={`${
           darkMode
-            ? 'darkmode bg-fixed to-black text-white min-h-screen font-darumadrop'
-            : 'normal bg-fixed min-h-screen font-darumadrop'
+            ? 'darkmode bg-fixed to-black text-white min-h-screen font-darumadropone'
+            : 'normal bg-fixed min-h-screen font-darumadropone'
         }`}
       >
         {/* Navigation */}
@@ -83,10 +83,10 @@ export default function Home() {
                   setIsOpen(false)
                 }
               }}>
-              <ul ref={menuRef} className={`${darkMode ? 'card-dark' : 'card'} p-8 flex flex-col space-y-6 text-xl md:text-2xl animate-fade-in-up`}>
+              <ul ref={menuRef} className={`${darkMode ? 'card-dark' : 'card'} p-8 flex flex-col space-y-6 text-xl md:text-2xl animate-fade-in-up shadow-2xl`}>
                 <li>
                   <Link 
-                    className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-colors duration-300 font-semibold`} 
+                    className={`${darkMode ? 'text-white hover:text-amber-400 drop-shadow-lg' : 'text-gray-800 hover:text-amber-600 drop-shadow-md'} transition-colors duration-300 font-semibold`} 
                     href="/play"
                     onClick={() => setIsOpen(false)}
                   >
@@ -95,7 +95,7 @@ export default function Home() {
                 </li>
                 <li>
                   <Link 
-                    className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-colors duration-300 font-semibold`} 
+                    className={`${darkMode ? 'text-white hover:text-amber-400 drop-shadow-lg' : 'text-gray-800 hover:text-amber-600 drop-shadow-md'} transition-colors duration-300 font-semibold`} 
                     href="/leaderboard"
                     onClick={() => setIsOpen(false)}
                   >
@@ -104,7 +104,7 @@ export default function Home() {
                 </li>
                 <li>
                   <Link 
-                    className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-colors duration-300 font-semibold`} 
+                    className={`${darkMode ? 'text-white hover:text-amber-400 drop-shadow-lg' : 'text-gray-800 hover:text-amber-600 drop-shadow-md'} transition-colors duration-300 font-semibold`} 
                     href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" 
                     target="_blank"
                     onClick={() => setIsOpen(false)}
@@ -114,7 +114,7 @@ export default function Home() {
                 </li>
                 <li>
                   <Link 
-                    className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-colors duration-300 font-semibold`} 
+                    className={`${darkMode ? 'text-white hover:text-amber-400 drop-shadow-lg' : 'text-gray-800 hover:text-amber-600 drop-shadow-md'} transition-colors duration-300 font-semibold`} 
                     href="https://opensea.io" 
                     target="_blank"
                     onClick={() => setIsOpen(false)}
@@ -138,7 +138,7 @@ export default function Home() {
           <ul className='hidden xl:flex space-x-8 text-lg font-semibold'>
             <li>
               <Link 
-                className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-all duration-300 hover:scale-105 relative group`} 
+                className={`${darkMode ? 'text-white hover:text-amber-400 drop-shadow-lg' : 'text-gray-800 hover:text-amber-600 drop-shadow-md'} transition-all duration-300 hover:scale-105 relative group font-medium`} 
                 href="/play"
               >
                 Play
@@ -147,7 +147,7 @@ export default function Home() {
             </li>
             <li>
               <Link 
-                className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-all duration-300 hover:scale-105 relative group`} 
+                className={`${darkMode ? 'text-white hover:text-amber-400 drop-shadow-lg' : 'text-gray-800 hover:text-amber-600 drop-shadow-md'} transition-all duration-300 hover:scale-105 relative group font-medium`} 
                 href="/leaderboard"
               >
                 Leaderboard
@@ -156,7 +156,7 @@ export default function Home() {
             </li>
             <li>
               <Link 
-                className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-all duration-300 hover:scale-105 relative group`} 
+                className={`${darkMode ? 'text-white hover:text-amber-400 drop-shadow-lg' : 'text-gray-800 hover:text-amber-600 drop-shadow-md'} transition-all duration-300 hover:scale-105 relative group font-medium`} 
                 href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" 
                 target="_blank"
               >
@@ -166,7 +166,7 @@ export default function Home() {
             </li>
             <li>
               <Link 
-                className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-all duration-300 hover:scale-105 relative group`} 
+                className={`${darkMode ? 'text-white hover:text-amber-400 drop-shadow-lg' : 'text-gray-800 hover:text-amber-600 drop-shadow-md'} transition-all duration-300 hover:scale-105 relative group font-medium`} 
                 href="https://opensea.io" 
                 target="_blank"
               >
@@ -188,13 +188,15 @@ export default function Home() {
         </nav>
 
         {/* Hero Section */}
-        <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 sm:px-6 lg:px-8 text-center animate-fade-in-up">
-          <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
-            <h1 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold gradient-text mb-4 sm:mb-6 animate-glow`}>
+        <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 sm:px-6 lg:px-8 text-center animate-fade-in-up relative">
+          {/* Background overlay for better text readability */}
+          <div className={`absolute inset-0 ${darkMode ? 'bg-black/40' : 'bg-white/30'} backdrop-blur-sm`}></div>
+          <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 relative z-10">
+            <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold gradient-text mb-4 sm:mb-6 animate-glow drop-shadow-2xl`}>
               HOT POTATO
             </h1>
-            <div className="w-24 sm:w-32 h-1 sm:h-2 bg-gradient-to-r from-amber-500 to-red-500 mx-auto rounded-full mb-6 sm:mb-8"></div>
-            <p className={`text-lg sm:text-xl md:text-2xl lg:text-3xl ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-8 sm:mb-12 font-light`}>
+            <div className="w-24 sm:w-32 h-1 sm:h-2 bg-gradient-to-r from-amber-500 to-red-500 mx-auto rounded-full mb-6 sm:mb-8 shadow-lg"></div>
+            <p className={`text-lg sm:text-xl md:text-2xl lg:text-3xl ${darkMode ? 'text-white' : 'text-gray-800'} mb-8 sm:mb-12 font-medium drop-shadow-lg`}>
               Hold, Pass, Survive...
             </p>
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
@@ -211,24 +213,24 @@ export default function Home() {
         {/* Features Section */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            <div className={`${darkMode ? 'card-dark' : 'card'} p-6 sm:p-8 text-center animate-fade-in-up`}>
+            <div className={`${darkMode ? 'card-dark' : 'card'} p-6 sm:p-8 text-center animate-fade-in-up shadow-xl`}>
               <div className="text-4xl sm:text-6xl mb-4">🔥</div>
-              <h3 className={`text-xl sm:text-2xl font-bold mb-4 gradient-text`}>Hot Potato Game</h3>
-              <p className={`text-sm sm:text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <h3 className={`text-xl sm:text-2xl font-bold mb-4 gradient-text drop-shadow-lg`}>Hot Potato Game</h3>
+              <p className={`text-base sm:text-lg ${darkMode ? 'text-gray-200' : 'text-gray-700'} font-medium leading-relaxed`}>
                 Pass the hot potato before it explodes! The last person holding it wins the round.
               </p>
             </div>
-            <div className={`${darkMode ? 'card-dark' : 'card'} p-6 sm:p-8 text-center animate-fade-in-up`}>
+            <div className={`${darkMode ? 'card-dark' : 'card'} p-6 sm:p-8 text-center animate-fade-in-up shadow-xl`}>
               <div className="text-4xl sm:text-6xl mb-4">🎯</div>
-              <h3 className={`text-xl sm:text-2xl font-bold mb-4 gradient-text`}>Strategic Gameplay</h3>
-              <p className={`text-sm sm:text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <h3 className={`text-xl sm:text-2xl font-bold mb-4 gradient-text drop-shadow-lg`}>Strategic Gameplay</h3>
+              <p className={`text-base sm:text-lg ${darkMode ? 'text-gray-200' : 'text-gray-700'} font-medium leading-relaxed`}>
                 Time your passes perfectly and outsmart your opponents to claim victory.
               </p>
             </div>
-            <div className={`${darkMode ? 'card-dark' : 'card'} p-6 sm:p-8 text-center animate-fade-in-up`}>
+            <div className={`${darkMode ? 'card-dark' : 'card'} p-6 sm:p-8 text-center animate-fade-in-up shadow-xl`}>
               <div className="text-4xl sm:text-6xl mb-4">💰</div>
-              <h3 className={`text-xl sm:text-2xl font-bold mb-4 gradient-text`}>Win Rewards</h3>
-              <p className={`text-sm sm:text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <h3 className={`text-xl sm:text-2xl font-bold mb-4 gradient-text drop-shadow-lg`}>Win Rewards</h3>
+              <p className={`text-base sm:text-lg ${darkMode ? 'text-gray-200' : 'text-gray-700'} font-medium leading-relaxed`}>
                 Earn ETH rewards for successful passes and winning rounds.
               </p>
             </div>

@@ -10,6 +10,12 @@ interface AdminControlsProps {
   onPauseGame: () => void
   onResumeGame: () => void
   onRestartGame: () => void
+  // Debug props
+  startSim?: any
+  endMintSim?: any
+  pauseSim?: any
+  resumeSim?: any
+  restartSim?: any
 }
 
 export default function AdminControls({ 
@@ -21,9 +27,21 @@ export default function AdminControls({
   onEndMinting, 
   onPauseGame, 
   onResumeGame, 
-  onRestartGame 
+  onRestartGame,
+  startSim,
+  endMintSim,
+  pauseSim,
+  resumeSim,
+  restartSim
 }: AdminControlsProps) {
+  console.log('=== ADMIN CONTROLS RENDER ===');
+  console.log('address:', address);
+  console.log('ownerAddress:', ownerAddress);
+  console.log('gameState:', gameState);
+  console.log('address match:', address && ownerAddress && address.toLowerCase() === ownerAddress.toLowerCase());
+  
   if (!address || !ownerAddress || address.toLowerCase() !== ownerAddress.toLowerCase()) {
+    console.log('Admin controls not rendered - address mismatch or missing');
     return null
   }
 
@@ -34,6 +52,23 @@ export default function AdminControls({
         <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
           Manage the game state and settings
         </p>
+        {/* Debug info */}
+        <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50'} text-left`}>
+          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            <strong>Debug Info:</strong><br/>
+            Address: {address}<br/>
+            Owner: {ownerAddress}<br/>
+            Game State: {gameState}<br/>
+            Match: {address && ownerAddress && address.toLowerCase() === ownerAddress.toLowerCase() ? '✅' : '❌'}<br/>
+            <br/>
+            <strong>Simulation Status:</strong><br/>
+            Start: {startSim?.request ? '✅' : '❌'}<br/>
+            End Mint: {endMintSim?.request ? '✅' : '❌'}<br/>
+            Pause: {pauseSim?.request ? '✅' : '❌'}<br/>
+            Resume: {resumeSim?.request ? '✅' : '❌'}<br/>
+            Restart: {restartSim?.request ? '✅' : '❌'}
+          </p>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

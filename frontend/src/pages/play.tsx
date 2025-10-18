@@ -139,7 +139,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     restarting,
     isPrivyWallet,
     walletType
-  } = usePrivyContractWrites(mintAmount, parsedResults?._price, tokenId)
+  } = usePrivyContractWrites(mintAmount, parsedResults?._price, tokenId, getGameState || undefined)
 
   // --- Game Events Hook (needs _address) ---
   const { 
@@ -160,8 +160,8 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const displayPrice = useMemo(() => ethers.utils.formatEther(BigInt(price || 0)), [price])
   
   // --- Constants ---
-  const CONTRACT = '0xD89A2aE68A3696D42327D75C02095b632D1B8f53' as `0x${string}`
-  const CONTRACT_ADDRESS = '0xD89A2aE68A3696D42327D75C02095b632D1B8f53' as const
+  const CONTRACT = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as `0x${string}`
+  const CONTRACT_ADDRESS = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as const
   const ADMIN_ADDRESS = "0x41b1e204e9c15fF5894bd47C6Dc3a7Fa98C775C7"
 
   // -----------------------------Single Reads End---------------------------------
@@ -418,6 +418,19 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     }
   }, [parsedResults?.gameState, getGameState, updateGameState]);
 
+  // Debug admin controls
+  useEffect(() => {
+    console.log('=== ADMIN CONTROLS DEBUG ===');
+    console.log('actualAddress:', actualAddress);
+    console.log('parsedResults?._ownerAddress:', parsedResults?._ownerAddress);
+    console.log('getGameState:', getGameState);
+    console.log('startSim:', startSim);
+    console.log('endMintSim:', endMintSim);
+    console.log('pauseSim:', pauseSim);
+    console.log('resumeSim:', resumeSim);
+    console.log('restartSim:', restartSim);
+  }, [actualAddress, parsedResults?._ownerAddress, getGameState, startSim, endMintSim, pauseSim, resumeSim, restartSim]);
+
   // Refresh contract data when events trigger shouldRefresh
   useEffect(() => {
     if (eventShouldRefresh) {
@@ -559,51 +572,186 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           address={actualAddress || ''}
           ownerAddress={parsedResults?._ownerAddress || ''}
           gameState={getGameState || ''}
+          startSim={startSim}
+          endMintSim={endMintSim}
+          pauseSim={pauseSim}
+          resumeSim={resumeSim}
+          restartSim={restartSim}
           onStartGame={() => {
+                    console.log('=== START GAME CLICKED ===');
+                    console.log('actualAddress:', actualAddress);
+                    console.log('getGameState:', getGameState);
+                    console.log('startSim:', startSim);
+                    console.log('startSim?.request:', startSim?.request);
+                    
                     if (!actualAddress) {
+                      console.log('No address - showing toast');
                       noAddressToast();
                     } else if (getGameState !== "Queued") {
+                      console.log('Game state not Queued - showing toast');
                       startToast();
                     } else if (startSim?.request) {
+                      console.log('Starting game transaction...');
                       handleTransaction(() => writeStartGame(startSim.request), 'Start Game');
+                    } else {
+                      console.log('No valid simulation request available, trying direct transaction...');
+                      try {
+                        handleTransaction(() => writeStartGame({
+                          abi: ABI,
+                          address: CONTRACT_ADDRESS,
+                          functionName: 'startGame'
+                        }), 'Start Game');
+                      } catch (error: any) {
+                        console.error('Direct transaction failed:', error);
+                        // Check if it's an unknown error signature
+                        if (error?.message?.includes('Unable to decode signature')) {
+                          toast.error('Cannot start game at this time - contract constraint');
+                        } else {
+                          toast.error('Unable to start game - transaction failed');
+                        }
+                      }
                     }
                   }}
           onEndMinting={() => {
+                    console.log('=== END MINTING CLICKED ===');
+                    console.log('actualAddress:', actualAddress);
+                    console.log('getGameState:', getGameState);
+                    console.log('endMintSim:', endMintSim);
+                    console.log('endMintSim?.request:', endMintSim?.request);
+                    
                     if (!actualAddress) {
+                      console.log('No address - showing toast');
                       noAddressToast();
                     } else if (getGameState !== "Minting") {
+                      console.log('Game state not Minting - showing toast');
                       endToast();
                     } else if (endMintSim?.request) {
-                      console.log("end minting")
+                      console.log("Ending minting transaction...");
                       handleTransaction(() => writeEndMint(endMintSim.request), 'End Minting');
-                      console.log("end minting success")
+                    } else {
+                      console.log('No valid simulation request available, trying direct transaction...');
+                      // Try direct transaction even without simulation
+                      try {
+                        handleTransaction(() => writeEndMint({
+                          abi: ABI,
+                          address: CONTRACT_ADDRESS,
+                          functionName: 'endMinting',
+                          gas: 5000000n // Higher gas limit for VRF request
+                        }), 'End Minting');
+                      } catch (error: any) {
+                        console.error('Direct transaction failed:', error);
+                        // Check if it's an unknown error signature
+                        if (error?.message?.includes('Unable to decode signature')) {
+                          toast.error('Cannot end minting at this time - contract constraint');
+                        } else {
+                          toast.error('Unable to end minting - transaction failed');
+                        }
+                      }
                     }
                   }}
           onPauseGame={() => {
+                    console.log('=== PAUSE GAME CLICKED ===');
+                    console.log('actualAddress:', actualAddress);
+                    console.log('getGameState:', getGameState);
+                    console.log('pauseSim:', pauseSim);
+                    console.log('pauseSim?.request:', pauseSim?.request);
+                    
                     if (!actualAddress) {
+                      console.log('No address - showing toast');
                       noAddressToast();
                     } else if (getGameState !== "Playing" && getGameState !== "Final Stage" && getGameState !== "Minting") {
+                      console.log('Game state not pausable - showing toast');
                       pauseToast();
                     } else if (pauseSim?.request) {
+                      console.log('Pausing game transaction...');
                       handleTransaction(() => writePause(pauseSim.request), 'Pause Game');
+                    } else {
+                      console.log('No valid simulation request available, trying direct transaction...');
+                      try {
+                        handleTransaction(() => writePause({
+                          abi: ABI,
+                          address: CONTRACT_ADDRESS,
+                          functionName: 'pauseGame'
+                        }), 'Pause Game');
+                      } catch (error: any) {
+                        console.error('Direct transaction failed:', error);
+                        // Check if it's an unknown error signature
+                        if (error?.message?.includes('Unable to decode signature')) {
+                          toast.error('Cannot pause game at this time - contract constraint');
+                        } else {
+                          toast.error('Unable to pause game - transaction failed');
+                        }
+                      }
                     }
                   }}
           onResumeGame={() => {
+                    console.log('=== RESUME GAME CLICKED ===');
+                    console.log('actualAddress:', actualAddress);
+                    console.log('getGameState:', getGameState);
+                    console.log('resumeSim:', resumeSim);
+                    console.log('resumeSim?.request:', resumeSim?.request);
+                    
                     if (!actualAddress) {
+                      console.log('No address - showing toast');
                       noAddressToast();
                     } else if (getGameState !== "Paused") {
+                      console.log('Game state not Paused - showing toast');
                       resumeToast();
                     } else if (resumeSim?.request) {
+                      console.log('Resuming game transaction...');
                       handleTransaction(() => writeResume(resumeSim.request), 'Resume Game');
+                    } else {
+                      console.log('No valid simulation request available, trying direct transaction...');
+                      try {
+                        handleTransaction(() => writeResume({
+                          abi: ABI,
+                          address: CONTRACT_ADDRESS,
+                          functionName: 'resumeGame'
+                        }), 'Resume Game');
+                      } catch (error: any) {
+                        console.error('Direct transaction failed:', error);
+                        // Check if it's an unknown error signature
+                        if (error?.message?.includes('Unable to decode signature')) {
+                          toast.error('Cannot resume game at this time - contract constraint');
+                        } else {
+                          toast.error('Unable to resume game - transaction failed');
+                        }
+                      }
                     }
                   }}
           onRestartGame={() => {
+                    console.log('=== RESTART GAME CLICKED ===');
+                    console.log('actualAddress:', actualAddress);
+                    console.log('getGameState:', getGameState);
+                    console.log('restartSim:', restartSim);
+                    console.log('restartSim?.request:', restartSim?.request);
+                    
                     if (!actualAddress) {
+                      console.log('No address - showing toast');
                       noAddressToast();
                     } else if (getGameState !== "Ended") {
+                      console.log('Game state not Ended - showing toast');
                       restartToast();
                     } else if (restartSim?.request) {
+                      console.log('Restarting game transaction...');
                       handleTransaction(() => writeRestart(restartSim.request), 'Restart Game');
+                    } else {
+                      console.log('No valid simulation request available, trying direct transaction...');
+                      try {
+                        handleTransaction(() => writeRestart({
+                          abi: ABI,
+                          address: CONTRACT_ADDRESS,
+                          functionName: 'restartGame'
+                        }), 'Restart Game');
+                      } catch (error: any) {
+                        console.error('Direct transaction failed:', error);
+                        // Check if it's an unknown error signature
+                        if (error?.message?.includes('Unable to decode signature')) {
+                          toast.error('Cannot restart game at this time - contract constraint');
+                        } else {
+                          toast.error('Unable to restart game - transaction failed');
+                        }
+                      }
                     }
                   }}
         />

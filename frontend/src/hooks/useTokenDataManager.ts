@@ -3,7 +3,7 @@ import { useReadContracts } from 'wagmi'
 import { Abi } from 'viem'
 import ABI from '../abi/Game.json'
 
-const CONTRACT_ADDRESS = '0xD89A2aE68A3696D42327D75C02095b632D1B8f53' as const
+const CONTRACT_ADDRESS = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as const
 
 interface TokenData {
   tokenId: number
