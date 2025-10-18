@@ -6,7 +6,14 @@ import { createDeferredPromise, type DeferredPromise } from '../pages/helpers/de
 import { safeParseEventLogs } from '../pages/helpers/viemUtils'
 import ABI from '../abi/Game.json'
 
-const CONTRACT_ADDRESS = '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704' as const
+const CONTRACT_ADDRESS = '0xD89A2aE68A3696D42327D75C02095b632D1B8f53' as const
+
+// Debug logging for contract configuration
+console.log('=== CONTRACT CONFIG DEBUG ===')
+console.log('CONTRACT_ADDRESS:', CONTRACT_ADDRESS)
+console.log('ABI length:', ABI.length)
+console.log('ABI has getGameState:', ABI.some((item: any) => item.name === 'getGameState'))
+console.log('=============================')
 
 export function useGameContract(tokenId: string = '') {
   const { address } = useAccount()
@@ -25,57 +32,80 @@ export function useGameContract(tokenId: string = '') {
     abi: ABI,
   } as const), [])
 
-  // Optimized contract reads with memoized contracts
-  const contracts = useMemo(() => [
-    {
-      ...gameContract,
-      functionName: '_price' as const,
-    },
-    {
-      ...gameContract,
-      functionName: 'potatoTokenId' as const,
-    },
-    {
-      ...gameContract,
-      functionName: 'currentGeneration' as const,
-    },
-    {
-      ...gameContract,
-      functionName: 'roundMints' as const,
-    },
-    {
-      ...gameContract,
-      functionName: '_owner' as const,
-    },
-    {
+  // Contract calls - start with basic ERC721 functions that should always work
+  const contracts = useMemo(() => {
+    const baseContracts: any[] = [
+      {
+        ...gameContract,
+        functionName: 'name' as const,
+      },
+      {
+        ...gameContract,
+        functionName: 'symbol' as const,
+      },
+      {
+        ...gameContract,
+        functionName: 'totalSupply' as const,
+      },
+      {
+        ...gameContract,
+        functionName: 'owner' as const,
+      },
+      {
+        ...gameContract,
+        functionName: 'getGameState' as const,
+      },
+      {
+        ...gameContract,
+        functionName: 'currentGeneration' as const,
+      },
+      {
+        ...gameContract,
+        functionName: '_price' as const,
+      },
+      {
+        ...gameContract,
+        functionName: 'potatoTokenId' as const,
+      },
+      {
+        ...gameContract,
+        functionName: '_maxperwallet' as const,
+      }
+    ]
+
+    // Add getAllWinners function
+    baseContracts.push({
       ...gameContract,
       functionName: 'getAllWinners' as const,
-    },
-    {
-      ...gameContract,
-      functionName: 'rewards' as const,
-      args: [_address]
-    },
-    {
-      ...gameContract,
-      functionName: 'totalWins' as const,
-      args: [_address]
-    },
-    {
-      ...gameContract,
-      functionName: '_maxperwallet' as const,
-    },
-    {
-      ...gameContract,
-      functionName: '_isTokenActive' as const,
-      args: [tokenId]
-    },
-    {
-      ...gameContract,
-      functionName: 'ownerOf' as const,
-      args: [tokenId]
+    })
+
+    // Only add address-dependent calls if we have an address
+    if (_address) {
+      baseContracts.push(
+        {
+          ...gameContract,
+          functionName: 'rewards' as const,
+          args: [_address]
+        },
+        {
+          ...gameContract,
+          functionName: 'totalWins' as const,
+          args: [_address]
+        }
+      )
     }
-  ] as const, [_address, tokenId])
+
+    // Only add tokenId-dependent calls if we have a tokenId
+    if (tokenId) {
+      baseContracts.push({
+        ...gameContract,
+        functionName: 'ownerOf' as const,
+        args: [tokenId]
+      })
+    }
+
+    return baseContracts
+  }, [_address, tokenId])
 
   const { data: readResults, isLoading: loadingReadResults, refetch: refetchReadResults, error: readError } = useReadContracts({
     contracts,
@@ -85,50 +115,72 @@ export function useGameContract(tokenId: string = '') {
       staleTime: 60000, // Increased to 60 seconds
       refetchInterval: false, // Disable automatic refetching
       refetchOnWindowFocus: false, // Disable refetch on window focus
-      refetchOnMount: false, // Only refetch when explicitly called
+      refetchOnMount: true, // Enable refetch on mount for initial data
       refetchOnReconnect: false, // Disable refetch on reconnect
     }
   })
 
   // Memoized parsed results
   const parsedResults = useMemo(() => {
-    if (!readResults) return null
+    if (!readResults) {
+      console.log('=== NO CONTRACT DATA ===')
+      console.log('readResults is null or undefined')
+      console.log('loadingReadResults:', loadingReadResults)
+      console.log('readError:', readError)
+      console.log('========================')
+      return null
+    }
     
     // Debug logging for raw contract data
     console.log('=== RAW CONTRACT DATA ===')
     console.log('readResults:', readResults)
-    console.log('readResults[0] (_price):', readResults[0])
-    console.log('readResults[1] (potatoTokenId):', readResults[1])
-    console.log('readResults[2] (currentGeneration):', readResults[2])
-    console.log('readResults[3] (roundMints):', readResults[3])
-    console.log('readResults[4] (_owner):', readResults[4])
-    console.log('readResults[5] (getAllWinners):', readResults[5])
-    console.log('readResults[6] (rewards):', readResults[6])
-    console.log('readResults[7] (totalWins):', readResults[7])
-    console.log('readResults[8] (_maxperwallet):', readResults[8])
-    console.log('readResults[9] (_isTokenActive):', readResults[9])
-    console.log('readResults[10] (ownerOf):', readResults[10])
+    console.log('readResults length:', readResults.length)
+    readResults.forEach((result, index) => {
+      console.log(`readResults[${index}]:`, result)
+      console.log(`readResults[${index}] success:`, result.status === 'success')
+      console.log(`readResults[${index}] error:`, result.error)
+    })
+    console.log('========================')
+    
+    // Handle dynamic array based on what contracts were called
+    // Base contracts are always called: name, symbol, totalSupply, owner, getGameState, currentGeneration, _price, potatoTokenId, _maxperwallet, getAllWinners
+    const baseResults = readResults.slice(0, 10)
+    
+    // Address-dependent results (rewards, totalWins) come after base results if address exists
+    const addressResults = _address ? readResults.slice(10, 12) : []
+    
+    // TokenId-dependent results come last if tokenId exists
+    const tokenResults = tokenId ? readResults.slice(-1) : []
+    
+    const gameStateResult = baseResults[4]?.result
+    const gameStateString = gameStateResult?.toString() || 'Unknown'
+    
+    console.log('=== GAME STATE DEBUG ===')
+    console.log('baseResults[4] (getGameState):', baseResults[4])
+    console.log('gameStateResult:', gameStateResult)
+    console.log('gameStateString:', gameStateString)
     console.log('========================')
     
     return {
-      _price: readResults[0] ? formatUnits(readResults[0] as unknown as bigint, 18) : '0',
-      _potato_token: readResults[1] ? parseInt(readResults[1] as unknown as string, 10) : 0,
-      _currentGeneration: readResults[2] ? parseInt(readResults[2] as unknown as string, 10) : 0,
-      totalMints: readResults[3] ? parseInt(readResults[3] as unknown as string, 10) : 0,
-      _ownerAddress: readResults[4]?.toString(),
-      allWinners: readResults[5].result as `0x${string}`[],
-      _rewards: readResults[6] ? formatUnits(readResults[6] as unknown as bigint, 18) : '0',
-      totalWins: readResults[7] ? parseInt(readResults[7] as unknown as string, 10) : 0,
-      maxPerWallet: readResults[8] ? parseInt(readResults[8] as unknown as string, 10) : 0,
-      isTokenActive: readResults[9] as unknown as boolean,
-      ownerOf: readResults[10]?.toString(),
+      _price: baseResults[6]?.result ? formatUnits(baseResults[6].result as unknown as bigint, 18) : '0',
+      _potato_token: baseResults[7]?.result ? parseInt(baseResults[7].result as unknown as string, 10) : 0,
+      _currentGeneration: baseResults[5]?.result ? parseInt(baseResults[5].result as unknown as string, 10) : 1,
+      totalMints: baseResults[2]?.result ? parseInt(baseResults[2].result as unknown as string, 10) : 0,
+      _ownerAddress: baseResults[3]?.result?.toString(),
+      allWinners: baseResults[9]?.result as unknown as string[] || [],
+      _rewards: addressResults[0]?.result ? formatUnits(addressResults[0].result as unknown as bigint, 18) : '0',
+      totalWins: addressResults[1]?.result ? parseInt(addressResults[1].result as unknown as string, 10) : 0,
+      maxPerWallet: baseResults[8]?.result ? parseInt(baseResults[8].result as unknown as string, 10) : 0,
+      isTokenActive: false, // Will be updated when we find the correct function
+      ownerOf: tokenResults[0]?.result?.toString(),
+      gameState: gameStateString,
     }
-  }, [readResults])
+  }, [readResults, _address, tokenId])
   
-  const isWinner = useMemo(() => 
-    Array.isArray(parsedResults?.allWinners) ? parsedResults.allWinners.includes(_address as `0x${string}`) : false,
-    [parsedResults?.allWinners, _address]
-  )
+  const isWinner = useMemo(() => {
+    if (!Array.isArray(parsedResults?.allWinners) || !_address) return false
+    return (parsedResults.allWinners as string[]).includes(_address)
+  }, [parsedResults?.allWinners, _address])
 
   return {
     gameContract,

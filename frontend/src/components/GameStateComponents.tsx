@@ -127,5 +127,20 @@ export default function GameStateComponents({
     )
   }
 
-  return null
+  if (gameState === "Ended") {
+    return (
+      <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+        <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Game Ended</h1>
+        <p className="text-center">The game has ended. Wait for the next round to start.</p>
+      </div>
+    )
+  }
+
+  // Default case for unknown states
+  return (
+    <div className={`w-full flex flex-col items-center col-start-1 col-end-3 md:w-2/3 lg:w-1/2 shadow rounded-xl p-4 mb-8 overflow-y-auto hide-scrollbar ${darkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
+      <h1 className={`text-4xl font-extrabold underline text-center mb-4 text-transparent bg-clip-text ${darkMode ? 'bg-gradient-to-br from-amber-800 to-red-800' : 'bg-gradient-to-b from-yellow-400 to-red-500'}`}>Game State: {gameState || 'Unknown'}</h1>
+      <p className="text-center">Current game state: {gameState || 'Unknown'}</p>
+    </div>
+  )
 }

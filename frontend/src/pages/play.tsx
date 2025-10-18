@@ -30,10 +30,10 @@ const TokenImage = dynamic(() => import('../components/TokenImage'), {
 })
 
 interface PlayProps {
-  initalGameState: string | null
-  gen: number
-  price: number | bigint
-  maxSupply: number
+  initalGameState?: string | null
+  gen?: number
+  price?: number | bigint
+  maxSupply?: number
 }
 
 export default function Play({ initalGameState, gen, price, maxSupply }: PlayProps): React.JSX.Element {
@@ -43,7 +43,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   ), [])
 
   // --- Custom Hooks ---
-  const { getGameState, prevGameState, updateGameState } = useGameState(initalGameState)
+  const { getGameState, prevGameState, updateGameState } = useGameState(initalGameState ?? null)
   const { 
     activeTokens, 
     setActiveTokens, 
@@ -63,6 +63,22 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     handleSearch 
   } = useTokenManagement()
   
+  // --- State Hooks ---
+  const [mintAmount, setMintAmount] = useState<string>('')
+  const [darkMode, setDarkMode] = useState<boolean>(false)
+  const [isOpen, setIsOpen] = useState<boolean>(false)
+  const [tokenId, setTokenId] = useState<string>('')
+  const [totalCost, setTotalCost] = useState<number>(0)
+  const [passPromise, setPassPromise] = useState<DeferredPromise<void> | null>(null)
+  const [isLoadingActiveTokens, setIsLoadingActiveTokens] = useState<boolean>(true)
+  const [_potatoTokenId, setPotatoTokenId] = useState<number>(0)
+  const [passArgs, setPassArgs] = useState<unknown[] | null>(null)
+  const [mintArgs, setMintArgs] = useState<unknown[] | null>(null)
+
+  // --- Game Contract Hook (needs tokenId) ---
+  const { gameContract, parsedResults, isWinner, _address, loadingReadResults, refetchReadResults, readError } = useGameContract(tokenId)
+
+  // --- Contract Writes Hook (needs mintAmount, price, tokenId) ---
   const {
     mintSim,
     writeMint,
@@ -87,22 +103,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     restartSim,
     writeRestart,
     restarting
-  } = useContractWrites()
-  
-  // --- State Hooks ---
-  const [mintAmount, setMintAmount] = useState<string>('')
-  const [darkMode, setDarkMode] = useState<boolean>(false)
-  const [isOpen, setIsOpen] = useState<boolean>(false)
-  const [tokenId, setTokenId] = useState<string>('')
-  const [totalCost, setTotalCost] = useState<number>(0)
-  const [passPromise, setPassPromise] = useState<DeferredPromise<void> | null>(null)
-  const [isLoadingActiveTokens, setIsLoadingActiveTokens] = useState<boolean>(true)
-  const [_potatoTokenId, setPotatoTokenId] = useState<number>(0)
-  const [passArgs, setPassArgs] = useState<unknown[] | null>(null)
-  const [mintArgs, setMintArgs] = useState<unknown[] | null>(null)
-
-  // --- Game Contract Hook (needs tokenId) ---
-  const { gameContract, parsedResults, isWinner, _address, loadingReadResults, refetchReadResults, readError } = useGameContract(tokenId)
+  } = useContractWrites(mintAmount, parsedResults?._price, tokenId)
 
   // --- Game Events Hook (needs _address) ---
   const { events, setEvents, explosion, remainingTime, setRemainingTime } = useGameEvents(_address, () => refetchAdditionalResults())
@@ -111,58 +112,67 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const displayPrice = useMemo(() => ethers.utils.formatEther(BigInt(price || 0)), [price])
   
   // --- Constants ---
-  const CONTRACT = '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704' as `0x${string}`
-  const CONTRACT_ADDRESS = '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704' as const
+  const CONTRACT = '0xD89A2aE68A3696D42327D75C02095b632D1B8f53' as `0x${string}`
+  const CONTRACT_ADDRESS = '0xD89A2aE68A3696D42327D75C02095b632D1B8f53' as const
   const ADMIN_ADDRESS = "0x41b1e204e9c15fF5894bd47C6Dc3a7Fa98C775C7"
 
   // -----------------------------Single Reads End---------------------------------
 
-  // Batch all additional contract reads to reduce requests
-  const additionalContracts = useMemo(() => [
-    {
-      address: CONTRACT_ADDRESS,
-      abi: ABI as Abi,
-      functionName: 'getExplosionTime' as const,
-    },
-    {
-      address: CONTRACT_ADDRESS,
-      abi: ABI as Abi,
-      functionName: 'hallOfFame' as const,
-      args: [parsedResults?._currentGeneration || 0] as const,
-    },
-    {
-      address: CONTRACT_ADDRESS,
-      abi: ABI as Abi,
-      functionName: 'userHasPotatoToken' as const,
-      args: [_address] as const,
-    },
-    {
-      address: CONTRACT_ADDRESS,
-      abi: ABI as Abi,
-      functionName: 'getActiveTokenIds' as const,
-    },
-    {
-      address: CONTRACT_ADDRESS,
-      abi: ABI as Abi,
-      functionName: 'successfulPasses' as const,
-      args: [_address] as const,
-    },
-    {
-      address: CONTRACT_ADDRESS,
-      abi: ABI as Abi,
-      functionName: 'addressActiveTokenCount' as const,
-      args: [_address] as const,
+  // Batch all additional contract reads to reduce requests - start with basic functions
+  const additionalContracts = useMemo(() => {
+    const contracts: any[] = [
+      {
+        address: CONTRACT_ADDRESS,
+        abi: ABI as Abi,
+        functionName: 'getActiveTokenIds' as const,
+      },
+      {
+        address: CONTRACT_ADDRESS,
+        abi: ABI as Abi,
+        functionName: 'getExplosionTime' as const,
+      },
+      {
+        address: CONTRACT_ADDRESS,
+        abi: ABI as Abi,
+        functionName: 'getAllWinners' as const,
+      }
+    ]
+
+    // Only add address-dependent calls if we have an address
+    if (_address) {
+      contracts.push(
+        {
+          address: CONTRACT_ADDRESS,
+          abi: ABI as Abi,
+          functionName: 'userHasPotatoToken' as const,
+          args: [_address] as const,
+        },
+        {
+          address: CONTRACT_ADDRESS,
+          abi: ABI as Abi,
+          functionName: 'successfulPasses' as const,
+          args: [_address] as const,
+        },
+        {
+          address: CONTRACT_ADDRESS,
+          abi: ABI as Abi,
+          functionName: 'addressActiveTokenCount' as const,
+          args: [_address] as const,
+        }
+      )
     }
-  ], [parsedResults?._currentGeneration, _address])
+
+    return contracts
+  }, [_address])
 
   const { data: additionalResults, isLoading: loadingAdditionalResults, refetch: refetchAdditionalResults } = useReadContracts({
     contracts: additionalContracts,
     query: {
-      enabled: !!_address,
+      enabled: true, // Always enabled to get basic contract data
       staleTime: 60000, // Increased to 60 seconds
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      refetchOnMount: false, // Only refetch when explicitly called
+      refetchOnMount: true, // Enable refetch on mount for initial data
       refetchOnReconnect: false, // Disable refetch on reconnect
       retry: 1, // Reduced retries
       retryDelay: 2000, // Fixed retry delay
@@ -173,35 +183,34 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const additionalData = useMemo(() => {
     if (!additionalResults) return null
     
-    // Debug logging for additional contract data
-    console.log('=== ADDITIONAL CONTRACT DATA ===')
-    console.log('additionalResults:', additionalResults)
-    console.log('additionalResults[0] (getExplosionTime):', additionalResults[0])
-    console.log('additionalResults[1] (hallOfFame):', additionalResults[1])
-    console.log('additionalResults[2] (userHasPotatoToken):', additionalResults[2])
-    console.log('additionalResults[3] (getActiveTokenIds):', additionalResults[3])
-    console.log('additionalResults[4] (successfulPasses):', additionalResults[4])
-    console.log('additionalResults[5] (addressActiveTokenCount):', additionalResults[5])
-    console.log('================================')
+    // Handle dynamic array based on what contracts were called
+    // Base contracts: getActiveTokenIds, getExplosionTime, getAllWinners
+    const baseResults = additionalResults.slice(0, 3)
+    
+    // Address-dependent results come after base results if address exists
+    const addressResults = _address ? additionalResults.slice(3, 6) : []
     
     return {
-      explosionTime: additionalResults[0] ? parseInt(additionalResults[0] as unknown as string, 10) : 0,
-      roundWinner: additionalResults[1]?.toString(),
-      hasPotatoToken: additionalResults[2]?.toString(),
-      getActiveTokenIds: Array.isArray(additionalResults[3]) ? additionalResults[3] as (string | number | bigint)[] : [],
-      successfulPasses: additionalResults[4] ? parseInt(additionalResults[4] as unknown as string, 10) : 0,
-      activeTokensCount: additionalResults[5] ? parseInt(additionalResults[5] as unknown as string, 10) : 0,
+      explosionTime: baseResults[1]?.result ? parseInt(baseResults[1].result as unknown as string, 10) : 0,
+      roundWinner: undefined, // Will be updated when we find the correct function
+      hasPotatoToken: addressResults[0]?.result?.toString(),
+      getActiveTokenIds: baseResults[0]?.result as unknown as number[] || [],
+      allWinners: baseResults[2]?.result as unknown as string[] || [],
+      successfulPasses: addressResults[1]?.result ? parseInt(addressResults[1].result as unknown as string, 10) : 0,
+      activeTokensCount: addressResults[2]?.result ? parseInt(addressResults[2].result as unknown as string, 10) : 0,
+      gameState: parsedResults?.gameState || 'Unknown',
     }
-  }, [additionalResults])
+  }, [additionalResults, _address, parsedResults?.gameState])
 
   const { data: bal, isLoading: balanceLoading, isError } = useBalance({
-    address: _address as `0x${string}`,
+    address: _address ? _address as `0x${string}` : undefined,
     chainId: 84532,
     query: {
+      enabled: !!_address, // Only fetch balance when address is available
       staleTime: 60000, // Increased to 60 seconds
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      refetchOnMount: false, // Only refetch when explicitly called
+      refetchOnMount: true, // Enable refetch on mount for initial data
       refetchOnReconnect: false, // Disable refetch on reconnect
       retry: 1, // Reduced retries
     }
@@ -211,12 +220,13 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const balance = formatUnits(value, bal?.decimals ?? 18)
 
   const { data: winnerEnsName, isError: errorWinnerEnsName, isLoading: loadingWinnerEnsName } = useEnsName({
-    address: additionalData?.roundWinner as `0x${string}`,
+    address: additionalData?.roundWinner ? additionalData.roundWinner as `0x${string}` : undefined,
     query: {
+      enabled: !!additionalData?.roundWinner, // Only fetch ENS when round winner exists
       staleTime: 60000, // Increased to 60 seconds
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      refetchOnMount: false, // Only refetch when explicitly called
+      refetchOnMount: true, // Enable refetch on mount for initial data
       refetchOnReconnect: false, // Disable refetch on reconnect
       retry: 1, // Reduced retries
     }
@@ -317,16 +327,14 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     }
   }, [readError]);
 
-  // Debug logging for contract data
+
+  // Update game state when contract data changes
   useEffect(() => {
-    console.log('=== CONTRACT DATA DEBUG ===')
-    console.log('parsedResults:', parsedResults)
-    console.log('additionalData:', additionalData)
-    console.log('additionalResults:', additionalResults)
-    console.log('_address:', _address)
-    console.log('tokenId:', tokenId)
-    console.log('========================')
-  }, [parsedResults, additionalData, additionalResults, _address, tokenId]);
+    if (parsedResults?.gameState && parsedResults.gameState !== getGameState) {
+      console.log('Updating game state from contract:', parsedResults.gameState)
+      updateGameState(parsedResults.gameState)
+    }
+  }, [parsedResults?.gameState, getGameState, updateGameState]);
 
   // --- Optimized timer effect ---
   useEffect(() => {
@@ -385,8 +393,51 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         />
 
         <h1 className={`${darkMode ? 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto' : 'text-4xl md:w-2/3 lg:w-1/2 col-start-2 col-span-6 w-full text-center mx-auto'}`}>
-          {gen === 1 ? "Round 1" : `Round ${gen}`}
+          {parsedResults?._currentGeneration ? `Round ${parsedResults._currentGeneration}` : "Round 1"}
         </h1>
+
+        {/* Debug Test Button */}
+        <div className="w-full flex justify-center mb-4">
+          <button 
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={async () => {
+              console.log('=== MANUAL CONTRACT TEST ===')
+              try {
+                // Test basic network connectivity
+                const provider = new ethers.providers.JsonRpcProvider('https://sepolia.base.org')
+                const network = await provider.getNetwork()
+                console.log('Network:', network)
+                
+                // Test contract existence
+                const code = await provider.getCode('0xD89A2aE68A3696D42327D75C02095b632D1B8f53')
+                console.log('Contract code length:', code.length)
+                console.log('Contract exists:', code !== '0x')
+                
+                // Test basic contract call
+                const contract = new ethers.Contract('0xD89A2aE68A3696D42327D75C02095b632D1B8f53', ABI, provider)
+                try {
+                  const name = await contract.name()
+                  console.log('Contract name:', name)
+                } catch (err) {
+                  console.log('Name call failed:', err)
+                }
+                
+                try {
+                  const gameState = await contract.getGameState()
+                  console.log('Game state:', gameState)
+                } catch (err) {
+                  console.log('Game state call failed:', err)
+                }
+                
+              } catch (error) {
+                console.log('Network test failed:', error)
+              }
+              console.log('================================')
+            }}
+          >
+            Test New Contract
+          </button>
+        </div>
 
         <GameStateComponents
           darkMode={darkMode}

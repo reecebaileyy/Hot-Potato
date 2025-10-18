@@ -12,7 +12,7 @@ const config: Config = createConfig({
   chains: [base, baseSepolia],
   transports: {
     [base.id]: http(process.env.NEXT_PUBLIC_ALCHEMY_URL || 'https://base-mainnet.public.blastapi.io'),
-    [baseSepolia.id]: http(process.env.NEXT_PUBLIC_ALCHEMY_URL_SEPOLIA || 'https://base-sepolia.public.blastapi.io'),
+    [baseSepolia.id]: http(process.env.NEXT_PUBLIC_ALCHEMY_URL_SEPOLIA || 'https://sepolia.base.org'),
   },
 })
 
