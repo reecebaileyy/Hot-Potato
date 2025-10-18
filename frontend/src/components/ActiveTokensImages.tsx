@@ -1,106 +1,50 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useReadContract, useWatchContractEvent } from 'wagmi'
 import { HiArrowCircleDown, HiArrowCircleUp } from 'react-icons/hi'
 import TokenImage from '../components/TokenImage'
-import { Abi } from 'viem'
+import { useTokenDataManager } from '../hooks/useTokenDataManager'
 
 interface ActiveTokensImagesProps {
-  ownerAddress: `0x${string}`
-  ABI: any
+  activeTokenIds: number[]
+  potatoTokenId: number
   shouldRefresh: boolean
-  tokenId: number
 }
 
-const CONTRACT_ADDRESS = '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07' as const
-
 const ActiveTokensImages: React.FC<ActiveTokensImagesProps> = ({
-  ownerAddress,
-  ABI,
+  activeTokenIds,
+  potatoTokenId,
   shouldRefresh,
-  tokenId,
 }) => {
   const [explodedTokens, setExplodedTokens] = useState<number[]>([])
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [itemsPerPage] = useState<number>(24)
-  const [sortedTokens, setSortedTokens] = useState<bigint[]>([])
+  const [sortedTokens, setSortedTokens] = useState<number[]>([])
 
-
-  // --- Contract Reads ---
-  const {
-    data: getActiveTokens,
-    refetch: refetchGetActiveTokens,
-  } = useReadContract({
-    abi: ABI,
-    address: CONTRACT_ADDRESS,
-    functionName: 'getActiveTokens',
-  })
-
-const {
-  data: activeTokens,
-  isLoading,
-  isError,
-  refetch: refetchActiveTokens,
-} = useReadContract({
-  abi: ABI,
-  address: CONTRACT_ADDRESS,
-  functionName: 'getActiveTokensOfOwner',
-  args: [ownerAddress],
-}) as {
-    data?: bigint[]
-    isLoading: boolean
-    isError: boolean
-    refetch?: () => Promise<any>
-  }
-
-
-  const {
-    data: getImageString,
-    refetch: refetchImageString,
-  } = useReadContract({
-    abi: ABI,
-    address: CONTRACT_ADDRESS,
-    functionName: 'getImageString',
-    args: [tokenId],
-  })
-
-  // --- Contract Events ---
-  useWatchContractEvent({
-    abi: ABI,
-    address: CONTRACT_ADDRESS,
-    eventName: 'PotatoMinted',
-    onLogs: async () => {
-      try {
-        await refetchImageString?.()
-        await refetchGetActiveTokens?.()
-      } catch (err) {
-        console.error('Error updating on PotatoMinted', err)
-      }
-    },
-  })
+  // Use centralized token data manager
+  const { getTokenData, refreshAll, isLoading } = useTokenDataManager(activeTokenIds)
 
   // --- Effects ---
   useEffect(() => {
-    refetchActiveTokens?.()
-    refetchGetActiveTokens?.()
-    refetchImageString?.()
-  }, [ownerAddress, shouldRefresh])
+    if (activeTokenIds.length > 0) {
+      setSortedTokens(activeTokenIds)
+    }
+  }, [activeTokenIds])
 
   useEffect(() => {
-    if (activeTokens) setSortedTokens(activeTokens as bigint[])
-  }, [activeTokens])
+    if (shouldRefresh) {
+      refreshAll()
+    }
+  }, [shouldRefresh, refreshAll])
 
   // --- Handlers ---
   const sortTokensAsc = () => {
-    if (!activeTokens) return
-    const sorted = [...activeTokens].sort((a, b) => Number(a - b))
+    const sorted = [...activeTokenIds].sort((a, b) => a - b)
     setSortedTokens(sorted)
   }
 
   const sortTokensDesc = () => {
-    if (!activeTokens) return
-    const sorted = [...activeTokens].sort((a, b) => Number(b - a))
+    const sorted = [...activeTokenIds].sort((a, b) => b - a)
     setSortedTokens(sorted)
   }
 
@@ -115,20 +59,8 @@ const {
 
   // --- Rendering ---
   if (isLoading) return <div>Loading...</div>
-  if (isError || !activeTokens)
-    return (
-      <div className="flex flex-col text-center">
-        <p>Error loading active tokens.</p>
-        <button
-          className="border font-bold"
-          onClick={() => refetchActiveTokens?.()}
-        >
-          Try Refreshing
-        </button>
-      </div>
-    )
 
-  if ((activeTokens as bigint[]).length === 0)
+  if (activeTokenIds.length === 0)
     return (
       <div className="flex flex-col text-center">
         <h1 className="text-xl">Mint some hands to join the round!</h1>
@@ -149,22 +81,26 @@ const {
 
       <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-5 gap-4 justify-center items-center">
         {currentTokens
-          .filter((id) => !explodedTokens.includes(Number(id)))
-          .map((id, index) => (
-            <div
-              key={index}
-              className="border rounded-lg p-2 text-center flex flex-col items-center"
-            >
-              <TokenImage
-                delay={index * 1000}
-                tokenId={Number(id)}
-                onTokenExploded={handleTokenExploded}
-                ABI={ABI}
-                shouldRefresh={shouldRefresh}
-                size={300}
-              />
-            </div>
-          ))}
+          .filter((id) => !explodedTokens.includes(id))
+          .map((id, index) => {
+            const tokenData = getTokenData(id)
+            return (
+              <div
+                key={id}
+                className="border rounded-lg p-2 text-center flex flex-col items-center"
+              >
+                <TokenImage
+                  tokenId={id}
+                  imageString={tokenData.imageString}
+                  potatoTokenId={potatoTokenId}
+                  isLoading={tokenData.isLoading}
+                  isError={tokenData.isError}
+                  onTokenExploded={handleTokenExploded}
+                  size={300}
+                />
+              </div>
+            )
+          })}
       </div>
 
       <div className="text-center mt-4">

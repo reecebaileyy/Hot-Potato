@@ -11,9 +11,16 @@
     "viem": "^1.2.12",
     "wagmi": "^1.3.8"
   },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node update-passes.js"
+    "start": "node update-passes.js",
+    "dev": "node update-passes.js",
+    "dev:passes": "node update-passes.js",
+    "dev:wins": "node update-wins.js",
+    "dev:all": "concurrently \"npm run dev:passes\" \"npm run dev:wins\""
   },
   "author": "",
   "license": "ISC"

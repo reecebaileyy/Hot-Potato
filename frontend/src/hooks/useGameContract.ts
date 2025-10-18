@@ -80,16 +80,35 @@ export function useGameContract(tokenId: string = '') {
   const { data: readResults, isLoading: loadingReadResults, refetch: refetchReadResults, error: readError } = useReadContracts({
     contracts,
     query: {
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      staleTime: 10000, // 10 seconds
-      refetchInterval: 30000, // 30 seconds
+      retry: 1, // Reduced retries
+      retryDelay: 2000, // Fixed retry delay
+      staleTime: 60000, // Increased to 60 seconds
+      refetchInterval: false, // Disable automatic refetching
+      refetchOnWindowFocus: false, // Disable refetch on window focus
+      refetchOnMount: false, // Only refetch when explicitly called
+      refetchOnReconnect: false, // Disable refetch on reconnect
     }
   })
 
   // Memoized parsed results
   const parsedResults = useMemo(() => {
     if (!readResults) return null
+    
+    // Debug logging for raw contract data
+    console.log('=== RAW CONTRACT DATA ===')
+    console.log('readResults:', readResults)
+    console.log('readResults[0] (_price):', readResults[0])
+    console.log('readResults[1] (potatoTokenId):', readResults[1])
+    console.log('readResults[2] (currentGeneration):', readResults[2])
+    console.log('readResults[3] (roundMints):', readResults[3])
+    console.log('readResults[4] (_owner):', readResults[4])
+    console.log('readResults[5] (getAllWinners):', readResults[5])
+    console.log('readResults[6] (rewards):', readResults[6])
+    console.log('readResults[7] (totalWins):', readResults[7])
+    console.log('readResults[8] (_maxperwallet):', readResults[8])
+    console.log('readResults[9] (_isTokenActive):', readResults[9])
+    console.log('readResults[10] (ownerOf):', readResults[10])
+    console.log('========================')
     
     return {
       _price: readResults[0] ? formatUnits(readResults[0] as unknown as bigint, 18) : '0',

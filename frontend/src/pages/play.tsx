@@ -11,6 +11,7 @@ import { useGameContract } from '../hooks/useGameContract'
 import { useGameEvents } from '../hooks/useGameEvents'
 import { useGameState } from '../hooks/useGameState'
 import { useTokenManagement } from '../hooks/useTokenManagement'
+import { useTokenDataManager } from '../hooks/useTokenDataManager'
 import { useContractWrites } from '../hooks/useContractWrites'
 import { createDeferredPromise, type DeferredPromise } from './helpers/deferredPromise'
 import Navigation from '../components/Navigation'
@@ -25,11 +26,6 @@ import EventFeed from '../components/EventFeed'
 // Lazy load heavy components
 const TokenImage = dynamic(() => import('../components/TokenImage'), {
   loading: () => <div className="animate-pulse bg-gray-300 h-32 w-32 rounded"></div>,
-  ssr: false
-})
-
-const ActiveTokensImages = dynamic(() => import('../components/ActiveTokensImages'), {
-  loading: () => <div className="animate-pulse bg-gray-300 h-64 w-full rounded"></div>,
   ssr: false
 })
 
@@ -109,7 +105,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const { gameContract, parsedResults, isWinner, _address, loadingReadResults, refetchReadResults, readError } = useGameContract(tokenId)
 
   // --- Game Events Hook (needs _address) ---
-  const { events, setEvents, explosion, remainingTime, setRemainingTime } = useGameEvents(_address, refetchReadResults)
+  const { events, setEvents, explosion, remainingTime, setRemainingTime } = useGameEvents(_address, () => refetchAdditionalResults())
   
   // --- Memoized values ---
   const displayPrice = useMemo(() => ethers.utils.formatEther(BigInt(price || 0)), [price])
@@ -121,74 +117,109 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
   // -----------------------------Single Reads End---------------------------------
 
-  // Additional contract reads still needed
-  const { data: getExplosionTime, isLoading: loadingExplosionTime, error: loadingError, refetch: refetchGetExplosionTime } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'getExplosionTime',
-  })
-  const explosionTime = useMemo(() => 
-    getExplosionTime ? parseInt(getExplosionTime as unknown as string, 10) : 0,
-    [getExplosionTime]
-  );
+  // Batch all additional contract reads to reduce requests
+  const additionalContracts = useMemo(() => [
+    {
+      address: CONTRACT_ADDRESS,
+      abi: ABI as Abi,
+      functionName: 'getExplosionTime' as const,
+    },
+    {
+      address: CONTRACT_ADDRESS,
+      abi: ABI as Abi,
+      functionName: 'hallOfFame' as const,
+      args: [parsedResults?._currentGeneration || 0] as const,
+    },
+    {
+      address: CONTRACT_ADDRESS,
+      abi: ABI as Abi,
+      functionName: 'userHasPotatoToken' as const,
+      args: [_address] as const,
+    },
+    {
+      address: CONTRACT_ADDRESS,
+      abi: ABI as Abi,
+      functionName: 'getActiveTokenIds' as const,
+    },
+    {
+      address: CONTRACT_ADDRESS,
+      abi: ABI as Abi,
+      functionName: 'successfulPasses' as const,
+      args: [_address] as const,
+    },
+    {
+      address: CONTRACT_ADDRESS,
+      abi: ABI as Abi,
+      functionName: 'addressActiveTokenCount' as const,
+      args: [_address] as const,
+    }
+  ], [parsedResults?._currentGeneration, _address])
 
-  const { data: hallOfFame, isLoading: loadingHGallOfFame, refetch: refetchHallOfFame } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'hallOfFame',
-    args: [parsedResults?._currentGeneration || 0],
-  })
-  const roundWinner = useMemo(() => hallOfFame?.toString(), [hallOfFame]);
-
-  const { data: userHasPotatoToken, isLoading: loadingHasPotato, refetch: refetchUserHasPotatoToken } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'userHasPotatoToken',
-    args: [_address],
-    query: { enabled: !!_address },
-  })
-  const hasPotatoToken = useMemo(() => userHasPotatoToken?.toString(), [userHasPotatoToken]);
-
-  const { data: getActiveTokenIds = [], isLoading: loadingActiveTokenIds, refetch: refetchGetActiveTokenIds } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'getActiveTokenIds',
+  const { data: additionalResults, isLoading: loadingAdditionalResults, refetch: refetchAdditionalResults } = useReadContracts({
+    contracts: additionalContracts,
+    query: {
+      enabled: !!_address,
+      staleTime: 60000, // Increased to 60 seconds
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false, // Only refetch when explicitly called
+      refetchOnReconnect: false, // Disable refetch on reconnect
+      retry: 1, // Reduced retries
+      retryDelay: 2000, // Fixed retry delay
+    }
   })
 
-  const { data: _successfulPasses, isLoading: loadingSuccessfulPasses, refetch: refetchSuccessfulPasses } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'successfulPasses',
-    args: [_address],
-    query: { enabled: !!_address },
-  })
-  const successfulPasses = useMemo(() => 
-    _successfulPasses ? parseInt(_successfulPasses as unknown as string, 10) : 0,
-    [_successfulPasses]
-  );
-
-  const { data: getActiveTokenCount, isLoading: loadingActiveTokenCount, refetch: refetchGetActiveTokenCount } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'addressActiveTokenCount',
-    args: [_address],
-    query: { enabled: !!_address },
-  })
-  const activeTokensCount = useMemo(() => 
-    getActiveTokenCount ? parseInt(getActiveTokenCount as unknown as string, 10) : 0,
-    [getActiveTokenCount]
-  );
+  // Memoized parsed results for additional data
+  const additionalData = useMemo(() => {
+    if (!additionalResults) return null
+    
+    // Debug logging for additional contract data
+    console.log('=== ADDITIONAL CONTRACT DATA ===')
+    console.log('additionalResults:', additionalResults)
+    console.log('additionalResults[0] (getExplosionTime):', additionalResults[0])
+    console.log('additionalResults[1] (hallOfFame):', additionalResults[1])
+    console.log('additionalResults[2] (userHasPotatoToken):', additionalResults[2])
+    console.log('additionalResults[3] (getActiveTokenIds):', additionalResults[3])
+    console.log('additionalResults[4] (successfulPasses):', additionalResults[4])
+    console.log('additionalResults[5] (addressActiveTokenCount):', additionalResults[5])
+    console.log('================================')
+    
+    return {
+      explosionTime: additionalResults[0] ? parseInt(additionalResults[0] as unknown as string, 10) : 0,
+      roundWinner: additionalResults[1]?.toString(),
+      hasPotatoToken: additionalResults[2]?.toString(),
+      getActiveTokenIds: Array.isArray(additionalResults[3]) ? additionalResults[3] as (string | number | bigint)[] : [],
+      successfulPasses: additionalResults[4] ? parseInt(additionalResults[4] as unknown as string, 10) : 0,
+      activeTokensCount: additionalResults[5] ? parseInt(additionalResults[5] as unknown as string, 10) : 0,
+    }
+  }, [additionalResults])
 
   const { data: bal, isLoading: balanceLoading, isError } = useBalance({
     address: _address as `0x${string}`,
     chainId: 84532,
+    query: {
+      staleTime: 60000, // Increased to 60 seconds
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false, // Only refetch when explicitly called
+      refetchOnReconnect: false, // Disable refetch on reconnect
+      retry: 1, // Reduced retries
+    }
   })
 
   const value = bal?.value ?? 0n
   const balance = formatUnits(value, bal?.decimals ?? 18)
 
   const { data: winnerEnsName, isError: errorWinnerEnsName, isLoading: loadingWinnerEnsName } = useEnsName({
-    address: roundWinner as `0x${string}`,
+    address: additionalData?.roundWinner as `0x${string}`,
+    query: {
+      staleTime: 60000, // Increased to 60 seconds
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false, // Only refetch when explicitly called
+      refetchOnReconnect: false, // Disable refetch on reconnect
+      retry: 1, // Reduced retries
+    }
   })
 
   // Write Hooks - Now handled by useContractWrites hook
@@ -241,7 +272,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   // Event handlers - Now handled by useGameEvents hook
 
   // --- Loading states ---
-  const isLoading = loadingReadResults || loadingExplosionTime || loadingHGallOfFame || loadingHasPotato || loadingSuccessfulPasses || loadingActiveTokenCount || loadingActiveTokenIds || balanceLoading
+  const isLoading = loadingReadResults || loadingAdditionalResults || balanceLoading
   
 
   // --- Optimized effects ---
@@ -249,39 +280,53 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     if (parsedResults?._potato_token) {
       setPotatoTokenId(parsedResults._potato_token);
     }
-    if (explosionTime) {
-      setRemainingTime(explosionTime);
+    if (additionalData?.explosionTime) {
+      setRemainingTime(additionalData.explosionTime);
     }
-  }, [parsedResults?._potato_token, explosionTime]);
+  }, [parsedResults?._potato_token, additionalData?.explosionTime]);
 
   useEffect(() => {
-    const ids = (getActiveTokenIds as unknown as (string | number | bigint)[] | undefined) ?? [];
-    const activeIds = ids.slice(1).map((tokenId) => Number(tokenId));
-    setActiveTokens(activeIds);
-    setIsLoadingActiveTokens(false);
-  }, [getActiveTokenIds]);
+    if (additionalData?.getActiveTokenIds) {
+      const ids = additionalData.getActiveTokenIds;
+      // Ensure ids is an array before calling slice
+      if (Array.isArray(ids)) {
+        const activeIds = ids.slice(1).map((tokenId) => Number(tokenId));
+        setActiveTokens(activeIds);
+        setIsLoadingActiveTokens(false);
+      } else {
+        console.warn('getActiveTokenIds is not an array:', ids);
+        setActiveTokens([]);
+        setIsLoadingActiveTokens(false);
+      }
+    }
+  }, [additionalData?.getActiveTokenIds]);
 
   useEffect(() => {
     setSortedTokens(activeTokens);
   }, [activeTokens]);
 
   useEffect(() => {
-    if (roundWinner === undefined || roundWinner === null) {
-      refetchHallOfFame();
-    }
-  }, [roundWinner, refetchHallOfFame]);
-
-  useEffect(() => {
     console.log("An UNKNOWN X BEDTIME PRODUCTION")
   }, []);
 
-  // Log contract read errors
+  // Log contract read errors and debug data
   useEffect(() => {
     if (readError) {
       console.error('Contract read error:', readError)
       toast.error('Failed to load game data. Please try again.')
     }
   }, [readError]);
+
+  // Debug logging for contract data
+  useEffect(() => {
+    console.log('=== CONTRACT DATA DEBUG ===')
+    console.log('parsedResults:', parsedResults)
+    console.log('additionalData:', additionalData)
+    console.log('additionalResults:', additionalResults)
+    console.log('_address:', _address)
+    console.log('tokenId:', tokenId)
+    console.log('========================')
+  }, [parsedResults, additionalData, additionalResults, _address, tokenId]);
 
   // --- Optimized timer effect ---
   useEffect(() => {
@@ -357,7 +402,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           onMint={() => {
                           if (!_address) {
                             noAddressToast();
-                          } else if (activeTokensCount >= (parsedResults?.maxPerWallet ?? 0)) {
+                          } else if ((additionalData?.activeTokensCount || 0) >= (parsedResults?.maxPerWallet ?? 0)) {
                             maxPerWalletToast();
                           } else if (mintSim?.request) {
                             writeMint(mintSim.request);
@@ -381,14 +426,14 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         <TokenGrid
           darkMode={darkMode}
           gameState={getGameState || ''}
-          loadingActiveTokenIds={loadingActiveTokenIds}
+          loadingActiveTokenIds={loadingAdditionalResults}
           paginationData={paginationData}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           explodedTokens={explodedTokens}
-                          potatoTokenId={parsedResults?._potato_token || 0}
-                          shouldRefresh={shouldRefresh}
-                          onTokenExploded={handleTokenExploded}
+          potatoTokenId={parsedResults?._potato_token || 0}
+          shouldRefresh={shouldRefresh}
+          onTokenExploded={handleTokenExploded}
           onRefreshImages={refreshAllImages}
           onSortTokensAsc={sortTokensAsc}
           onSortTokensDesc={sortTokensDesc}
@@ -459,7 +504,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
             onPassPotato={() => {
                     if (!_address) {
                       noAddressToast();
-                    } else if (hasPotatoToken !== "true") {
+                    } else if (additionalData?.hasPotatoToken !== "true") {
                       noPotatoToast();
                     } else if (!parsedResults?.isTokenActive) {
                       notActiveToast();
@@ -481,8 +526,8 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         <PlayerStats
           darkMode={darkMode}
           totalWins={parsedResults?.totalWins || 0}
-          successfulPasses={successfulPasses}
-          activeTokensCount={activeTokensCount}
+          successfulPasses={additionalData?.successfulPasses || 0}
+          activeTokensCount={additionalData?.activeTokensCount || 0}
           rewards={parsedResults?._rewards || '0'}
         />
       </div>

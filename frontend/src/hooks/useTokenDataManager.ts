@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useReadContract, useReadContracts } from 'wagmi'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useReadContracts } from 'wagmi'
+import { Abi } from 'viem'
 import ABI from '../abi/Game.json'
 
-const CONTRACT_ADDRESS = '0x64c913B1B5F17C5a908359F6ed17DA0c744FEa07' as const
+const CONTRACT_ADDRESS = '0x278Bf0EF8CEED11bcdf201B1eE39d00e94FCA704' as const
 
 interface TokenData {
   tokenId: number
@@ -14,24 +15,36 @@ interface TokenData {
 export function useTokenDataManager(activeTokenIds: number[]) {
   const [tokenDataCache, setTokenDataCache] = useState<Map<number, TokenData>>(new Map())
   const [lastRefresh, setLastRefresh] = useState<number>(0)
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Centralized contract reads for all tokens
+  // Debounced refresh function to prevent excessive API calls
+  const debouncedRefresh = useCallback((callback: () => void, delay: number = 2000) => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current)
+    }
+    refreshTimeoutRef.current = setTimeout(callback, delay)
+  }, [])
+
+  // Centralized contract reads for all tokens with optimized caching
   const contracts = useMemo(() => 
     activeTokenIds.map(tokenId => ({
       address: CONTRACT_ADDRESS,
-      abi: ABI,
+      abi: ABI as Abi,
       functionName: 'getImageString' as const,
       args: [tokenId] as const,
     })), [activeTokenIds]
   )
 
-  const { data: allImageStrings, isLoading, error } = useReadContracts({
+  const { data: allImageStrings, isLoading, error, refetch } = useReadContracts({
     contracts,
     query: {
       enabled: activeTokenIds.length > 0,
-      staleTime: 30000, // 30 seconds
-      refetchInterval: 60000, // 1 minute
-      retry: 2,
+      staleTime: 60000, // Increased to 60 seconds
+      refetchInterval: false, // Disable automatic refetching
+      refetchOnWindowFocus: false, // Disable refetch on window focus
+      refetchOnMount: false, // Only refetch when explicitly called
+      retry: 1, // Reduced retries
+      retryDelay: 1000, // Fixed retry delay
     }
   })
 
@@ -45,8 +58,8 @@ export function useTokenDataManager(activeTokenIds: number[]) {
         newCache.set(tokenId, {
           tokenId,
           imageString: imageString || '',
-          isLoading: allImageStrings[index]?.status === 'pending',
-          isError: allImageStrings[index]?.status === 'error',
+          isLoading: !allImageStrings[index]?.result,
+          isError: allImageStrings[index]?.status === 'failure',
         })
       })
       
@@ -64,10 +77,22 @@ export function useTokenDataManager(activeTokenIds: number[]) {
     }
   }
 
-  // Refresh all data
-  const refreshAll = () => {
-    setLastRefresh(Date.now())
-  }
+  // Debounced refresh all data
+  const refreshAll = useCallback(() => {
+    debouncedRefresh(() => {
+      setLastRefresh(Date.now())
+      refetch()
+    }, 2000)
+  }, [debouncedRefresh, refetch])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current)
+      }
+    }
+  }, [])
 
   return {
     getTokenData,

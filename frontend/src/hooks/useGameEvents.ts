@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import { useWatchContractEvent } from 'wagmi'
 import { safeParseEventLogs } from '../pages/helpers/viemUtils'
 import ABI from '../abi/Game.json'
@@ -11,6 +11,49 @@ export function useGameEvents(address: string, refetchHallOfFame: () => void) {
   const [explosion, setExplosion] = useState<boolean>(false)
   const [remainingTime, setRemainingTime] = useState<number | null>(null)
   const [roundMints, setRoundMints] = useState<number>(0)
+  
+  // Debounce refs to prevent excessive calls
+  const refetchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const lastRefetchTimeRef = useRef<number>(0)
+  const lastRefreshTimeRef = useRef<number>(0)
+
+  // Debounced helper functions with minimum interval enforcement
+  const debouncedRefetch = useCallback((callback: () => void, delay: number = 3000) => {
+    const now = Date.now()
+    const timeSinceLastRefetch = now - lastRefetchTimeRef.current
+    
+    if (timeSinceLastRefetch < 2000) {
+      // If less than 2 seconds since last refetch, extend the delay
+      delay = Math.max(delay, 2000 - timeSinceLastRefetch)
+    }
+    
+    if (refetchTimeoutRef.current) {
+      clearTimeout(refetchTimeoutRef.current)
+    }
+    refetchTimeoutRef.current = setTimeout(() => {
+      lastRefetchTimeRef.current = Date.now()
+      callback()
+    }, delay)
+  }, [])
+
+  const debouncedRefresh = useCallback((callback: () => void, delay: number = 2000) => {
+    const now = Date.now()
+    const timeSinceLastRefresh = now - lastRefreshTimeRef.current
+    
+    if (timeSinceLastRefresh < 1000) {
+      // If less than 1 second since last refresh, extend the delay
+      delay = Math.max(delay, 1000 - timeSinceLastRefresh)
+    }
+    
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current)
+    }
+    refreshTimeoutRef.current = setTimeout(() => {
+      lastRefreshTimeRef.current = Date.now()
+      callback()
+    }, delay)
+  }, [])
 
   // Optimized event handlers with useCallback
   const handleGameStarted = useCallback(async (logs: any[]) => {
@@ -47,15 +90,15 @@ export function useGameEvents(address: string, refetchHallOfFame: () => void) {
       if (!player) return
 
       console.log('PlayerWon', player)
-      // Only refetch if it's the current player
+      // Only refetch if it's the current player and debounce the refetch
       if (player.toLowerCase() === address?.toLowerCase()) {
-        await refetchHallOfFame()
+        debouncedRefetch(() => refetchHallOfFame(), 2000)
       }
       setEvents((prev) => [...prev, `${player} won! 🎉`])
     } catch (error) {
       console.error('Error updating wins:', error)
     }
-  }, [refetchHallOfFame, address])
+  }, [refetchHallOfFame, address, debouncedRefetch])
 
   const handleSuccessfulPass = useCallback(async (logs: any[]) => {
     try {
@@ -77,27 +120,28 @@ export function useGameEvents(address: string, refetchHallOfFame: () => void) {
       if (!player) return
 
       console.log(`address: ${address} player: ${player} amount: ${amount}`)
-      // Only trigger refresh if it's the current player
+      // Only trigger refresh if it's the current player and debounce the refresh
       if (player.toLowerCase() === address?.toLowerCase()) {
-        setShouldRefresh((prev) => !prev)
+        debouncedRefresh(() => setShouldRefresh((prev) => !prev), 1000)
       }
       setRoundMints(roundMints)
       setEvents((prev) => [...prev, `${player} just minted ${amount} hands`])
     } catch (error) {
       console.error('Error updating mints', error)
     }
-  }, [address, roundMints])
+  }, [address, roundMints, debouncedRefresh])
 
   const handleNewRound = useCallback(async (logs: any[]) => {
     try {
       const decoded = safeParseEventLogs<{ round: bigint }>(ABI, 'NewRound', logs)
       const round = Number(decoded[0]?.args?.round ?? 0)
       console.log('NewRound', round)
-      setShouldRefresh((prev) => !prev)
+      // Debounce refresh to prevent excessive updates
+      debouncedRefresh(() => setShouldRefresh((prev) => !prev), 2000)
     } catch (error) {
       console.error('Error updating new round data', error)
     }
-  }, [])
+  }, [debouncedRefresh])
 
   const handleUpdatedTimer = useCallback((logs: any[]) => {
     const decoded = safeParseEventLogs<{ time: bigint }>(ABI, 'UpdatedTimer', logs)
@@ -133,9 +177,22 @@ export function useGameEvents(address: string, refetchHallOfFame: () => void) {
 
       console.log('PotatoPassed', tokenIdTo)
       setEvents((prev) => [...prev, `Potato Passed to #${tokenIdTo}`])
-      setShouldRefresh((prev) => !prev)
+      // Debounce refresh to prevent excessive updates
+      debouncedRefresh(() => setShouldRefresh((prev) => !prev), 1000)
     } catch (error) {
       console.error('Error handling PotatoPassed event', error)
+    }
+  }, [debouncedRefresh])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (refetchTimeoutRef.current) {
+        clearTimeout(refetchTimeoutRef.current)
+      }
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current)
+      }
     }
   }, [])
 
