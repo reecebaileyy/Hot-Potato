@@ -1,0 +1,14 @@
+{
+  "name": "hot-potato",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "cd frontend && npm run build",
+    "start": "cd frontend && npm run start",
+    "dev": "cd frontend && npm run dev",
+    "install": "cd frontend && npm install"
+  }
+}
