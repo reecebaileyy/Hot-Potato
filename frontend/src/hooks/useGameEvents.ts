@@ -173,11 +173,15 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
 
       console.log('✅ SuccessfulPass event detected for player:', player)
       
-      // Refresh successful passes count and other player data
+      // Immediately refetch to update successful passes count
+      // Note: PotatoPassed event will also fire and handle the timer update
+      refetchAdditionalData() // Updates successful passes count immediately
+      
+      // Debounced secondary refresh to avoid excessive calls
       debouncedRefetch(() => {
-        console.log('Refetching data after successful pass')
-        refetchAdditionalData() // Updates successful passes count and active tokens
-      }, 500)
+        console.log('Secondary refetch after successful pass')
+        refetchAdditionalData()
+      }, 1000)
       
       setEvents((prev) => [...prev, `${player} passed successfully!`])
     } catch (error) {
@@ -237,13 +241,15 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
   const handleUpdatedTimer = useCallback((logs: any[]) => {
     const decoded = safeParseEventLogs<{ time: bigint }>(ABI, 'UpdatedTimer', logs)
     const time = decoded[0]?.args?.time?.toString()
-    console.log('UpdatedTimer', time)
+    console.log('⏱️ UpdatedTimer event detected:', time, 'seconds')
 
     if (time) {
-      setRemainingTime(parseInt(time, 10))
-      setEvents((prev) => [...prev, `${time} seconds till explosion`])
+      const timeInSeconds = parseInt(time, 10)
+      console.log(`Setting remaining time to ${timeInSeconds} seconds from UpdatedTimer event`)
+      setRemainingTime(timeInSeconds)
+      setEvents((prev) => [...prev, `${timeInSeconds} seconds till explosion`])
     }
-  }, [])
+  }, [setRemainingTime, setEvents])
 
   const handlePotatoExploded = useCallback(async (logs: any[]) => {
     try {
@@ -254,12 +260,17 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
       setExplosion(true)
       setTimeout(() => setExplosion(false), 3050)
       
-      // Refresh ALL data after explosion - critical event
+      // CRITICAL: Immediately refetch ALL data after explosion - timer resets, new potato assigned
+      console.log('⏱️ Immediately refetching all data after explosion (new timer, new potato holder)')
+      refetchGameState() // New potato token ID
+      refetchAdditionalData() // New explosion time, new active tokens, new potato holder
+      
+      // Also trigger debounced refresh for a second update
       debouncedRefetch(() => {
-        console.log('Refetching all data after explosion')
+        console.log('Secondary refetch after explosion')
         refetchGameState()
         refetchAdditionalData()
-      }, 1000)
+      }, 1500)
       debouncedRefresh(() => setShouldRefresh((prev) => !prev), 1000)
       
       // Refresh images to show updated tokens
@@ -284,19 +295,23 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
 
       console.log('🥔 PotatoPassed event detected', { from: tokenIdFrom, to: tokenIdTo, yielder })
       
-      // Comprehensive refresh of all potato-related data
+      // CRITICAL: Immediately refetch timer without debouncing
+      // The contract updates EXPLOSION_TIME internally but doesn't emit UpdatedTimer for passes
+      console.log('⏱️ Immediately refetching explosion time after potato pass')
+      refetchAdditionalData() // This fetches getExplosionTime() which returns EXPLOSION_TIME - block.timestamp
+      refetchGameState() // Refreshes potato token ID and game state
+      
+      // Also trigger debounced refresh for other data to avoid excessive calls
       debouncedRefetch(() => {
-        console.log('Refetching all data after potato pass:')
+        console.log('Secondary refetch after potato pass:')
         console.log('  - Updating potato holder status (userHasPotatoToken)')
-        console.log('  - Updating potato timer (getExplosionTime)')
         console.log('  - Updating active tokens list (getActiveTokenIds)')
         console.log('  - Updating user active tokens (getActiveTokensOfOwner)')
         console.log('  - Updating successful passes count (successfulPasses)')
-        console.log('  - Updating potato token ID')
         
-        refetchAdditionalData() // Refreshes: userHasPotatoToken, explosionTime, activeTokenIds, userTokens, successfulPasses
-        refetchGameState() // Refreshes: potato token ID and game state
-      }, 500)
+        refetchAdditionalData()
+        refetchGameState()
+      }, 1000)
       
       // Trigger UI refresh for all components
       debouncedRefresh(() => setShouldRefresh((prev) => !prev), 500)
