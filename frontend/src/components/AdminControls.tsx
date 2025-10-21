@@ -7,12 +7,14 @@ interface AdminControlsProps {
   gameState: string
   onStartGame: () => void
   onEndMinting: () => void
+  onCloseMinting: () => void
   onPauseGame: () => void
   onResumeGame: () => void
   onRestartGame: () => void
   // Debug props
   startSim?: any
   endMintSim?: any
+  closeMintSim?: any
   pauseSim?: any
   resumeSim?: any
   restartSim?: any
@@ -24,12 +26,14 @@ export default function AdminControls({
   ownerAddress,
   gameState, 
   onStartGame, 
-  onEndMinting, 
+  onEndMinting,
+  onCloseMinting, 
   onPauseGame, 
   onResumeGame, 
   onRestartGame,
   startSim,
   endMintSim,
+  closeMintSim,
   pauseSim,
   resumeSim,
   restartSim
@@ -55,40 +59,73 @@ export default function AdminControls({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <button
-          className={`btn-primary text-lg py-4 md:col-span-2 lg:col-span-3`}
-          onClick={onStartGame}
-        >
-          🚀 Start Game
-        </button>
+        {/* Start Game - Show when Queued or Ended */}
+        {(gameState === 'Queued' || gameState === 'Ended') && (
+          <button
+            className={`btn-primary text-lg py-4 md:col-span-2 lg:col-span-3`}
+            onClick={onStartGame}
+          >
+            🚀 Start Game (Open Minting)
+          </button>
+        )}
         
-        <button
-          className={`btn-secondary text-lg py-4 md:col-span-2 lg:col-span-3`}
-          onClick={onEndMinting}
-        >
-          ⏹️ End Minting
-        </button>
+        {/* Minting State Controls */}
+        {gameState === 'Minting' && (
+          <>
+            <button
+              className={`btn-outline text-lg py-4`}
+              onClick={onPauseGame}
+            >
+              ⏸️ Pause Minting
+            </button>
+            
+            <button
+              className={`btn-outline text-lg py-4`}
+              onClick={onCloseMinting}
+            >
+              🔒 Close Minting
+            </button>
+            
+            <button
+              className={`btn-secondary text-lg py-4`}
+              onClick={onEndMinting}
+            >
+              ⏹️ End Minting & Start Game
+            </button>
+          </>
+        )}
         
-        <button
-          className={`btn-outline text-lg py-4`}
-          onClick={onPauseGame}
-        >
-          ⏸️ Pause Game
-        </button>
+        {/* Paused State Controls */}
+        {gameState === 'Paused' && (
+          <>
+            <button
+              className={`btn-primary text-lg py-4 md:col-span-2 lg:col-span-3`}
+              onClick={onResumeGame}
+            >
+              ▶️ Resume Game
+            </button>
+          </>
+        )}
         
-        <button
-          className={`btn-outline text-lg py-4`}
-          onClick={onResumeGame}
-        >
-          ▶️ Resume Game
-        </button>
+        {/* Playing/Final Round State Controls */}
+        {(gameState === 'Playing' || gameState === 'Final Stage') && (
+          <button
+            className={`btn-outline text-lg py-4 md:col-span-2 lg:col-span-3`}
+            onClick={onPauseGame}
+          >
+            ⏸️ Pause Game
+          </button>
+        )}
         
-        <button
-          className={`btn-outline text-lg py-4`}
-          onClick={onRestartGame}
-        >
-          🔄 Restart Game
-        </button>
+        {/* Restart - Show for Paused or Ended */}
+        {(gameState === 'Paused' || gameState === 'Ended') && (
+          <button
+            className={`btn-outline text-lg py-4 md:col-span-2 lg:col-span-3`}
+            onClick={onRestartGame}
+          >
+            🔄 Restart Game
+          </button>
+        )}
       </div>
       
       <div className={`mt-6 p-4 rounded-lg ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50'} text-center`}>

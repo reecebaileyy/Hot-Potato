@@ -19,7 +19,7 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
       enabled: !!mintAmount && !!price
     }
   })
-  const { writeContract: writeMint, isPending: mintPending } = useWriteContract()
+  const { writeContract: writeMint, isPending: mintPending, data: mintTxHash } = useWriteContract()
 
   // Pass operations
   const { data: passSim, isError: passSimError, error: passError } = useSimulateContract({
@@ -31,7 +31,7 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
       enabled: !!tokenId
     }
   })
-  const { writeContract: writePass, isPending: passPending } = useWriteContract()
+  const { writeContract: writePass, isPending: passPending, data: passTxHash } = useWriteContract()
 
   // Claim operations
   const { data: claimSim, error: claimError } = useSimulateContract({
@@ -39,7 +39,7 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
     address: CONTRACT_ADDRESS,
     functionName: 'withdrawWinnersFunds'
   })
-  const { writeContract: writeClaim } = useWriteContract()
+  const { writeContract: writeClaim, data: claimTxHash } = useWriteContract()
 
   // Owner operations - conditional based on game state
   const { data: startSim, error: startError } = useSimulateContract({
@@ -55,7 +55,7 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
       refetchOnWindowFocus: false
     }
   })
-  const { writeContract: writeStartGame, isPending: starting } = useWriteContract()
+  const { writeContract: writeStartGame, isPending: starting, data: startTxHash } = useWriteContract()
   
   // Debug logging for admin operations
   console.log('=== ADMIN SIMULATIONS DEBUG ===');
@@ -76,7 +76,22 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
       refetchOnWindowFocus: false
     }
   })
-  const { writeContract: writeEndMint, isPending: ending } = useWriteContract()
+  const { writeContract: writeEndMint, isPending: ending, data: endMintTxHash } = useWriteContract()
+
+  const { data: closeMintSim, error: closeMintError } = useSimulateContract({
+    abi: ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: 'closeMinting',
+    query: {
+      enabled: false, // Disabled due to unknown error signatures in contract
+      retry: 1,
+      retryDelay: 1000,
+      staleTime: 30000,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false
+    }
+  })
+  const { writeContract: writeCloseMint, isPending: closing, data: closeMintTxHash } = useWriteContract()
 
   const { data: pauseSim, error: pauseError } = useSimulateContract({
     abi: ABI,
@@ -91,7 +106,7 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
       refetchOnWindowFocus: false
     }
   })
-  const { writeContract: writePause, isPending: pausing } = useWriteContract()
+  const { writeContract: writePause, isPending: pausing, data: pauseTxHash } = useWriteContract()
 
   const { data: resumeSim, error: resumeError } = useSimulateContract({
     abi: ABI,
@@ -106,7 +121,7 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
       refetchOnWindowFocus: false
     }
   })
-  const { writeContract: writeResume, isPending: resuming } = useWriteContract()
+  const { writeContract: writeResume, isPending: resuming, data: resumeTxHash } = useWriteContract()
 
   const { data: restartSim, error: restartError } = useSimulateContract({
     abi: ABI,
@@ -121,10 +136,27 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
       refetchOnWindowFocus: false
     }
   })
-  const { writeContract: writeRestart, isPending: restarting } = useWriteContract()
+  const { writeContract: writeRestart, isPending: restarting, data: restartTxHash } = useWriteContract()
+
+  // Check Explosion operation
+  const { data: checkExplosionSim, error: checkExplosionError } = useSimulateContract({
+    abi: ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: 'checkExplosion',
+    query: {
+      enabled: gameState === 'Playing' || gameState === 'Final Stage',
+      retry: 1,
+      retryDelay: 1000,
+      staleTime: 5000, // Short cache since this is time-sensitive
+      refetchOnMount: true,
+      refetchOnWindowFocus: false
+    }
+  })
+  const { writeContract: writeCheckExplosion, isPending: checkingExplosion, data: checkExplosionTxHash } = useWriteContract()
   
   // Debug logging for all admin operations
   console.log('endMintSim:', endMintSim, 'endMintError:', endMintError);
+  console.log('closeMintSim:', closeMintSim, 'closeMintError:', closeMintError);
   console.log('pauseSim:', pauseSim, 'pauseError:', pauseError);
   console.log('resumeSim:', resumeSim, 'resumeError:', resumeError);
   console.log('restartSim:', restartSim, 'restartError:', restartError);
@@ -136,6 +168,9 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
   }
   if (endMintError) {
     console.warn('End minting simulation disabled due to contract error signature issues');
+  }
+  if (closeMintError) {
+    console.warn('Close minting simulation disabled due to contract error signature issues');
   }
   if (pauseError) {
     console.warn('Pause game simulation disabled due to contract error signature issues');
@@ -149,29 +184,34 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
 
   // Simple wrapper functions that just use wagmi directly
   // wagmi automatically handles Privy embedded wallets when properly configured
+  // Note: writeContract doesn't return the hash directly, it's available in the data property
   const enhancedWriteMint = async (request: any) => {
     console.log('=== WRITE MINT ===')
     console.log('Using wagmi writeContract (works with all wallet types)')
     console.log('request:', request)
-    return writeMint(request)
+    writeMint(request)
+    return mintTxHash // Return the hash from the hook's data
   }
 
   const enhancedWritePass = async (request: any) => {
     console.log('=== WRITE PASS ===')
     console.log('Using wagmi writeContract (works with all wallet types)')
-    return writePass(request)
+    writePass(request)
+    return passTxHash
   }
 
   const enhancedWriteClaim = async (request: any) => {
     console.log('=== WRITE CLAIM ===')
     console.log('Using wagmi writeContract (works with all wallet types)')
-    return writeClaim(request)
+    writeClaim(request)
+    return claimTxHash
   }
 
   const enhancedWriteStartGame = async (request: any) => {
     console.log('=== WRITE START GAME ===')
     console.log('Using wagmi writeContract (works with all wallet types)')
-    return writeStartGame(request)
+    writeStartGame(request)
+    return startTxHash
   }
 
   const enhancedWriteEndMint = async (request: any) => {
@@ -182,25 +222,43 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
       ...request,
       gas: 5000000n // Higher gas limit for VRF request
     }
-    return writeEndMint(requestWithGas)
+    writeEndMint(requestWithGas)
+    return endMintTxHash
+  }
+
+  const enhancedWriteCloseMint = async (request: any) => {
+    console.log('=== WRITE CLOSE MINT ===')
+    console.log('Using wagmi writeContract (works with all wallet types)')
+    writeCloseMint(request)
+    return closeMintTxHash
   }
 
   const enhancedWritePause = async (request: any) => {
     console.log('=== WRITE PAUSE ===')
     console.log('Using wagmi writeContract (works with all wallet types)')
-    return writePause(request)
+    writePause(request)
+    return pauseTxHash
   }
 
   const enhancedWriteResume = async (request: any) => {
     console.log('=== WRITE RESUME ===')
     console.log('Using wagmi writeContract (works with all wallet types)')
-    return writeResume(request)
+    writeResume(request)
+    return resumeTxHash
   }
 
   const enhancedWriteRestart = async (request: any) => {
     console.log('=== WRITE RESTART ===')
     console.log('Using wagmi writeContract (works with all wallet types)')
-    return writeRestart(request)
+    writeRestart(request)
+    return restartTxHash
+  }
+
+  const enhancedWriteCheckExplosion = async (request: any) => {
+    console.log('=== WRITE CHECK EXPLOSION ===')
+    console.log('Using wagmi writeContract (works with all wallet types)')
+    writeCheckExplosion(request)
+    return checkExplosionTxHash
   }
 
   return {
@@ -210,6 +268,7 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
     mintError,
     writeMint: enhancedWriteMint,
     mintPending,
+    mintTxHash,
     
     // Pass
     passSim,
@@ -217,37 +276,57 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
     passError,
     writePass: enhancedWritePass,
     passPending,
+    passTxHash,
     
     // Claim
     claimSim,
     claimError,
     writeClaim: enhancedWriteClaim,
+    claimTxHash,
     
     // Owner operations
     startSim,
     startError,
     writeStartGame: enhancedWriteStartGame,
     starting,
+    startTxHash,
     
     endMintSim,
     endMintError,
     writeEndMint: enhancedWriteEndMint,
     ending,
+    endMintTxHash,
+    
+    closeMintSim,
+    closeMintError,
+    writeCloseMint: enhancedWriteCloseMint,
+    closing,
+    closeMintTxHash,
     
     pauseSim,
     pauseError,
     writePause: enhancedWritePause,
     pausing,
+    pauseTxHash,
     
     resumeSim,
     resumeError,
     writeResume: enhancedWriteResume,
     resuming,
+    resumeTxHash,
     
     restartSim,
     restartError,
     writeRestart: enhancedWriteRestart,
     restarting,
+    restartTxHash,
+
+    // Check Explosion
+    checkExplosionSim,
+    checkExplosionError,
+    writeCheckExplosion: enhancedWriteCheckExplosion,
+    checkingExplosion,
+    checkExplosionTxHash,
 
     // Wallet info (simplified)
     isPrivyWallet: true, // Always true since we're using wagmi

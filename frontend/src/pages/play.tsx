@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense } fr
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
 import { Abi, formatUnits, parseEther, parseEventLogs } from 'viem'
-import { useAccount, useWatchContractEvent, useReadContract, UseReadContractsReturnType, useReadContracts, useBalance, useSimulateContract, useWriteContract, useEnsName, useChainId } from 'wagmi'
+import { useAccount, useWatchContractEvent, useReadContract, UseReadContractsReturnType, useReadContracts, useBalance, useSimulateContract, useWriteContract, useEnsName, useChainId, useWaitForTransactionReceipt } from 'wagmi'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import ABI from '../abi/Game.json'
 import { toast, ToastContainer } from 'react-toastify'
@@ -29,6 +29,7 @@ import PlayerStats from '../components/PlayerStats'
 import EventFeed from '../components/EventFeed'
 import UserTokens from '../components/UserTokens'
 import MobileSwipeNavigation from '../components/MobileSwipeNavigation'
+import Rewards, { ClaimHistoryItem } from '../components/Rewards'
 
 // Lazy load heavy components
 const TokenImage = dynamic(() => import('../components/TokenImage'), {
@@ -86,6 +87,17 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const [transactionError, setTransactionError] = useState<string | null>(null)
   const [transactionSuccess, setTransactionSuccess] = useState<string | null>(null)
   const [transactionLoading, setTransactionLoading] = useState<string | null>(null)
+  const [currentTxHash, setCurrentTxHash] = useState<`0x${string}` | undefined>(undefined)
+  const [pendingAction, setPendingAction] = useState<string | null>(null)
+  
+  // Claim history state
+  const [claimHistory, setClaimHistory] = useState<ClaimHistoryItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('claimHistory')
+      return stored ? JSON.parse(stored) : []
+    }
+    return []
+  })
 
   // --- Game Contract Hook (needs tokenId) ---
   const { gameContract, parsedResults, isWinner: hookIsWinner, _address, loadingReadResults, refetchReadResults, readError } = useGameContract(tokenId)
@@ -121,29 +133,60 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     mintSim,
     writeMint,
     mintPending,
+    mintTxHash,
     passSim,
     writePass,
     passPending,
+    passTxHash,
     claimSim,
     writeClaim,
+    claimTxHash,
     startSim,
     writeStartGame,
     starting,
+    startTxHash,
     endMintSim,
     writeEndMint,
     ending,
+    endMintTxHash,
+    closeMintSim,
+    writeCloseMint,
+    closing,
+    closeMintTxHash,
     pauseSim,
     writePause,
     pausing,
+    pauseTxHash,
     resumeSim,
     writeResume,
     resuming,
+    resumeTxHash,
     restartSim,
     writeRestart,
     restarting,
+    restartTxHash,
+    checkExplosionSim,
+    writeCheckExplosion,
+    checkingExplosion,
+    checkExplosionTxHash,
     isPrivyWallet,
     walletType
   } = usePrivyContractWrites(mintAmount, parsedResults?._price, tokenId, getGameState || undefined)
+  
+  // Wait for transaction confirmation
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: currentTxHash,
+  })
+
+  // Monitor tx hashes from different operations and set currentTxHash
+  useEffect(() => {
+    const latestHash = mintTxHash || passTxHash || claimTxHash || startTxHash || endMintTxHash || 
+                        closeMintTxHash || pauseTxHash || resumeTxHash || restartTxHash || checkExplosionTxHash
+    if (latestHash && latestHash !== currentTxHash) {
+      console.log('New transaction hash detected:', latestHash)
+      setCurrentTxHash(latestHash)
+    }
+  }, [mintTxHash, passTxHash, claimTxHash, startTxHash, endMintTxHash, closeMintTxHash, pauseTxHash, resumeTxHash, restartTxHash, checkExplosionTxHash, currentTxHash])
   
   // --- Memoized values ---
   const displayPrice = useMemo(() => ethers.utils.formatEther(BigInt(price || 0)), [price])
@@ -309,39 +352,85 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
   // Write Hooks - Now handled by useContractWrites hook
 
+  // Function to save claim to history
+  const saveClaimToHistory = useCallback((amount: string, txHash: string, round?: number) => {
+    const newClaim: ClaimHistoryItem = {
+      amount,
+      txHash,
+      timestamp: Date.now(),
+      round
+    }
+    
+    setClaimHistory(prev => {
+      const updated = [newClaim, ...prev]
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('claimHistory', JSON.stringify(updated))
+      }
+      return updated
+    })
+  }, [])
+
+  // Effect to handle transaction confirmation
+  useEffect(() => {
+    if (isConfirmed && pendingAction) {
+      console.log('Transaction confirmed on blockchain:', currentTxHash)
+      setTransactionLoading(null)
+      setTransactionSuccess(`${pendingAction} completed successfully!`)
+      
+      // If this was a claim rewards transaction, save to history
+      if (pendingAction === 'Claim Rewards' && currentTxHash && parsedResults?._rewards) {
+        saveClaimToHistory(
+          parsedResults._rewards, 
+          currentTxHash,
+          parsedResults._currentGeneration || undefined
+        )
+      }
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => setTransactionSuccess(null), 5000)
+      
+      // Clear pending state
+      setPendingAction(null)
+      setCurrentTxHash(undefined)
+    }
+  }, [isConfirmed, pendingAction, currentTxHash, parsedResults?._rewards, parsedResults?._currentGeneration, saveClaimToHistory])
+
   // Enhanced transaction handlers with error handling
-  const handleTransaction = async (transactionFn: () => Promise<any>, action: string, showNotifications: boolean = true) => {
+  const handleTransaction = async (transactionFn: () => void, action: string, showNotifications: boolean = true) => {
     try {
       if (showNotifications) {
         setTransactionError(null)
         setTransactionSuccess(null)
-        setTransactionLoading(`Processing ${action}...`)
+        setTransactionLoading(`Submitting ${action}...`)
+        setPendingAction(action)
         
-        // Auto-clear loading notification after 30 seconds as a safety measure
+        // Auto-clear loading notification after 60 seconds as a safety measure
         setTimeout(() => {
           setTransactionLoading((current) => {
-            if (current === `Processing ${action}...`) {
+            if (current === `Submitting ${action}...` || current === `Confirming ${action}...`) {
               return null
             }
             return current
           })
-        }, 30000)
+          setPendingAction(null)
+          setCurrentTxHash(undefined)
+        }, 60000)
       }
       
-      const result = await transactionFn()
+      // Execute the transaction - hash will be picked up by useEffect monitoring tx hashes
+      transactionFn()
       
+      // Update to confirming status
       if (showNotifications) {
-        setTransactionLoading(null)
-        setTransactionSuccess(`${action} completed successfully!`)
-        
-        // Auto-hide success message after 5 seconds
-        setTimeout(() => setTransactionSuccess(null), 5000)
+        setTimeout(() => {
+          setTransactionLoading(`Confirming ${action}...`)
+        }, 1000)
       }
-      
-      return result
     } catch (error: any) {
       if (showNotifications) {
         setTransactionLoading(null)
+        setPendingAction(null)
+        setCurrentTxHash(undefined)
         const errorMessage = error?.message || error?.toString() || `Failed to ${action.toLowerCase()}`
         setTransactionError(errorMessage)
         
@@ -349,7 +438,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         setTimeout(() => setTransactionError(null), 8000)
       }
       
-      throw error
+      console.error('Transaction error:', error)
     }
   }
 
@@ -401,7 +490,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     if (parsedResults?._potato_token) {
       setPotatoTokenId(parsedResults._potato_token);
     }
-    if (additionalData?.explosionTime) {
+    if (additionalData?.explosionTime !== undefined && additionalData?.explosionTime !== null) {
       setRemainingTime(additionalData.explosionTime);
     }
   }, [parsedResults?._potato_token, additionalData?.explosionTime, setRemainingTime]);
@@ -538,18 +627,63 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           </div>
           
           {/* Mobile Hero - Compact - Fixed below nav */}
-          <div className="lg:hidden fixed top-16 left-0 right-0 z-40 text-center py-3 px-4 bg-gradient-to-r from-amber-500/10 to-red-500/10 backdrop-blur-sm border-b border-amber-500/20">
+          <div className="lg:hidden fixed top-16 left-0 right-0 z-30 text-center py-3 px-4 bg-gradient-to-r from-amber-500/10 to-red-500/10 backdrop-blur-sm border-b border-amber-500/20 pointer-events-none">
             <h1 className={`text-xl sm:text-2xl font-bold gradient-text glow`}>
               {parsedResults?._currentGeneration ? `Round ${parsedResults._currentGeneration}` : "Round 1"}
             </h1>
           </div>
 
-          {/* Desktop Layout: Side-by-side with Player Stats */}
-          <div className="hidden lg:flex lg:gap-8 lg:items-start px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8">
+
+          {/* Desktop Layout: Three column layout */}
+          <div className="hidden lg:flex lg:gap-6 lg:items-start px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8">
+            {/* Left Side Panel - Timer & Rewards */}
+            <div className="w-80 flex-shrink-0">
+              <div className="sticky top-6 space-y-6">
+                <Timer 
+                  remainingTime={remainingTime} 
+                  explosion={explosion} 
+                  darkMode={darkMode}
+                  gameState={getGameState || ''}
+                  onCheckExplosion={() => {
+                    console.log('Check explosion clicked, sim:', checkExplosionSim)
+                    if (checkExplosionSim?.request) {
+                      handleTransaction(() => writeCheckExplosion(checkExplosionSim.request), 'Check Explosion');
+                    } else {
+                      // Fallback: call without simulation
+                      console.log('No simulation available, calling directly')
+                      handleTransaction(() => writeCheckExplosion({
+                        address: '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as `0x${string}`,
+                        abi: ABI,
+                        functionName: 'checkExplosion',
+                      }), 'Check Explosion');
+                    }
+                  }}
+                  checkingExplosion={checkingExplosion}
+                />
+                
+                <Rewards
+                  darkMode={darkMode}
+                  isWinner={isWinner}
+                  rewards={parsedResults?._rewards || '0'}
+                  onClaimRewards={() => {
+                    if (!actualAddress) {
+                      noAddressToast();
+                    } else if (Number(parsedResults?._rewards || 0) == 0) {
+                      noRewardsToast();
+                    } else if (claimSim?.request) {
+                      handleTransaction(() => writeClaim(claimSim.request), 'Claim Rewards');
+                    }
+                  }}
+                  gameState={getGameState}
+                  claimHistory={claimHistory}
+                />
+              </div>
+            </div>
+
             {/* Main Content Area */}
             <div className="flex-1 space-y-6">
               {/* Pass Potato Form - Priority placement when game is playing */}
-              {getGameState === "Playing" && actualAddress && (
+              {(getGameState === "Playing" || getGameState === "Final Stage") && actualAddress && (
                 <PassPotatoForm
                     darkMode={darkMode}
                     tokenId={tokenId}
@@ -607,6 +741,24 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
               handleTransaction(() => writeClaim(claimSim.request), 'Claim Rewards');
             }
           }}
+          allWinners={parsedResults?.allWinners as string[]}
+          remainingTime={remainingTime}
+          explosion={explosion}
+          onCheckExplosion={() => {
+            console.log('Check explosion clicked, sim:', checkExplosionSim)
+            if (checkExplosionSim?.request) {
+              handleTransaction(() => writeCheckExplosion(checkExplosionSim.request), 'Check Explosion');
+            } else {
+              // Fallback: call without simulation
+              console.log('No simulation available, calling directly')
+              handleTransaction(() => writeCheckExplosion({
+                address: '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as `0x${string}`,
+                abi: ABI,
+                functionName: 'checkExplosion',
+              }), 'Check Explosion');
+            }
+          }}
+          checkingExplosion={checkingExplosion}
         />
 
         <EventFeed darkMode={darkMode} events={events} />
@@ -637,6 +789,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           gameState={getGameState || ''}
           startSim={startSim}
           endMintSim={endMintSim}
+          closeMintSim={closeMintSim}
           pauseSim={pauseSim}
           resumeSim={resumeSim}
           restartSim={restartSim}
@@ -708,6 +861,40 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                           toast.error('Cannot end minting at this time - contract constraint');
                         } else {
                           toast.error('Unable to end minting - transaction failed');
+                        }
+                      }
+                    }
+                  }}
+          onCloseMinting={() => {
+                    console.log('=== CLOSE MINTING CLICKED ===');
+                    console.log('actualAddress:', actualAddress);
+                    console.log('getGameState:', getGameState);
+                    console.log('closeMintSim:', closeMintSim);
+                    console.log('closeMintSim?.request:', closeMintSim?.request);
+                    
+                    if (!actualAddress) {
+                      console.log('No address - showing toast');
+                      noAddressToast();
+                    } else if (getGameState !== "Minting") {
+                      console.log('Game state not Minting - showing toast');
+                      toast.error('Game is not in minting state');
+                    } else if (closeMintSim?.request) {
+                      console.log("Closing minting transaction...");
+                      handleTransaction(() => writeCloseMint(closeMintSim.request), 'Close Minting');
+                    } else {
+                      console.log('No valid simulation request available, trying direct transaction...');
+                      try {
+                        handleTransaction(() => writeCloseMint({
+                          abi: ABI,
+                          address: CONTRACT_ADDRESS,
+                          functionName: 'closeMinting'
+                        }), 'Close Minting');
+                      } catch (error: any) {
+                        console.error('Direct transaction failed:', error);
+                        if (error?.message?.includes('Unable to decode signature')) {
+                          toast.error('Cannot close minting at this time - contract constraint');
+                        } else {
+                          toast.error('Unable to close minting - transaction failed');
                         }
                       }
                     }
@@ -818,15 +1005,9 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                     }
                   }}
         />
-
-              <Timer 
-                remainingTime={remainingTime} 
-                explosion={explosion} 
-            darkMode={darkMode}
-              />
             </div>
 
-            {/* Desktop Side Panel - Player Stats & Connected Players */}
+            {/* Right Side Panel - Player Stats & Connected Players */}
             <div className="w-80 flex-shrink-0">
               <div className="sticky top-6 space-y-6">
                 <PlayerStats
@@ -852,14 +1033,14 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           {/* Mobile Layout: Full Screen with Pass Potato at Bottom */}
           <div className="lg:hidden flex flex-col h-screen" style={{ paddingTop: '120px' }}>
             {/* Swipeable Content Area */}
-            <div className="flex-1 overflow-hidden" style={{ marginBottom: getGameState === "Playing" && actualAddress ? '160px' : '0px' }}>
+            <div className="flex-1 overflow-hidden" style={{ marginBottom: (getGameState === "Playing" || getGameState === "Final Stage") && actualAddress ? '160px' : '0px' }}>
               <MobileSwipeNavigation
                 darkMode={darkMode}
-                sectionNames={['Active Tokens', 'Your Tokens', 'Player Stats']}
+                sectionNames={['Active Tokens', 'Your Tokens', 'Rewards', 'Player Stats']}
               >
                 {/* Active Tokens Section */}
                 <div className="h-full overflow-hidden">
-                  <div className="h-full overflow-y-auto flex flex-col items-center w-full" style={{ paddingBottom: getGameState === "Playing" && actualAddress ? '24px' : '24px' }}>
+                  <div className="h-full overflow-y-auto flex flex-col items-center w-full" style={{ paddingBottom: (getGameState === "Playing" || getGameState === "Final Stage") && actualAddress ? '24px' : '24px' }}>
                     <GameStateComponents
                       darkMode={darkMode}
                       gameState={getGameState}
@@ -896,6 +1077,24 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                           handleTransaction(() => writeClaim(claimSim.request), 'Claim Rewards');
                     }
                   }}
+                      allWinners={parsedResults?.allWinners as string[]}
+                      remainingTime={remainingTime}
+                      explosion={explosion}
+                      onCheckExplosion={() => {
+                        console.log('Check explosion clicked, sim:', checkExplosionSim)
+                        if (checkExplosionSim?.request) {
+                          handleTransaction(() => writeCheckExplosion(checkExplosionSim.request), 'Check Explosion');
+                        } else {
+                          // Fallback: call without simulation
+                          console.log('No simulation available, calling directly')
+                          handleTransaction(() => writeCheckExplosion({
+                            address: '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as `0x${string}`,
+                            abi: ABI,
+                            functionName: 'checkExplosion',
+                          }), 'Check Explosion');
+                        }
+                      }}
+                      checkingExplosion={checkingExplosion}
           />
 
                     <EventFeed darkMode={darkMode} events={events} />
@@ -926,6 +1125,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                       gameState={getGameState || ''}
                       startSim={startSim}
                       endMintSim={endMintSim}
+                      closeMintSim={closeMintSim}
                       pauseSim={pauseSim}
                       resumeSim={resumeSim}
                       restartSim={restartSim}
@@ -994,6 +1194,40 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                               toast.error('Cannot end minting at this time - contract constraint');
                             } else {
                               toast.error('Unable to end minting - transaction failed');
+                            }
+                          }
+                        }
+                      }}
+                      onCloseMinting={() => {
+                        console.log('=== CLOSE MINTING CLICKED ===');
+                        console.log('actualAddress:', actualAddress);
+                        console.log('getGameState:', getGameState);
+                        console.log('closeMintSim:', closeMintSim);
+                        console.log('closeMintSim?.request:', closeMintSim?.request);
+                        
+                        if (!actualAddress) {
+                          console.log('No address - showing toast');
+                          noAddressToast();
+                        } else if (getGameState !== "Minting") {
+                          console.log('Game state not Minting - showing toast');
+                          toast.error('Game is not in minting state');
+                        } else if (closeMintSim?.request) {
+                          console.log("Closing minting transaction...");
+                          handleTransaction(() => writeCloseMint(closeMintSim.request), 'Close Minting');
+                        } else {
+                          console.log('No valid simulation request available, trying direct transaction...');
+                          try {
+                            handleTransaction(() => writeCloseMint({
+                              abi: ABI,
+                              address: CONTRACT_ADDRESS,
+                              functionName: 'closeMinting'
+                            }), 'Close Minting');
+                          } catch (error: any) {
+                            console.error('Direct transaction failed:', error);
+                            if (error?.message?.includes('Unable to decode signature')) {
+                              toast.error('Cannot close minting at this time - contract constraint');
+                            } else {
+                              toast.error('Unable to close minting - transaction failed');
                             }
                           }
                         }
@@ -1105,14 +1339,30 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         <Timer 
           remainingTime={remainingTime} 
           explosion={explosion} 
-          darkMode={darkMode} 
+          darkMode={darkMode}
+          gameState={getGameState || ''}
+          onCheckExplosion={() => {
+            console.log('Check explosion clicked, sim:', checkExplosionSim)
+            if (checkExplosionSim?.request) {
+              handleTransaction(() => writeCheckExplosion(checkExplosionSim.request), 'Check Explosion');
+            } else {
+              // Fallback: call without simulation
+              console.log('No simulation available, calling directly')
+              handleTransaction(() => writeCheckExplosion({
+                address: '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as `0x${string}`,
+                abi: ABI,
+                functionName: 'checkExplosion',
+              }), 'Check Explosion');
+            }
+          }}
+          checkingExplosion={checkingExplosion}
         />
                   </div>
                 </div>
 
                 {/* Your Tokens Section */}
                 <div className="h-full overflow-hidden">
-                  <div className="h-full overflow-y-auto flex flex-col items-center w-full" style={{ paddingBottom: getGameState === "Playing" && actualAddress ? '24px' : '24px' }}>
+                  <div className="h-full overflow-y-auto flex flex-col items-center w-full" style={{ paddingBottom: (getGameState === "Playing" || getGameState === "Final Stage") && actualAddress ? '24px' : '24px' }}>
                     <UserTokens
                       darkMode={darkMode}
                       userTokens={additionalData?.userTokens || []}
@@ -1120,6 +1370,28 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                       explodedTokens={explodedTokens}
                       onTokenExploded={handleTokenExploded}
                       onRefreshImages={refreshAllImages}
+                    />
+                  </div>
+                </div>
+
+                {/* Rewards Section */}
+                <div className="h-full overflow-hidden">
+                  <div className="h-full overflow-y-auto py-6 flex flex-col items-center justify-start w-full px-4">
+                    <Rewards
+                      darkMode={darkMode}
+                      isWinner={isWinner}
+                      rewards={parsedResults?._rewards || '0'}
+                      onClaimRewards={() => {
+                        if (!actualAddress) {
+                          noAddressToast();
+                        } else if (Number(parsedResults?._rewards || 0) == 0) {
+                          noRewardsToast();
+                        } else if (claimSim?.request) {
+                          handleTransaction(() => writeClaim(claimSim.request), 'Claim Rewards');
+                        }
+                      }}
+                      gameState={getGameState}
+                      claimHistory={claimHistory}
                     />
                   </div>
                 </div>
@@ -1140,7 +1412,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
             </div>
 
             {/* Pass Potato Form - Fixed at Bottom on Mobile */}
-            {getGameState === "Playing" && actualAddress && (
+            {(getGameState === "Playing" || getGameState === "Final Stage") && actualAddress && (
               <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-white via-white to-white/95 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 shadow-2xl">
                 <div className="p-4 pb-safe">
                   <PassPotatoForm

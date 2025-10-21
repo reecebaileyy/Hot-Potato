@@ -65,9 +65,9 @@ export default function MobileSwipeNavigation({
   }
 
   const updateTransform = useCallback(() => {
-    if (containerRef.current) {
-      const viewportWidth = containerRef.current.parentElement?.clientWidth || window.innerWidth
-      const transform = `translateX(-${activeIndex * viewportWidth}px)`
+    if (containerRef.current && containerRef.current.parentElement) {
+      const parentWidth = containerRef.current.parentElement.clientWidth
+      const transform = `translateX(-${activeIndex * parentWidth}px)`
       containerRef.current.style.transform = transform
     }
   }, [activeIndex])
@@ -119,8 +119,7 @@ export default function MobileSwipeNavigation({
           {children.map((child, index) => (
             <div
               key={index}
-              className="flex-shrink-0 h-full"
-              style={{ width: '100vw', maxWidth: '100%' }}
+              className="flex-shrink-0 h-full w-full"
             >
               <div className="h-full w-full px-4">
                 {child}

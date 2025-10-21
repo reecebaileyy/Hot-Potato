@@ -805,6 +805,13 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "closeMinting",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",

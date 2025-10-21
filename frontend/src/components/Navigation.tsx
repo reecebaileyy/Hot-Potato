@@ -46,7 +46,7 @@ export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }:
 
   return (
     <nav className={`fixed top-0 left-0 right-0 pt-6 pb-3 px-4 sm:px-6 md:px-12 flex justify-between items-center z-50 ${darkMode ? 'glass-effect-dark' : 'glass-effect'} backdrop-blur-md`}>
-      <Link href='/' className="transform transition-all duration-300 hover:scale-105">
+      <Link href='/' className="transform transition-all duration-300 hover:scale-105 relative z-50">
         <Image src={blacklogo} width={150} alt="Logo" className="drop-shadow-lg" />
       </Link>
       
@@ -67,9 +67,9 @@ export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }:
         </button>
         
         {/* Mobile Menu Overlay */}
-        <div className={`fixed inset-0 flex justify-center items-start pt-20 bg-black/60 backdrop-blur-sm transition-all duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+        <div className={`fixed inset-0 flex justify-center items-start pt-20 bg-black/60 backdrop-blur-sm transition-all duration-300 z-[60] ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
           onClick={handleOverlayClick}>
-          <ul ref={menuRef} className={`${darkMode ? 'card-dark' : 'card'} p-6 flex flex-col space-y-4 text-lg animate-fade-in-up max-w-sm w-full mx-4`}>
+          <ul ref={menuRef} className={`${darkMode ? 'card-dark' : 'card'} p-6 flex flex-col space-y-4 text-lg animate-fade-in-up w-11/12 max-w-sm`}>
             <li>
               <Link 
                 className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-colors duration-300 font-semibold`} 
@@ -121,7 +121,7 @@ export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }:
       </div>
       
       {/* Desktop Navigation */}
-      <ul className='hidden xl:flex space-x-8 text-lg font-semibold'>
+      <ul className='hidden xl:flex space-x-8 text-lg font-semibold relative z-50'>
         <li>
           <Link 
             className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-all duration-300 hover:scale-105 relative group`} 
@@ -163,7 +163,7 @@ export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }:
       </ul>
       
       {/* Desktop Controls */}
-      <div className='hidden xl:flex gap-4 items-center'>
+      <div className='hidden xl:flex gap-4 items-center relative z-50'>
         <DarkModeSwitch
           checked={darkMode}
           onChange={() => setDarkMode(!darkMode)}

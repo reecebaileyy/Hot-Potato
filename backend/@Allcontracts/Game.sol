@@ -414,6 +414,12 @@ contract Game is ERC721A, ERC721AQueryable, Ownable  {
         randomize(true);
     }
 
+    function closeMinting() external onlyOwner {
+        require(gameState == GameState.Minting, "Game not minting");
+        gameState = GameState.Queued;
+        emit GamePaused("Minting closed");
+    }
+
     function pauseGame() external onlyOwner {
         require(
             gameState == GameState.Playing ||

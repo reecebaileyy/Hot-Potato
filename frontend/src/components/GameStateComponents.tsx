@@ -17,6 +17,11 @@ interface GameStateProps {
   isWinner: boolean
   rewards: string
   onClaimRewards: () => void
+  allWinners?: string[]
+  remainingTime?: number | null
+  explosion?: boolean
+  onCheckExplosion?: () => void
+  checkingExplosion?: boolean
 }
 
 export default function GameStateComponents({
@@ -33,7 +38,12 @@ export default function GameStateComponents({
   onMint,
   isWinner,
   rewards,
-  onClaimRewards
+  onClaimRewards,
+  allWinners,
+  remainingTime,
+  explosion,
+  onCheckExplosion,
+  checkingExplosion
 }: GameStateProps) {
   const LoadingSpinner = () => (
     <div className="flex justify-center items-center p-8">
@@ -66,29 +76,7 @@ export default function GameStateComponents({
   }
 
   if (gameState === "Playing" || gameState === "Final Stage") {
-    // Only show something if user is a winner with rewards
-    if (isWinner && Number(rewards) !== 0) {
-      return (
-        <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
-          <div className="text-center">
-            <div className="space-y-6">
-              <h2 className={`text-3xl font-bold gradient-text mb-4`}>🎉 Congratulations! 🎉</h2>
-              <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
-                You won this round! Claim your rewards below.
-              </p>
-              <button 
-                className={`btn-primary text-lg px-8 py-4 animate-glow`}
-                onClick={onClaimRewards}
-              >
-                Claim {rewards} ETH Rewards
-              </button>
-            </div>
-          </div>
-        </div>
-      )
-    }
-    // Return null if not a winner or no rewards - don't render empty div
-    return null
+    return null // Content now handled by separate components
   }
 
   if (gameState === "Minting") {
@@ -189,13 +177,31 @@ export default function GameStateComponents({
     return (
       <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
         <div className="text-center space-y-6">
-          <h1 className={`text-5xl font-bold gradient-text mb-4`}>🏁 Game Ended</h1>
-          <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            The game has ended. Wait for the next round to start.
+          <div className="text-6xl mb-4 animate-bounce">🏆</div>
+          <h1 className={`text-4xl font-bold mb-4 ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>
+            Game Over!
+          </h1>
+          {allWinners && allWinners.length > 0 ? (
+            <div className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {allWinners.length === 1 ? (
+                <>Winner: {allWinners[0]}</>
+              ) : (
+                <>Winners: {allWinners.join(', ')}</>
+              )}
+            </div>
+          ) : (
+            <div className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              No Winners This Round
+            </div>
+          )}
+          {isWinner && (
+            <div className={`inline-block px-6 py-3 rounded-lg ${darkMode ? 'bg-green-700 text-white' : 'bg-green-500 text-white'} font-bold text-xl mb-4 shadow-lg`}>
+              🎉 Congratulations! You Won! 🎉
+            </div>
+          )}
+          <p className={`text-lg ${darkMode ? 'text-amber-200' : 'text-amber-700'} mt-4`}>
+            {isWinner ? 'You can claim your rewards!' : 'Better luck next time!'}
           </p>
-          <div className="animate-pulse-slow">
-            <div className={`w-16 h-16 mx-auto rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
-          </div>
         </div>
       </div>
     )
