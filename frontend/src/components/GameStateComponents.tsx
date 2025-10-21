@@ -66,10 +66,11 @@ export default function GameStateComponents({
   }
 
   if (gameState === "Playing" || gameState === "Final Stage") {
-    return (
-      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
-        <div className="text-center">
-          {isWinner && Number(rewards) !== 0 && (
+    // Only show something if user is a winner with rewards
+    if (isWinner && Number(rewards) !== 0) {
+      return (
+        <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
+          <div className="text-center">
             <div className="space-y-6">
               <h2 className={`text-3xl font-bold gradient-text mb-4`}>🎉 Congratulations! 🎉</h2>
               <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
@@ -82,10 +83,12 @@ export default function GameStateComponents({
                 Claim {rewards} ETH Rewards
               </button>
             </div>
-          )}
+          </div>
         </div>
-      </div>
-    )
+      )
+    }
+    // Return null if not a winner or no rewards - don't render empty div
+    return null
   }
 
   if (gameState === "Minting") {

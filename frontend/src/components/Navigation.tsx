@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { DarkModeSwitch } from 'react-toggle-dark-mode'
@@ -15,8 +15,37 @@ interface NavigationProps {
 export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }: NavigationProps) {
   const menuRef = useRef<HTMLUListElement | null>(null)
 
+  // Close menu on ESC key press
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape)
+      // Prevent body scroll when menu is open
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen, setIsOpen])
+
+  // Close menu when clicking outside
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      setIsOpen(false)
+    }
+  }
+
   return (
-    <nav className={`pt-6 px-6 md:px-12 flex justify-between items-center relative z-50 ${darkMode ? 'glass-effect-dark' : 'glass-effect'} backdrop-blur-md`}>
+    <nav className={`fixed top-0 left-0 right-0 pt-6 pb-3 px-4 sm:px-6 md:px-12 flex justify-between items-center z-50 ${darkMode ? 'glass-effect-dark' : 'glass-effect'} backdrop-blur-md`}>
       <Link href='/' className="transform transition-all duration-300 hover:scale-105">
         <Image src={blacklogo} width={150} alt="Logo" className="drop-shadow-lg" />
       </Link>
@@ -38,13 +67,9 @@ export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }:
         </button>
         
         {/* Mobile Menu Overlay */}
-        <div className={`fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm transition-all duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
-          onClick={(e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-              setIsOpen(false)
-            }
-          }}>
-          <ul ref={menuRef} className={`${darkMode ? 'card-dark' : 'card'} p-8 flex flex-col space-y-6 text-xl md:text-2xl animate-fade-in-up`}>
+        <div className={`fixed inset-0 flex justify-center items-start pt-20 bg-black/60 backdrop-blur-sm transition-all duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+          onClick={handleOverlayClick}>
+          <ul ref={menuRef} className={`${darkMode ? 'card-dark' : 'card'} p-6 flex flex-col space-y-4 text-lg animate-fade-in-up max-w-sm w-full mx-4`}>
             <li>
               <Link 
                 className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-colors duration-300 font-semibold`} 
@@ -83,7 +108,7 @@ export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }:
                 Opensea
               </Link>
             </li>
-            <div className="flex items-center justify-center space-x-4 pt-4 border-t border-gray-300/20">
+            <div className="flex items-center justify-between pt-4 border-t border-gray-300/20">
               <DarkModeSwitch
                 checked={darkMode}
                 onChange={() => setDarkMode(!darkMode)}

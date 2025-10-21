@@ -49,6 +49,9 @@ interface SuccessDisplayProps {
 }
 
 export function SuccessDisplay({ message, onClose, darkMode = false }: SuccessDisplayProps) {
+  // Don't show if there's no message
+  if (!message) return null
+
   return (
     <div className={`fixed top-4 right-4 z-50 max-w-md ${darkMode ? 'bg-green-900/90 border-green-700' : 'bg-green-50 border-green-200'} border-2 rounded-xl p-4 shadow-lg backdrop-blur-sm animate-slide-in-right`}>
       <div className="flex items-start space-x-3">
@@ -83,9 +86,13 @@ export function SuccessDisplay({ message, onClose, darkMode = false }: SuccessDi
 interface LoadingDisplayProps {
   message: string
   darkMode?: boolean
+  onClose?: () => void
 }
 
-export function LoadingDisplay({ message, darkMode = false }: LoadingDisplayProps) {
+export function LoadingDisplay({ message, darkMode = false, onClose }: LoadingDisplayProps) {
+  // Don't show if there's no message
+  if (!message) return null
+
   return (
     <div className={`fixed top-4 right-4 z-50 max-w-md ${darkMode ? 'bg-blue-900/90 border-blue-700' : 'bg-blue-50 border-blue-200'} border-2 rounded-xl p-4 shadow-lg backdrop-blur-sm animate-slide-in-right`}>
       <div className="flex items-center space-x-3">
@@ -100,6 +107,17 @@ export function LoadingDisplay({ message, darkMode = false }: LoadingDisplayProp
             {message}
           </p>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className={`flex-shrink-0 ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'} transition-colors`}
+            aria-label="Close notification"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   )

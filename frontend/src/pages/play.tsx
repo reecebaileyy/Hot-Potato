@@ -27,6 +27,8 @@ import PassPotatoForm from '../components/PassPotatoForm'
 import Timer from '../components/Timer'
 import PlayerStats from '../components/PlayerStats'
 import EventFeed from '../components/EventFeed'
+import UserTokens from '../components/UserTokens'
+import MobileSwipeNavigation from '../components/MobileSwipeNavigation'
 
 // Lazy load heavy components
 const TokenImage = dynamic(() => import('../components/TokenImage'), {
@@ -208,6 +210,12 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           abi: ABI as Abi,
           functionName: 'addressActiveTokenCount' as const,
           args: [actualAddress] as const,
+        },
+        {
+          address: CONTRACT_ADDRESS,
+          abi: ABI as Abi,
+          functionName: 'getActiveTokensOfOwner' as const,
+          args: [actualAddress] as const,
         }
       )
     }
@@ -238,7 +246,19 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     const baseResults = additionalResults.slice(0, 3)
     
     // Address-dependent results come after base results if address exists
-    const addressResults = actualAddress ? additionalResults.slice(3, 6) : []
+    const addressResults = actualAddress ? additionalResults.slice(3, 7) : []
+    
+    // Debug: Log user tokens data
+    console.log('=== USER TOKENS DEBUG ===')
+    console.log('actualAddress:', actualAddress)
+    console.log('addressResults:', addressResults)
+    console.log('userTokens raw result:', addressResults[3]?.result)
+    console.log('userTokens parsed:', addressResults[3]?.result as unknown as number[] || [])
+    
+    // Convert BigInt array to number array for user tokens
+    const rawUserTokens = addressResults[3]?.result as unknown as bigint[] || []
+    const userTokensConverted = rawUserTokens.map(token => Number(token))
+    console.log('userTokens converted:', userTokensConverted)
     
     return {
       explosionTime: baseResults[1]?.result ? parseInt(baseResults[1].result as unknown as string, 10) : 0,
@@ -248,6 +268,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
       allWinners: baseResults[2]?.result as unknown as string[] || [],
       successfulPasses: addressResults[1]?.result ? parseInt(addressResults[1].result as unknown as string, 10) : 0,
       activeTokensCount: addressResults[2]?.result ? parseInt(addressResults[2].result as unknown as string, 10) : 0,
+      userTokens: userTokensConverted,
       gameState: parsedResults?.gameState || 'Unknown',
     }
   }, [additionalResults, actualAddress, parsedResults?.gameState])
@@ -291,6 +312,16 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         setTransactionError(null)
         setTransactionSuccess(null)
         setTransactionLoading(`Processing ${action}...`)
+        
+        // Auto-clear loading notification after 30 seconds as a safety measure
+        setTimeout(() => {
+          setTransactionLoading((current) => {
+            if (current === `Processing ${action}...`) {
+              return null
+            }
+            return current
+          })
+        }, 30000)
       }
       
       const result = await transactionFn()
@@ -500,14 +531,49 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         />
 
         {/* Main Content Container */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
-          {/* Hero Section */}
-          <div className="text-center mb-8 sm:mb-12 animate-fade-in-up">
-            <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 gradient-text ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div className="max-w-7xl mx-auto pt-20 lg:pt-0">
+          {/* Hero Section - Hidden on Mobile */}
+          <div className="hidden lg:block text-center mb-8 sm:mb-12 animate-fade-in-up px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+            <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 gradient-text glow`}>
               {parsedResults?._currentGeneration ? `Round ${parsedResults._currentGeneration}` : "Round 1"}
             </h1>
             <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-amber-500 to-red-500 mx-auto rounded-full"></div>
           </div>
+          
+          {/* Mobile Hero - Compact - Fixed below nav */}
+          <div className="lg:hidden fixed top-16 left-0 right-0 z-40 text-center py-3 px-4 bg-gradient-to-r from-amber-500/10 to-red-500/10 backdrop-blur-sm border-b border-amber-500/20">
+            <h1 className={`text-xl sm:text-2xl font-bold gradient-text glow`}>
+              {parsedResults?._currentGeneration ? `Round ${parsedResults._currentGeneration}` : "Round 1"}
+            </h1>
+          </div>
+
+          {/* Desktop Layout: Side-by-side with Player Stats */}
+          <div className="hidden lg:flex lg:gap-8 lg:items-start px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8">
+            {/* Main Content Area */}
+            <div className="flex-1 space-y-6">
+              {/* Pass Potato Form - Priority placement when game is playing */}
+              {getGameState === "Playing" && actualAddress && (
+                <PassPotatoForm
+                    darkMode={darkMode}
+                    tokenId={tokenId}
+                    setTokenId={setTokenId}
+                    passPending={passPending}
+                    hasPotato={additionalData?.hasPotatoToken === "true"}
+                    onPassPotato={() => {
+                      if (!actualAddress) {
+                        noAddressToast();
+                      } else if (additionalData?.hasPotatoToken !== "true") {
+                        noPotatoToast();
+                      } else if (!parsedResults?.isTokenActive) {
+                        notActiveToast();
+                      } else if (parsedResults?.ownerOf !== actualAddress) {
+                        notOwnerToast();
+                      } else if (passSim?.request) {
+                        handleTransaction(() => writePass(passSim.request), 'Pass Potato');
+                      }
+                    }}
+                  />
+              )}
 
         <GameStateComponents
           darkMode={darkMode}
@@ -758,42 +824,355 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                   }}
         />
 
-          {getGameState === "Playing" && actualAddress && (
-          <PassPotatoForm
+              <Timer 
+                remainingTime={remainingTime} 
+                explosion={explosion} 
             darkMode={darkMode}
-            tokenId={tokenId}
-            setTokenId={setTokenId}
-            passPending={passPending}
-            onPassPotato={() => {
+              />
+            </div>
+
+            {/* Desktop Side Panel - Player Stats & Connected Players */}
+            <div className="w-80 flex-shrink-0">
+              <div className="sticky top-6 space-y-6">
+                <PlayerStats
+                  darkMode={darkMode}
+                  totalWins={parsedResults?.totalWins || 0}
+                  successfulPasses={additionalData?.successfulPasses || 0}
+                  activeTokensCount={additionalData?.activeTokensCount || 0}
+                  rewards={parsedResults?._rewards || '0'}
+                />
+                
+                <UserTokens
+                  darkMode={darkMode}
+                  userTokens={additionalData?.userTokens || []}
+                  potatoTokenId={parsedResults?._potato_token || 0}
+                  explodedTokens={explodedTokens}
+                  onTokenExploded={handleTokenExploded}
+                  onRefreshImages={refreshAllImages}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Layout: Full Screen with Pass Potato at Bottom */}
+          <div className="lg:hidden flex flex-col h-screen" style={{ paddingTop: '120px' }}>
+            {/* Swipeable Content Area */}
+            <div className="flex-1 overflow-hidden" style={{ marginBottom: getGameState === "Playing" && actualAddress ? '160px' : '0px' }}>
+              <MobileSwipeNavigation
+                darkMode={darkMode}
+                sectionNames={['Active Tokens', 'Player Stats', 'Your Tokens']}
+              >
+                {/* Active Tokens Section */}
+                <div className="h-full overflow-hidden">
+                  <div className="h-full overflow-y-auto flex flex-col items-center w-full" style={{ paddingBottom: getGameState === "Playing" && actualAddress ? '24px' : '24px' }}>
+                    <GameStateComponents
+                      darkMode={darkMode}
+                      gameState={getGameState}
+                      address={actualAddress}
+                      mintAmount={mintAmount}
+                      setMintAmount={setMintAmount}
+                      totalCost={totalCost}
+                      setTotalCost={setTotalCost}
+                      price={parsedResults?._price || '0'}
+                      balance={balance}
+                      mintPending={mintPending}
+                      onMint={() => {
                     if (!actualAddress) {
                       noAddressToast();
-                    } else if (additionalData?.hasPotatoToken !== "true") {
-                      noPotatoToast();
-                    } else if (!parsedResults?.isTokenActive) {
-                      notActiveToast();
-                    } else if (parsedResults?.ownerOf !== actualAddress) {
-                      notOwnerToast();
-                    } else if (passSim?.request) {
-                      handleTransaction(() => writePass(passSim.request), 'Pass Potato');
+                        } else if ((additionalData?.activeTokensCount || 0) >= (parsedResults?.maxPerWallet ?? 0)) {
+                          maxPerWalletToast();
+                        } else if (mintSim?.request) {
+                          handleTransaction(() => writeMint(mintSim.request), 'Mint').then(() => {
+                            console.log('Mint successful - refreshing token images')
+                            refreshAllImages()
+                          }).catch((error) => {
+                            console.error('Mint failed:', error)
+                          });
+                        }
+                      }}
+                      isWinner={isWinner}
+                      rewards={parsedResults?._rewards || '0'}
+                      onClaimRewards={() => {
+                        if (!actualAddress) {
+                          noAddressToast();
+                        } else if (Number(parsedResults?._rewards || 0) == 0) {
+                          noRewardsToast();
+                        } else if (claimSim?.request) {
+                          handleTransaction(() => writeClaim(claimSim.request), 'Claim Rewards');
                     }
                   }}
           />
-        )}
+
+                    <EventFeed darkMode={darkMode} events={events} />
+
+                    <TokenGrid
+                      darkMode={darkMode}
+                      gameState={getGameState || ''}
+                      loadingActiveTokenIds={loadingAdditionalResults}
+                      paginationData={paginationData}
+                      currentPage={currentPage}
+                      setCurrentPage={setCurrentPage}
+                      explodedTokens={explodedTokens}
+                      potatoTokenId={parsedResults?._potato_token || 0}
+                      shouldRefresh={shouldRefresh}
+                      onTokenExploded={handleTokenExploded}
+                      onRefreshImages={refreshAllImages}
+                      onSortTokensAsc={sortTokensAsc}
+                      onSortTokensDesc={sortTokensDesc}
+                      onSearch={handleSearch}
+                      searchId={searchId}
+                      setSearchId={setSearchId}
+                    />
+
+                    <AdminControls
+                      darkMode={darkMode}
+                      address={actualAddress || ''}
+                      ownerAddress={parsedResults?._ownerAddress || ''}
+                      gameState={getGameState || ''}
+                      startSim={startSim}
+                      endMintSim={endMintSim}
+                      pauseSim={pauseSim}
+                      resumeSim={resumeSim}
+                      restartSim={restartSim}
+                      onStartGame={() => {
+                        console.log('=== START GAME CLICKED ===');
+                        console.log('actualAddress:', actualAddress);
+                        console.log('getGameState:', getGameState);
+                        console.log('startSim:', startSim);
+                        console.log('startSim?.request:', startSim?.request);
+                        
+                        if (!actualAddress) {
+                          console.log('No address - showing toast');
+                          noAddressToast();
+                        } else if (getGameState !== "Queued") {
+                          console.log('Game state not Queued - showing toast');
+                          startToast();
+                        } else if (startSim?.request) {
+                          console.log('Starting game transaction...');
+                          handleTransaction(() => writeStartGame(startSim.request), 'Start Game');
+                        } else {
+                          console.log('No valid simulation request available, trying direct transaction...');
+                          try {
+                            handleTransaction(() => writeStartGame({
+                              abi: ABI,
+                              address: CONTRACT_ADDRESS,
+                              functionName: 'startGame'
+                            }), 'Start Game');
+                          } catch (error: any) {
+                            console.error('Direct transaction failed:', error);
+                            if (error?.message?.includes('Unable to decode signature')) {
+                              toast.error('Cannot start game at this time - contract constraint');
+                            } else {
+                              toast.error('Unable to start game - transaction failed');
+                            }
+                          }
+                        }
+                      }}
+                      onEndMinting={() => {
+                        console.log('=== END MINTING CLICKED ===');
+                        console.log('actualAddress:', actualAddress);
+                        console.log('getGameState:', getGameState);
+                        console.log('endMintSim:', endMintSim);
+                        console.log('endMintSim?.request:', endMintSim?.request);
+                        
+                        if (!actualAddress) {
+                          console.log('No address - showing toast');
+                          noAddressToast();
+                        } else if (getGameState !== "Minting") {
+                          console.log('Game state not Minting - showing toast');
+                          endToast();
+                        } else if (endMintSim?.request) {
+                          console.log("Ending minting transaction...");
+                          handleTransaction(() => writeEndMint(endMintSim.request), 'End Minting');
+                        } else {
+                          console.log('No valid simulation request available, trying direct transaction...');
+                          try {
+                            handleTransaction(() => writeEndMint({
+                              abi: ABI,
+                              address: CONTRACT_ADDRESS,
+                              functionName: 'endMinting',
+                              gas: 5000000n
+                            }), 'End Minting');
+                          } catch (error: any) {
+                            console.error('Direct transaction failed:', error);
+                            if (error?.message?.includes('Unable to decode signature')) {
+                              toast.error('Cannot end minting at this time - contract constraint');
+                            } else {
+                              toast.error('Unable to end minting - transaction failed');
+                            }
+                          }
+                        }
+                      }}
+                      onPauseGame={() => {
+                        console.log('=== PAUSE GAME CLICKED ===');
+                        console.log('actualAddress:', actualAddress);
+                        console.log('getGameState:', getGameState);
+                        console.log('pauseSim:', pauseSim);
+                        console.log('pauseSim?.request:', pauseSim?.request);
+                        
+                        if (!actualAddress) {
+                          console.log('No address - showing toast');
+                          noAddressToast();
+                        } else if (getGameState !== "Playing" && getGameState !== "Final Stage" && getGameState !== "Minting") {
+                          console.log('Game state not pausable - showing toast');
+                          pauseToast();
+                        } else if (pauseSim?.request) {
+                          console.log('Pausing game transaction...');
+                          handleTransaction(() => writePause(pauseSim.request), 'Pause Game');
+                        } else {
+                          console.log('No valid simulation request available, trying direct transaction...');
+                          try {
+                            handleTransaction(() => writePause({
+                              abi: ABI,
+                              address: CONTRACT_ADDRESS,
+                              functionName: 'pauseGame'
+                            }), 'Pause Game');
+                          } catch (error: any) {
+                            console.error('Direct transaction failed:', error);
+                            if (error?.message?.includes('Unable to decode signature')) {
+                              toast.error('Cannot pause game at this time - contract constraint');
+                            } else {
+                              toast.error('Unable to pause game - transaction failed');
+                            }
+                          }
+                        }
+                      }}
+                      onResumeGame={() => {
+                        console.log('=== RESUME GAME CLICKED ===');
+                        console.log('actualAddress:', actualAddress);
+                        console.log('getGameState:', getGameState);
+                        console.log('resumeSim:', resumeSim);
+                        console.log('resumeSim?.request:', resumeSim?.request);
+                        
+                        if (!actualAddress) {
+                          console.log('No address - showing toast');
+                          noAddressToast();
+                        } else if (getGameState !== "Paused") {
+                          console.log('Game state not Paused - showing toast');
+                          resumeToast();
+                        } else if (resumeSim?.request) {
+                          console.log('Resuming game transaction...');
+                          handleTransaction(() => writeResume(resumeSim.request), 'Resume Game');
+                        } else {
+                          console.log('No valid simulation request available, trying direct transaction...');
+                          try {
+                            handleTransaction(() => writeResume({
+                              abi: ABI,
+                              address: CONTRACT_ADDRESS,
+                              functionName: 'resumeGame'
+                            }), 'Resume Game');
+                          } catch (error: any) {
+                            console.error('Direct transaction failed:', error);
+                            if (error?.message?.includes('Unable to decode signature')) {
+                              toast.error('Cannot resume game at this time - contract constraint');
+                            } else {
+                              toast.error('Unable to resume game - transaction failed');
+                            }
+                          }
+                        }
+                      }}
+                      onRestartGame={() => {
+                        console.log('=== RESTART GAME CLICKED ===');
+                        console.log('actualAddress:', actualAddress);
+                        console.log('getGameState:', getGameState);
+                        console.log('restartSim:', restartSim);
+                        console.log('restartSim?.request:', restartSim?.request);
+                        
+                        if (!actualAddress) {
+                          console.log('No address - showing toast');
+                          noAddressToast();
+                        } else if (getGameState !== "Ended") {
+                          console.log('Game state not Ended - showing toast');
+                          restartToast();
+                        } else if (restartSim?.request) {
+                          console.log('Restarting game transaction...');
+                          handleTransaction(() => writeRestart(restartSim.request), 'Restart Game');
+                        } else {
+                          console.log('No valid simulation request available, trying direct transaction...');
+                          try {
+                            handleTransaction(() => writeRestart({
+                              abi: ABI,
+                              address: CONTRACT_ADDRESS,
+                              functionName: 'restartGame'
+                            }), 'Restart Game');
+                          } catch (error: any) {
+                            console.error('Direct transaction failed:', error);
+                            if (error?.message?.includes('Unable to decode signature')) {
+                              toast.error('Cannot restart game at this time - contract constraint');
+                            } else {
+                              toast.error('Unable to restart game - transaction failed');
+                            }
+                          }
+                        }
+                      }}
+                    />
 
         <Timer 
           remainingTime={remainingTime} 
           explosion={explosion} 
           darkMode={darkMode} 
         />
+                  </div>
+                </div>
 
-        <PlayerStats
-          darkMode={darkMode}
-          totalWins={parsedResults?.totalWins || 0}
-          successfulPasses={additionalData?.successfulPasses || 0}
-          activeTokensCount={additionalData?.activeTokensCount || 0}
-          rewards={parsedResults?._rewards || '0'}
-        />
+                {/* Player Stats Section */}
+                <div className="h-full overflow-hidden">
+                  <div className="h-full overflow-y-auto py-6 flex flex-col items-center justify-start w-full">
+                    <PlayerStats
+                      darkMode={darkMode}
+                      totalWins={parsedResults?.totalWins || 0}
+                      successfulPasses={additionalData?.successfulPasses || 0}
+                      activeTokensCount={additionalData?.activeTokensCount || 0}
+                      rewards={parsedResults?._rewards || '0'}
+                    />
+                  </div>
+                </div>
 
+                {/* Your Tokens Section */}
+                <div className="h-full overflow-hidden">
+                  <div className="h-full overflow-y-auto flex flex-col items-center w-full" style={{ paddingBottom: getGameState === "Playing" && actualAddress ? '24px' : '24px' }}>
+                    <UserTokens
+                      darkMode={darkMode}
+                      userTokens={additionalData?.userTokens || []}
+                      potatoTokenId={parsedResults?._potato_token || 0}
+                      explodedTokens={explodedTokens}
+                      onTokenExploded={handleTokenExploded}
+                      onRefreshImages={refreshAllImages}
+                    />
+                  </div>
+                </div>
+              </MobileSwipeNavigation>
+            </div>
+
+            {/* Pass Potato Form - Fixed at Bottom on Mobile */}
+            {getGameState === "Playing" && actualAddress && (
+              <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-white via-white to-white/95 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 shadow-2xl">
+                <div className="p-4 pb-safe">
+                  <PassPotatoForm
+                    darkMode={darkMode}
+                    tokenId={tokenId}
+                    setTokenId={setTokenId}
+                    passPending={passPending}
+                    hasPotato={additionalData?.hasPotatoToken === "true"}
+                    isMobileFixed={true}
+                    onPassPotato={() => {
+                      if (!actualAddress) {
+                        noAddressToast();
+                      } else if (additionalData?.hasPotatoToken !== "true") {
+                        noPotatoToast();
+                      } else if (!parsedResults?.isTokenActive) {
+                        notActiveToast();
+                      } else if (parsedResults?.ownerOf !== actualAddress) {
+                        notOwnerToast();
+                      } else if (passSim?.request) {
+                        handleTransaction(() => writePass(passSim.request), 'Pass Potato');
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Transaction Notifications */}
@@ -809,6 +1188,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         />
         <LoadingDisplay 
           message={transactionLoading || ''} 
+          onClose={() => setTransactionLoading(null)} 
           darkMode={darkMode} 
         />
       </div>

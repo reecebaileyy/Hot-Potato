@@ -38,29 +38,27 @@
 /* Modern Card Components */
 @layer components {
   .card {
-    @apply bg-white backdrop-blur-md border border-white rounded-2xl shadow-xl;
+    @apply bg-white backdrop-blur-md rounded-2xl shadow-xl;
     background-color: rgba(255, 255, 255, 0.95);
-    border-color: rgba(255, 255, 255, 0.5);
     transition: var(--transition);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
   }
   
   .card:hover {
     @apply shadow-2xl transform scale-105;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.4);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
   }
   
   .card-dark {
-    @apply bg-gray-900 backdrop-blur-md border border-gray-500 rounded-2xl shadow-xl;
+    @apply bg-gray-900 backdrop-blur-md rounded-2xl shadow-xl;
     background-color: rgba(17, 24, 39, 0.95);
-    border-color: rgba(107, 114, 128, 0.7);
     transition: var(--transition);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
   }
   
   .card-dark:hover {
     @apply shadow-2xl transform scale-105;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
   }
   
   .btn-primary {
@@ -77,8 +75,12 @@
   
   .gradient-text {
     @apply bg-gradient-to-r from-amber-400 via-red-400 to-pink-400 bg-clip-text text-transparent;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 10px rgba(245, 158, 11, 0.2);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  }
+  
+  .gradient-text.glow {
+    animation: text-glow 2s ease-in-out infinite;
   }
   
   .glass-effect {
@@ -218,10 +220,30 @@
 
 @keyframes glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
   }
   50% {
-    box-shadow: 0 0 30px rgba(245, 158, 11, 0.8);
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+  }
+}
+
+@keyframes glow-strong {
+  0%, 100% {
+    box-shadow: 0 0 40px rgba(245, 158, 11, 0.4), 0 0 80px rgba(239, 68, 68, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 60px rgba(245, 158, 11, 0.6), 0 0 120px rgba(239, 68, 68, 0.3);
+    transform: scale(1.01);
+  }
+}
+
+@keyframes text-glow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.5), 0 0 20px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(245, 158, 11, 0.8), 0 0 40px rgba(245, 158, 11, 0.5), 0 0 60px rgba(239, 68, 68, 0.3);
   }
 }
 
@@ -269,6 +291,14 @@
 
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
+}
+
+.animate-glow-strong {
+  animation: glow-strong 2s ease-in-out infinite;
+}
+
+.animate-text-glow {
+  animation: text-glow 2s ease-in-out infinite;
 }
 
 .animate-float {
@@ -362,5 +392,48 @@ input[type="number"], input[type="text"] {
 
 .animate-slide-out-right {
   animation: slide-out-right 0.4s ease-out;
+}
+
+/* Mobile Safe Area Support */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .pt-safe {
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+  
+  nav.fixed {
+    padding-top: max(1.5rem, calc(env(safe-area-inset-top) + 1.5rem));
+  }
+}
+
+/* Mobile Touch Improvements */
+@media (max-width: 1024px) {
+  /* Prevent touch callouts on long press */
+  * {
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Allow text selection only where needed */
+  input, textarea {
+    -webkit-touch-callout: default;
+  }
+  
+  /* Better mobile scrolling */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* Fixed positioning improvements for mobile */
+@media (max-width: 1024px) {
+  .fixed {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
 }
 
