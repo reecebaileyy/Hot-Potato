@@ -45,9 +45,9 @@ export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }:
   }
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 pt-6 pb-3 px-4 sm:px-6 md:px-12 flex justify-between items-center z-50 ${darkMode ? 'glass-effect-dark' : 'glass-effect'} backdrop-blur-md`}>
+    <nav className={`fixed top-0 left-0 right-0 pt-3 pb-2 sm:pt-6 sm:pb-3 px-4 sm:px-6 md:px-12 flex justify-between items-center z-50 ${darkMode ? 'glass-effect-dark' : 'glass-effect'} backdrop-blur-md`}>
       <Link href='/' className="transform transition-all duration-300 hover:scale-105 relative z-50">
-        <Image src={blacklogo} width={150} alt="Logo" className="drop-shadow-lg" />
+        <Image src={blacklogo} width={150} alt="Logo" className="w-[50px] sm:w-[100px] md:w-[150px] h-auto drop-shadow-lg" />
       </Link>
       
       {/* Mobile Menu Button */}

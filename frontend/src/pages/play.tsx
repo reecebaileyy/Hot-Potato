@@ -487,6 +487,10 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     toast.error("You Don't Have the Potato")
   }
 
+  function tokenNotExistToast() {
+    setTransactionError("Token does not exist or is not active in the game. Please check the token ID and try again.")
+  }
+
   // Event handlers - Now handled by useGameEvents hook
 
   // --- Loading states ---
@@ -625,7 +629,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         />
 
         {/* Main Content Container */}
-        <div className="max-w-7xl mx-auto pt-20 lg:pt-0">
+        <div className="max-w-7xl mx-auto lg:pt-0">
           {/* Hero Section - Hidden on Mobile */}
           <div className="hidden lg:block text-center mb-8 sm:mb-12 animate-fade-in-up px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
             <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 gradient-text glow`}>
@@ -635,7 +639,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           </div>
           
           {/* Mobile Hero - Compact - Fixed below nav */}
-          <div className="lg:hidden fixed top-16 left-0 right-0 z-30 text-center py-3 px-4 bg-gradient-to-r from-amber-500/10 to-red-500/10 backdrop-blur-sm border-b border-amber-500/20 pointer-events-none">
+          <div className="lg:hidden fixed top-[60px] left-0 right-0 z-30 text-center py-2 px-4 bg-gradient-to-r from-amber-500/10 to-red-500/10 backdrop-blur-sm border-b border-amber-500/20 pointer-events-none">
             <h1 className={`text-xl sm:text-2xl font-bold gradient-text glow`}>
               {parsedResults?._currentGeneration ? `Round ${parsedResults._currentGeneration}` : "Round 1"}
             </h1>
@@ -705,6 +709,8 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                         noPotatoToast();
                       } else if (!tokenId || tokenId === '0') {
                         toast.error('Please enter a valid token ID');
+                      } else if (!activeTokens.includes(Number(tokenId))) {
+                        tokenNotExistToast();
                       } else if (passSim?.request) {
                         handleTransaction(() => writePass(passSim.request), 'Pass Potato');
                       }
@@ -1073,7 +1079,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           </div>
 
           {/* Mobile Layout: Full Screen with Pass Potato at Bottom */}
-          <div className="lg:hidden flex flex-col h-screen" style={{ paddingTop: '120px' }}>
+          <div className="lg:hidden flex flex-col h-screen pt-24">
             {/* Swipeable Content Area */}
             <div className="flex-1 overflow-hidden" style={{ marginBottom: (getGameState === "Playing" || getGameState === "Final Stage") && actualAddress ? '160px' : '0px' }}>
               <MobileSwipeNavigation
@@ -1505,6 +1511,8 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                         noPotatoToast();
                       } else if (!tokenId || tokenId === '0') {
                         toast.error('Please enter a valid token ID');
+                      } else if (!activeTokens.includes(Number(tokenId))) {
+                        tokenNotExistToast();
                       } else if (passSim?.request) {
                         handleTransaction(() => writePass(passSim.request), 'Pass Potato');
                       }
