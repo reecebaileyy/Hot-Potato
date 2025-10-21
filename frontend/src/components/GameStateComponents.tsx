@@ -1,6 +1,8 @@
 import React from 'react'
 import Image from 'next/image'
+import { useEnsName } from 'wagmi'
 import hot from '../../public/assets/images/hot.png'
+import { formatAddress } from '../utils/formatAddress'
 
 interface GameStateProps {
   darkMode: boolean
@@ -18,6 +20,7 @@ interface GameStateProps {
   rewards: string
   onClaimRewards: () => void
   allWinners?: string[]
+  currentRoundWinner?: string | null
   remainingTime?: number | null
   explosion?: boolean
   onCheckExplosion?: () => void
@@ -40,6 +43,7 @@ export default function GameStateComponents({
   rewards,
   onClaimRewards,
   allWinners,
+  currentRoundWinner,
   remainingTime,
   explosion,
   onCheckExplosion,
@@ -47,6 +51,18 @@ export default function GameStateComponents({
 }: GameStateProps) {
   // Round down price to 2 decimal places
   const formattedPrice = (Math.floor(parseFloat(price) * 100) / 100).toFixed(2)
+  
+  // Fetch ENS name for the winner if available
+  const { data: winnerEnsName } = useEnsName({
+    address: currentRoundWinner as `0x${string}` | undefined,
+    chainId: 1, // Mainnet for ENS
+    query: {
+      enabled: !!currentRoundWinner,
+      staleTime: 300000, // Cache for 5 minutes
+      retry: 1,
+    }
+  })
+  
   const LoadingSpinner = () => (
     <div className="flex justify-center items-center p-8">
       <div className="animate-spin rounded-full h-12 w-12 border-4 border-transparent border-t-amber-500"></div>
@@ -176,6 +192,9 @@ export default function GameStateComponents({
   }
 
   if (gameState === "Ended") {
+    // Display priority: ENS name > formatted address
+    const displayWinner = winnerEnsName || (currentRoundWinner ? formatAddress(currentRoundWinner) : null)
+    
     return (
       <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>
         <div className="text-center space-y-6">
@@ -183,17 +202,13 @@ export default function GameStateComponents({
           <h1 className={`text-4xl font-bold mb-4 ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>
             Game Over!
           </h1>
-          {allWinners && allWinners.length > 0 ? (
-            <div className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              {allWinners.length === 1 ? (
-                <>Winner: {allWinners[0]}</>
-              ) : (
-                <>Winners: {allWinners.join(', ')}</>
-              )}
+          {displayWinner ? (
+            <div className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`} title={currentRoundWinner || undefined}>
+              Winner: {displayWinner}
             </div>
           ) : (
             <div className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              No Winners This Round
+              No Winner This Round
             </div>
           )}
           {isWinner && (

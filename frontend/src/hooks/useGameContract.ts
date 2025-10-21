@@ -33,6 +33,19 @@ export function useGameContract(tokenId: string = '') {
     abi: ABI,
   } as const), [])
 
+  // Get current generation first to use for hallOfFame lookup
+  const { data: currentGenData } = useReadContracts({
+    contracts: [{
+      ...gameContract,
+      functionName: 'currentGeneration' as const,
+    }],
+    query: {
+      staleTime: 60000,
+    }
+  })
+
+  const currentGen = currentGenData?.[0]?.result ? parseInt(currentGenData[0].result as unknown as string, 10) : 1
+
   // Contract calls - start with basic ERC721 functions that should always work
   const contracts = useMemo(() => {
     const baseContracts: any[] = [
@@ -80,6 +93,13 @@ export function useGameContract(tokenId: string = '') {
       functionName: 'getAllWinners' as const,
     })
 
+    // Add hallOfFame for current generation to get current round winner
+    baseContracts.push({
+      ...gameContract,
+      functionName: 'hallOfFame' as const,
+      args: [currentGen]
+    })
+
     // Only add address-dependent calls if we have an address
     if (_address) {
       baseContracts.push(
@@ -106,7 +126,7 @@ export function useGameContract(tokenId: string = '') {
     }
 
     return baseContracts
-  }, [_address, tokenId, gameContract])
+  }, [_address, tokenId, gameContract, currentGen])
 
   const { data: readResults, isLoading: loadingReadResults, refetch: refetchReadResults, error: readError } = useReadContracts({
     contracts,
@@ -156,11 +176,11 @@ export function useGameContract(tokenId: string = '') {
     console.log('========================')
     
     // Handle dynamic array based on what contracts were called
-    // Base contracts are always called: name, symbol, totalSupply, owner, getGameState, currentGeneration, _price, potatoTokenId, _maxperwallet, getAllWinners
-    const baseResults = readResults.slice(0, 10)
+    // Base contracts are always called: name, symbol, totalSupply, owner, getGameState, currentGeneration, _price, potatoTokenId, _maxperwallet, getAllWinners, hallOfFame[currentGen]
+    const baseResults = readResults.slice(0, 11)
     
     // Address-dependent results (rewards, totalWins) come after base results if address exists
-    const addressResults = _address ? readResults.slice(10, 12) : []
+    const addressResults = _address ? readResults.slice(11, 13) : []
     
     // TokenId-dependent results come last if tokenId exists
     const tokenResults = tokenId ? readResults.slice(-1) : []
@@ -181,6 +201,7 @@ export function useGameContract(tokenId: string = '') {
       totalMints: baseResults[2]?.result ? parseInt(baseResults[2].result as unknown as string, 10) : 0,
       _ownerAddress: baseResults[3]?.result?.toString(),
       allWinners: baseResults[9]?.result as unknown as string[] || [],
+      currentRoundWinner: baseResults[10]?.result?.toString() || null,
       _rewards: addressResults[0]?.result ? formatUnits(addressResults[0].result as unknown as bigint, 18) : '0',
       totalWins: addressResults[1]?.result ? parseInt(addressResults[1].result as unknown as string, 10) : 0,
       maxPerWallet: baseResults[8]?.result ? parseInt(baseResults[8].result as unknown as string, 10) : 0,

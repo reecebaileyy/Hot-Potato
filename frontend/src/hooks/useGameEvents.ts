@@ -1,6 +1,7 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
 import { useWatchContractEvent } from 'wagmi'
 import { safeParseEventLogs } from '../utils/viemUtils'
+import { formatAddress } from '../utils/formatAddress'
 import GameArtifact from '../abi/Game.json'
 
 const ABI = GameArtifact.abi
@@ -159,7 +160,7 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
         refetchAdditionalData()
       }, 1000)
       
-      setEvents((prev) => [...prev, `${player} won! 🎉`])
+      setEvents((prev) => [...prev, `${formatAddress(player)} won! 🎉`])
     } catch (error) {
       console.error('Error updating wins:', error)
     }
@@ -183,7 +184,7 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
         refetchAdditionalData()
       }, 1000)
       
-      setEvents((prev) => [...prev, `${player} passed successfully!`])
+      setEvents((prev) => [...prev, `${formatAddress(player)} passed successfully!`])
     } catch (error) {
       console.error('Error updating successful passes', error)
     }
@@ -207,7 +208,7 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
         }
       }
       setRoundMints(roundMints)
-      setEvents((prev) => [...prev, `${player} just minted ${amount} hands`])
+      setEvents((prev) => [...prev, `${formatAddress(player)} just minted ${amount} hands`])
     } catch (error) {
       console.error('Error updating mints', error)
     }

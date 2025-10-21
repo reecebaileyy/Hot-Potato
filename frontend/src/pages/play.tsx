@@ -756,6 +756,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
             }
           }}
           allWinners={parsedResults?.allWinners as string[]}
+          currentRoundWinner={parsedResults?.currentRoundWinner}
           remainingTime={remainingTime}
           explosion={explosion}
           onCheckExplosion={() => {
@@ -1126,6 +1127,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                     }
                   }}
                       allWinners={parsedResults?.allWinners as string[]}
+                      currentRoundWinner={parsedResults?.currentRoundWinner}
                       remainingTime={remainingTime}
                       explosion={explosion}
                       onCheckExplosion={() => {

@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { useAccount } from 'wagmi'
+import { useAccount, useEnsName } from 'wagmi'
+import { formatAddress } from '../utils/formatAddress'
 
 interface ConnectWalletButtonProps {
   className?: string
@@ -10,6 +11,24 @@ export default function ConnectWalletButton({ className }: ConnectWalletButtonPr
   const { ready, authenticated, login, logout } = usePrivy()
   const { wallets } = useWallets()
   const { address } = useAccount()
+
+  // Get actual address (from wagmi or Privy)
+  const actualAddress = useMemo(() => {
+    if (address) return address
+    if (wallets.length > 0 && wallets[0].address) return wallets[0].address
+    return null
+  }, [address, wallets])
+
+  // Fetch ENS name for the address
+  const { data: ensName, isLoading: ensLoading } = useEnsName({
+    address: actualAddress as `0x${string}` | undefined,
+    chainId: 1, // Mainnet for ENS
+    query: {
+      enabled: !!actualAddress,
+      staleTime: 300000, // Cache for 5 minutes
+      retry: 1,
+    }
+  })
 
   if (!ready) {
     return (
@@ -30,15 +49,14 @@ export default function ConnectWalletButton({ className }: ConnectWalletButtonPr
     )
   }
 
-  const displayAddress =
-    address ??
-    (wallets.length > 0 && wallets[0].address
-      ? `${wallets[0].address.slice(0, 6)}...${wallets[0].address.slice(-4)}`
-      : 'Connected')
+  // Display priority: ENS name > formatted address > 'Connected'
+  const displayAddress = ensName || (actualAddress ? formatAddress(actualAddress) : 'Connected')
 
   return (
     <div className={`flex items-center gap-2 ${className ?? ''}`}>
-      <span className="text-sm text-gray-300 truncate max-w-[150px]">{displayAddress}</span>
+      <span className="text-sm text-gray-300 truncate max-w-[150px]" title={actualAddress || undefined}>
+        {displayAddress}
+      </span>
       <button
         onClick={logout}
         className="px-4 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm"
