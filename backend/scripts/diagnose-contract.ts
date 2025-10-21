@@ -4,7 +4,7 @@ async function main() {
   console.log("🔍 DIAGNOSING CONTRACT STATE...\n");
 
   // Contract address from deployment
-  const CONTRACT_ADDRESS = "0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF";
+  const CONTRACT_ADDRESS = "0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9";
   
   // Get the wallet client
   const [deployer] = await hre.viem.getWalletClients();

@@ -192,8 +192,8 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const displayPrice = useMemo(() => ethers.utils.formatEther(BigInt(price || 0)), [price])
   
   // --- Constants ---
-  const CONTRACT = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as `0x${string}`
-  const CONTRACT_ADDRESS = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as const
+  const CONTRACT = '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as `0x${string}`
+  const CONTRACT_ADDRESS = '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as const
   const ADMIN_ADDRESS = "0x41b1e204e9c15fF5894bd47C6Dc3a7Fa98C775C7"
 
   // -----------------------------Single Reads End---------------------------------
@@ -652,7 +652,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                       // Fallback: call without simulation
                       console.log('No simulation available, calling directly')
                       handleTransaction(() => writeCheckExplosion({
-                        address: '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as `0x${string}`,
+                        address: '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as `0x${string}`,
                         abi: ABI,
                         functionName: 'checkExplosion',
                       }), 'Check Explosion');
@@ -752,7 +752,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
               // Fallback: call without simulation
               console.log('No simulation available, calling directly')
               handleTransaction(() => writeCheckExplosion({
-                address: '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as `0x${string}`,
+                address: '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as `0x${string}`,
                 abi: ABI,
                 functionName: 'checkExplosion',
               }), 'Check Explosion');
@@ -1088,7 +1088,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                           // Fallback: call without simulation
                           console.log('No simulation available, calling directly')
                           handleTransaction(() => writeCheckExplosion({
-                            address: '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as `0x${string}`,
+                            address: '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as `0x${string}`,
                             abi: ABI,
                             functionName: 'checkExplosion',
                           }), 'Check Explosion');
@@ -1349,7 +1349,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
               // Fallback: call without simulation
               console.log('No simulation available, calling directly')
               handleTransaction(() => writeCheckExplosion({
-                address: '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as `0x${string}`,
+                address: '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as `0x${string}`,
                 abi: ABI,
                 functionName: 'checkExplosion',
               }), 'Check Explosion');

@@ -3,7 +3,7 @@ import { useWatchContractEvent } from 'wagmi'
 import { safeParseEventLogs } from '../utils/viemUtils'
 import ABI from '../abi/Game.json'
 
-const CONTRACT_ADDRESS = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as const
+const CONTRACT_ADDRESS = '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as const
 
 // Temporary flag to disable event watching during RPC transition
 const DISABLE_EVENT_WATCHING = false

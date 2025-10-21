@@ -6,7 +6,7 @@ import { createDeferredPromise, type DeferredPromise } from '../utils/deferredPr
 import { safeParseEventLogs } from '../utils/viemUtils'
 import ABI from '../abi/Game.json'
 
-const CONTRACT_ADDRESS = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as const
+const CONTRACT_ADDRESS = '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as const
 
 // Debug logging for contract configuration
 console.log('=== CONTRACT CONFIG DEBUG ===')

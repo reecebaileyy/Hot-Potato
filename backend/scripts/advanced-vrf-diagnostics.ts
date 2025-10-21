@@ -4,7 +4,7 @@ async function main() {
   console.log("🔍 ADVANCED VRF DIAGNOSTICS...\n");
 
   // Contract addresses
-  const GAME_ADDRESS = "0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF";
+  const GAME_ADDRESS = "0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9";
   const VRF_HANDLER_ADDRESS = "0xA18E252a36AC16EE9f65c8a6da1D34ca3b6Ac874";
   
   // Get the wallet client
