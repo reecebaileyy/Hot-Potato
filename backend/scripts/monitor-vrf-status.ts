@@ -4,7 +4,7 @@ async function main() {
   console.log("⏳ MONITORING VRF REQUEST STATUS...\n");
 
   // Contract address
-  const GAME_ADDRESS = "0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9";
+  const GAME_ADDRESS = "0x050Bd2067828D5e94a3E90Be05949C6798b2c176";
   
   // Get the wallet client
   const [deployer] = await hre.viem.getWalletClients();

@@ -409,6 +409,59 @@ contract Game is ERC721A, ERC721AQueryable, Ownable  {
         emit GameStarted("Minting");
     }
 
+    function startGameWithoutMinting() external onlyOwner {
+        require(
+            gameState == GameState.Ended || gameState == GameState.Queued,
+            "Game already started"
+        );
+        require(totalSupply() >= 2, "Need at least 2 NFTs to play");
+
+        currentGeneration += 1;
+        emit NewRound(currentGeneration);
+
+        // Clear previous round data
+        delete activeTokens;
+        activeTokens.push(0); // Index 0 is placeholder
+        roundMints = 0;
+        TOTAL_PASSES = 0;
+        activeAddresses = 0;
+        delete players;
+        
+        // Reactivate all existing NFTs for the new round
+        for (uint256 i = 1; i <= totalSupply(); i++) {
+            uint256 tokenId = i;
+            address owner = ownerOf(tokenId);
+            
+            // Add to active tokens
+            activeTokens.push(tokenId);
+            
+            // Update hand data for new generation
+            hands[tokenId].generation = currentGeneration;
+            hands[tokenId].isActive = true;
+            hands[tokenId].hasPotato = false;
+            
+            // Track active addresses and rebuild players array
+            if (addressActiveTokenCount[owner] == 0) {
+                activeAddresses += 1;
+                players.push(owner);
+                isPlayer[owner] = true;
+            }
+            addressActiveTokenCount[owner] += 1;
+        }
+
+        // Use pseudo-random selection for initial potato (not VRF since we're skipping minting)
+        uint256 randomIndex = (uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, currentGeneration))) % (activeTokens.length - 1)) + 1;
+        uint256 initialPotatoTokenId = activeTokens[randomIndex];
+        
+        assignPotato(initialPotatoTokenId);
+        gameState = GameState.Playing;
+        updateExplosionTimer();
+        
+        emit UpdatedTimer(EXPLOSION_TIME - block.timestamp);
+        emit GameStarted("Playing without minting");
+        emit HandsActivated(activeTokens.length);
+    }
+
     function endMinting() external onlyOwner {
         require(gameState == GameState.Minting, "Game not minting");
         randomize(true);

@@ -15,6 +15,9 @@ export default function PlayerStats({
   activeTokensCount, 
   rewards 
 }: PlayerStatsProps) {
+  // Round down rewards to 2 decimal places
+  const formattedRewards = (Math.floor(parseFloat(rewards) * 100) / 100).toFixed(2)
+  
   return (
     <div className={`w-full max-w-6xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-6 lg:p-8 animate-fade-in-up`}>
       <h2 className={`text-2xl lg:text-3xl font-bold text-center mb-6 gradient-text glow`}>Player Stats</h2>
@@ -33,7 +36,7 @@ export default function PlayerStats({
         </div>
         <div className="text-center p-4 rounded-lg bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20">
           <p className={`text-base lg:text-lg font-semibold ${darkMode ? 'text-white' : 'text-black'} mb-2`}>Rewards</p>
-          <p className={`text-3xl lg:text-4xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>{rewards} ETH</p>
+          <p className={`text-3xl lg:text-4xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>{formattedRewards} ETH</p>
         </div>
       </div>
     </div>

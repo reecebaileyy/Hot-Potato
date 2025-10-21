@@ -4,9 +4,10 @@ import { formatUnits, parseEther } from 'viem'
 import { ethers, providers } from 'ethers'
 import { createDeferredPromise, type DeferredPromise } from '../utils/deferredPromise'
 import { safeParseEventLogs } from '../utils/viemUtils'
-import ABI from '../abi/Game.json'
+import GameArtifact from '../abi/Game.json'
 
-const CONTRACT_ADDRESS = '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as const
+const ABI = GameArtifact.abi
+const CONTRACT_ADDRESS = '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as const
 
 // Debug logging for contract configuration
 console.log('=== CONTRACT CONFIG DEBUG ===')

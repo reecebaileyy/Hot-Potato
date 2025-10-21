@@ -1,8 +1,8 @@
 {
-  "HotPotatoModule#BackgroundsContract": "0xC1C895D019DDAe1a03F5051cAA8cA75539d98Dd2",
-  "HotPotatoModule#GameContract": "0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9",
-  "HotPotatoModule#HandsContract": "0x6B56357Bc629FCFf1EdBeD0F963886b8e23D1E75",
-  "HotPotatoModule#InventoryContract": "0x7783450e47A43708Aca8Ca343E6c2b768EEE3Dc9",
-  "HotPotatoModule#PotatoContract": "0x48EaFdCaD8317c459949bb076C90f164104Da9a7",
-  "HotPotatoModule#VRFHandlerContract": "0x2a9A036A6Ce708f1fca4724D93BF63aDD1340635"
+  "HotPotatoModule#BackgroundsContract": "0x7b91ec5Ac194415E821f9264ED91777eC20beb84",
+  "HotPotatoModule#GameContract": "0x050Bd2067828D5e94a3E90Be05949C6798b2c176",
+  "HotPotatoModule#HandsContract": "0x584a64C08BB691dc969B5A8584e5c134EFCE120C",
+  "HotPotatoModule#InventoryContract": "0xB6Ab502A0768A63179B7C90E40de3F89400dEf48",
+  "HotPotatoModule#PotatoContract": "0xa7712960BE4c7a5584eDEB02Ae1314511016DAa8",
+  "HotPotatoModule#VRFHandlerContract": "0x088e4a39f249fB232e634CB78609205C39916780"
 }

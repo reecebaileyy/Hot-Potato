@@ -1,8 +1,9 @@
 import { useSimulateContract, useWriteContract } from 'wagmi'
 import { parseEther } from 'viem'
-import ABI from '../abi/Game.json'
+import GameArtifact from '../abi/Game.json'
 
-const CONTRACT_ADDRESS = '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as const
+const ABI = GameArtifact.abi
+const CONTRACT_ADDRESS = '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as const
 
 export function usePrivyContractWrites(mintAmount?: string, price?: string, tokenId?: string, gameState?: string) {
   console.log('=== USE PRIVY CONTRACT WRITES ===')
@@ -56,12 +57,29 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
     }
   })
   const { writeContract: writeStartGame, isPending: starting, data: startTxHash } = useWriteContract()
+
+  const { data: startNoMintSim, error: startNoMintError } = useSimulateContract({
+    abi: ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: 'startGameWithoutMinting',
+    query: {
+      enabled: false, // Disabled due to unknown error signatures in contract
+      retry: 1,
+      retryDelay: 1000,
+      staleTime: 30000,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false
+    }
+  })
+  const { writeContract: writeStartGameNoMint, isPending: startingNoMint, data: startNoMintTxHash } = useWriteContract()
   
   // Debug logging for admin operations
   console.log('=== ADMIN SIMULATIONS DEBUG ===');
   console.log('gameState:', gameState);
   console.log('startSim:', startSim);
   console.log('startError:', startError);
+  console.log('startNoMintSim:', startNoMintSim);
+  console.log('startNoMintError:', startNoMintError);
 
   const { data: endMintSim, error: endMintError } = useSimulateContract({
     abi: ABI,
@@ -166,6 +184,9 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
   if (startError) {
     console.warn('Start game simulation disabled due to contract error signature issues');
   }
+  if (startNoMintError) {
+    console.warn('Start game without minting simulation disabled due to contract error signature issues');
+  }
   if (endMintError) {
     console.warn('End minting simulation disabled due to contract error signature issues');
   }
@@ -212,6 +233,13 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
     console.log('Using wagmi writeContract (works with all wallet types)')
     writeStartGame(request)
     return startTxHash
+  }
+
+  const enhancedWriteStartGameNoMint = async (request: any) => {
+    console.log('=== WRITE START GAME WITHOUT MINTING ===')
+    console.log('Using wagmi writeContract (works with all wallet types)')
+    writeStartGameNoMint(request)
+    return startNoMintTxHash
   }
 
   const enhancedWriteEndMint = async (request: any) => {
@@ -290,6 +318,12 @@ export function usePrivyContractWrites(mintAmount?: string, price?: string, toke
     writeStartGame: enhancedWriteStartGame,
     starting,
     startTxHash,
+
+    startNoMintSim,
+    startNoMintError,
+    writeStartGameNoMint: enhancedWriteStartGameNoMint,
+    startingNoMint,
+    startNoMintTxHash,
     
     endMintSim,
     endMintError,

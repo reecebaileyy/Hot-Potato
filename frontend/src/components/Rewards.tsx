@@ -25,6 +25,9 @@ export default function Rewards({
   claimHistory
 }: RewardsProps) {
   const [showHistory, setShowHistory] = useState(false)
+  
+  // Round down rewards to 2 decimal places
+  const formattedRewards = (Math.floor(parseFloat(rewards) * 100) / 100).toFixed(2)
 
   const formatTxHash = (hash: string) => {
     if (hash.length < 10) return hash
@@ -49,7 +52,7 @@ export default function Rewards({
                 You Won!
               </h3>
               <div className={`text-3xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                {rewards} ETH
+                {formattedRewards} ETH
               </div>
               <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 Available to claim
@@ -64,7 +67,7 @@ export default function Rewards({
           ) : (
             <>
               <div className={`text-4xl font-bold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {rewards} ETH
+                {formattedRewards} ETH
               </div>
               <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {Number(rewards) > 0 ? 'Available to claim' : 'No rewards yet'}
@@ -112,19 +115,23 @@ export default function Rewards({
               </p>
             ) : (
               <div className="space-y-3 mt-3 max-h-64 overflow-y-auto">
-                {claimHistory.map((claim, index) => (
-                  <div
-                    key={`${claim.txHash}-${index}`}
-                    className={`${
-                      darkMode ? 'bg-gray-700' : 'bg-white'
-                    } p-3 rounded-lg border ${
-                      darkMode ? 'border-gray-600' : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`font-bold text-lg ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                        {claim.amount} ETH
-                      </span>
+                {claimHistory.map((claim, index) => {
+                  // Round down claim amount to 2 decimal places
+                  const formattedClaimAmount = (Math.floor(parseFloat(claim.amount) * 100) / 100).toFixed(2)
+                  
+                  return (
+                    <div
+                      key={`${claim.txHash}-${index}`}
+                      className={`${
+                        darkMode ? 'bg-gray-700' : 'bg-white'
+                      } p-3 rounded-lg border ${
+                        darkMode ? 'border-gray-600' : 'border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`font-bold text-lg ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                          {formattedClaimAmount} ETH
+                        </span>
                       {claim.round && (
                         <span className={`text-xs px-2 py-1 rounded ${
                           darkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-200 text-gray-700'
@@ -152,7 +159,8 @@ export default function Rewards({
                       </div>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>

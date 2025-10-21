@@ -48,7 +48,7 @@ The scripts automatically read the deployed contract addresses from:
 `backend/ignition/deployments/chain-84532/deployed_addresses.json`
 
 Current deployed addresses:
-- **Game Contract**: `0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9`
+- **Game Contract**: `0x050Bd2067828D5e94a3E90Be05949C6798b2c176`
 - **Inventory Manager**: `0xB8F01a17081d5c6A762EC6a1cE203a3E0Fe8e024`
 - **Backgrounds Contract**: `0x31B56FBCB9cfb54c3015B5EaF106f1Ca49d09166`
 - **Hands Contract**: `0xbA3f05d94b38265525680DAc5286BA0CF77f6fA7`

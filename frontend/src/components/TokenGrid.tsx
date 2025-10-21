@@ -2,7 +2,9 @@ import React, { Suspense } from 'react'
 import { HiArrowCircleUp, HiArrowCircleDown } from 'react-icons/hi'
 import OptimizedTokenImage from './OptimizedTokenImage'
 import { useTokenDataManager } from '../hooks/useTokenDataManager'
-import ABI from '../abi/Game.json'
+import GameArtifact from '../abi/Game.json'
+
+const ABI = GameArtifact.abi
 
 interface TokenGridProps {
   darkMode: boolean

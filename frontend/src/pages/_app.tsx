@@ -45,7 +45,15 @@ export default function App({ Component, pageProps }: AppProps) {
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID as string}
       config={{
-        loginMethods: ['wallet', 'email', 'google', 'apple', 'sms'],
+        // Note: 'apple' login requires configuration in Privy Dashboard
+        // To enable Apple login:
+        // 1. Go to dashboard.privy.io
+        // 2. Select your app
+        // 3. Go to Settings > Login methods
+        // 4. Enable "Sign in with Apple"
+        // 5. Configure Apple OAuth (Service ID, Team ID, Key ID, Private Key)
+        // Then add 'apple' back to this array
+        loginMethods: ['wallet', 'email', 'google', 'sms'],
         defaultChain: baseSepolia,
         supportedChains: [baseSepolia],
         // Additional configuration to ensure proper network recognition

@@ -5,7 +5,9 @@ import dynamic from 'next/dynamic'
 import { Abi, formatUnits, parseEther, parseEventLogs } from 'viem'
 import { useAccount, useWatchContractEvent, useReadContract, UseReadContractsReturnType, useReadContracts, useBalance, useSimulateContract, useWriteContract, useEnsName, useChainId, useWaitForTransactionReceipt } from 'wagmi'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
-import ABI from '../abi/Game.json'
+import GameArtifact from '../abi/Game.json'
+
+const ABI = GameArtifact.abi
 import { toast, ToastContainer } from 'react-toastify'
 import { ethers, providers } from 'ethers'
 import { useGameContract } from '../hooks/useGameContract'
@@ -145,6 +147,10 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     writeStartGame,
     starting,
     startTxHash,
+    startNoMintSim,
+    writeStartGameNoMint,
+    startingNoMint,
+    startNoMintTxHash,
     endMintSim,
     writeEndMint,
     ending,
@@ -180,20 +186,20 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
   // Monitor tx hashes from different operations and set currentTxHash
   useEffect(() => {
-    const latestHash = mintTxHash || passTxHash || claimTxHash || startTxHash || endMintTxHash || 
+    const latestHash = mintTxHash || passTxHash || claimTxHash || startTxHash || startNoMintTxHash || endMintTxHash || 
                         closeMintTxHash || pauseTxHash || resumeTxHash || restartTxHash || checkExplosionTxHash
     if (latestHash && latestHash !== currentTxHash) {
       console.log('New transaction hash detected:', latestHash)
       setCurrentTxHash(latestHash)
     }
-  }, [mintTxHash, passTxHash, claimTxHash, startTxHash, endMintTxHash, closeMintTxHash, pauseTxHash, resumeTxHash, restartTxHash, checkExplosionTxHash, currentTxHash])
+  }, [mintTxHash, passTxHash, claimTxHash, startTxHash, startNoMintTxHash, endMintTxHash, closeMintTxHash, pauseTxHash, resumeTxHash, restartTxHash, checkExplosionTxHash, currentTxHash])
   
   // --- Memoized values ---
   const displayPrice = useMemo(() => ethers.utils.formatEther(BigInt(price || 0)), [price])
   
   // --- Constants ---
-  const CONTRACT = '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as `0x${string}`
-  const CONTRACT_ADDRESS = '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as const
+  const CONTRACT = '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`
+  const CONTRACT_ADDRESS = '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as const
   const ADMIN_ADDRESS = "0x41b1e204e9c15fF5894bd47C6Dc3a7Fa98C775C7"
 
   // -----------------------------Single Reads End---------------------------------
@@ -335,7 +341,9 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   })
 
   const value = bal?.value ?? 0n
-  const balance = formatUnits(value, bal?.decimals ?? 18)
+  // Round down ETH balance to 2 decimal places
+  const rawBalance = formatUnits(value, bal?.decimals ?? 18)
+  const balance = (Math.floor(parseFloat(rawBalance) * 100) / 100).toFixed(2)
 
   const { data: winnerEnsName, isError: errorWinnerEnsName, isLoading: loadingWinnerEnsName } = useEnsName({
     address: additionalData?.roundWinner ? additionalData.roundWinner as `0x${string}` : undefined,
@@ -652,7 +660,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                       // Fallback: call without simulation
                       console.log('No simulation available, calling directly')
                       handleTransaction(() => writeCheckExplosion({
-                        address: '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as `0x${string}`,
+                        address: '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`,
                         abi: ABI,
                         functionName: 'checkExplosion',
                       }), 'Check Explosion');
@@ -752,7 +760,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
               // Fallback: call without simulation
               console.log('No simulation available, calling directly')
               handleTransaction(() => writeCheckExplosion({
-                address: '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as `0x${string}`,
+                address: '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`,
                 abi: ABI,
                 functionName: 'checkExplosion',
               }), 'Check Explosion');
@@ -788,6 +796,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           ownerAddress={parsedResults?._ownerAddress || ''}
           gameState={getGameState || ''}
           startSim={startSim}
+          startNoMintSim={startNoMintSim}
           endMintSim={endMintSim}
           closeMintSim={closeMintSim}
           pauseSim={pauseSim}
@@ -820,6 +829,39 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                       } catch (error: any) {
                         console.error('Direct transaction failed:', error);
                         // Check if it's an unknown error signature
+                        if (error?.message?.includes('Unable to decode signature')) {
+                          toast.error('Cannot start game at this time - contract constraint');
+                        } else {
+                          toast.error('Unable to start game - transaction failed');
+                        }
+                      }
+                    }
+                  }}
+          onStartGameNoMint={() => {
+                    console.log('=== START GAME WITHOUT MINTING CLICKED ===');
+                    console.log('actualAddress:', actualAddress);
+                    console.log('getGameState:', getGameState);
+                    console.log('startNoMintSim:', startNoMintSim);
+                    
+                    if (!actualAddress) {
+                      console.log('No address - showing toast');
+                      noAddressToast();
+                    } else if (getGameState !== "Queued" && getGameState !== "Ended") {
+                      console.log('Game state not Queued or Ended - showing toast');
+                      toast.error('Can only start game from Queued or Ended state');
+                    } else if (startNoMintSim?.request) {
+                      console.log('Starting game without minting transaction...');
+                      handleTransaction(() => writeStartGameNoMint(startNoMintSim.request), 'Start Game (Skip Minting)');
+                    } else {
+                      console.log('No valid simulation request available, trying direct transaction...');
+                      try {
+                        handleTransaction(() => writeStartGameNoMint({
+                          abi: ABI,
+                          address: CONTRACT_ADDRESS,
+                          functionName: 'startGameWithoutMinting'
+                        }), 'Start Game (Skip Minting)');
+                      } catch (error: any) {
+                        console.error('Direct transaction failed:', error);
                         if (error?.message?.includes('Unable to decode signature')) {
                           toast.error('Cannot start game at this time - contract constraint');
                         } else {
@@ -1088,7 +1130,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                           // Fallback: call without simulation
                           console.log('No simulation available, calling directly')
                           handleTransaction(() => writeCheckExplosion({
-                            address: '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as `0x${string}`,
+                            address: '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`,
                             abi: ABI,
                             functionName: 'checkExplosion',
                           }), 'Check Explosion');
@@ -1124,6 +1166,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                       ownerAddress={parsedResults?._ownerAddress || ''}
                       gameState={getGameState || ''}
                       startSim={startSim}
+                      startNoMintSim={startNoMintSim}
                       endMintSim={endMintSim}
                       closeMintSim={closeMintSim}
                       pauseSim={pauseSim}
@@ -1153,6 +1196,39 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                               address: CONTRACT_ADDRESS,
                               functionName: 'startGame'
                             }), 'Start Game');
+                          } catch (error: any) {
+                            console.error('Direct transaction failed:', error);
+                            if (error?.message?.includes('Unable to decode signature')) {
+                              toast.error('Cannot start game at this time - contract constraint');
+                            } else {
+                              toast.error('Unable to start game - transaction failed');
+                            }
+                          }
+                        }
+                      }}
+                      onStartGameNoMint={() => {
+                        console.log('=== START GAME WITHOUT MINTING CLICKED ===');
+                        console.log('actualAddress:', actualAddress);
+                        console.log('getGameState:', getGameState);
+                        console.log('startNoMintSim:', startNoMintSim);
+                        
+                        if (!actualAddress) {
+                          console.log('No address - showing toast');
+                          noAddressToast();
+                        } else if (getGameState !== "Queued" && getGameState !== "Ended") {
+                          console.log('Game state not Queued or Ended - showing toast');
+                          toast.error('Can only start game from Queued or Ended state');
+                        } else if (startNoMintSim?.request) {
+                          console.log('Starting game without minting transaction...');
+                          handleTransaction(() => writeStartGameNoMint(startNoMintSim.request), 'Start Game (Skip Minting)');
+                        } else {
+                          console.log('No valid simulation request available, trying direct transaction...');
+                          try {
+                            handleTransaction(() => writeStartGameNoMint({
+                              abi: ABI,
+                              address: CONTRACT_ADDRESS,
+                              functionName: 'startGameWithoutMinting'
+                            }), 'Start Game (Skip Minting)');
                           } catch (error: any) {
                             console.error('Direct transaction failed:', error);
                             if (error?.message?.includes('Unable to decode signature')) {
@@ -1349,7 +1425,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
               // Fallback: call without simulation
               console.log('No simulation available, calling directly')
               handleTransaction(() => writeCheckExplosion({
-                address: '0x7Bfa203a115421a08bE6E27bEcb495D3cb4003B9' as `0x${string}`,
+                address: '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`,
                 abi: ABI,
                 functionName: 'checkExplosion',
               }), 'Check Explosion');

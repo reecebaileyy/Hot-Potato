@@ -6,6 +6,7 @@ interface AdminControlsProps {
   ownerAddress: string
   gameState: string
   onStartGame: () => void
+  onStartGameNoMint: () => void
   onEndMinting: () => void
   onCloseMinting: () => void
   onPauseGame: () => void
@@ -13,6 +14,7 @@ interface AdminControlsProps {
   onRestartGame: () => void
   // Debug props
   startSim?: any
+  startNoMintSim?: any
   endMintSim?: any
   closeMintSim?: any
   pauseSim?: any
@@ -25,13 +27,15 @@ export default function AdminControls({
   address, 
   ownerAddress,
   gameState, 
-  onStartGame, 
+  onStartGame,
+  onStartGameNoMint, 
   onEndMinting,
   onCloseMinting, 
   onPauseGame, 
   onResumeGame, 
   onRestartGame,
   startSim,
+  startNoMintSim,
   endMintSim,
   closeMintSim,
   pauseSim,
@@ -61,12 +65,20 @@ export default function AdminControls({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Start Game - Show when Queued or Ended */}
         {(gameState === 'Queued' || gameState === 'Ended') && (
-          <button
-            className={`btn-primary text-lg py-4 md:col-span-2 lg:col-span-3`}
-            onClick={onStartGame}
-          >
-            🚀 Start Game (Open Minting)
-          </button>
+          <>
+            <button
+              className={`btn-primary text-lg py-4`}
+              onClick={onStartGame}
+            >
+              🚀 Start New Round (With Minting)
+            </button>
+            <button
+              className={`btn-secondary text-lg py-4 md:col-span-2`}
+              onClick={onStartGameNoMint}
+            >
+              ⚡ Start Round (Skip Minting)
+            </button>
+          </>
         )}
         
         {/* Minting State Controls */}

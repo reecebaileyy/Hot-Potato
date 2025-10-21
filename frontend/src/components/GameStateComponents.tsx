@@ -45,6 +45,8 @@ export default function GameStateComponents({
   onCheckExplosion,
   checkingExplosion
 }: GameStateProps) {
+  // Round down price to 2 decimal places
+  const formattedPrice = (Math.floor(parseFloat(price) * 100) / 100).toFixed(2)
   const LoadingSpinner = () => (
     <div className="flex justify-center items-center p-8">
       <div className="animate-spin rounded-full h-12 w-12 border-4 border-transparent border-t-amber-500"></div>
@@ -124,11 +126,11 @@ export default function GameStateComponents({
             <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} p-4 rounded-lg`}>
                 <p className="font-semibold text-amber-500">Price per Hand</p>
-                <p className="text-lg">{price} ETH</p>
+                <p className="text-lg">{formattedPrice} ETH</p>
               </div>
               <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} p-4 rounded-lg`}>
                 <p className="font-semibold text-red-500">Total Cost</p>
-                <p className="text-lg">{totalCost.toFixed(4)} ETH</p>
+                <p className="text-lg">{(Math.floor(totalCost * 100) / 100).toFixed(2)} ETH</p>
               </div>
               <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} p-4 rounded-lg`}>
                 <p className="font-semibold text-green-500">Your Balance</p>
