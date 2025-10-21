@@ -171,11 +171,19 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
       const player = decoded[0]?.args?.player
       if (!player) return
 
-      console.log('SuccessfulPass', player)
+      console.log('✅ SuccessfulPass event detected for player:', player)
+      
+      // Refresh successful passes count and other player data
+      debouncedRefetch(() => {
+        console.log('Refetching data after successful pass')
+        refetchAdditionalData() // Updates successful passes count and active tokens
+      }, 500)
+      
+      setEvents((prev) => [...prev, `${player} passed successfully!`])
     } catch (error) {
       console.error('Error updating successful passes', error)
     }
-  }, [])
+  }, [debouncedRefetch, refetchAdditionalData, setEvents])
 
   const handlePotatoMinted = useCallback(async (logs: any[]) => {
     try {
@@ -276,12 +284,21 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
 
       console.log('🥔 PotatoPassed event detected', { from: tokenIdFrom, to: tokenIdTo, yielder })
       
-      // Refresh potato holder data and active tokens
+      // Comprehensive refresh of all potato-related data
       debouncedRefetch(() => {
-        console.log('Refetching data after potato pass')
-        refetchAdditionalData() // Updates who has the potato and token states
-        refetchGameState() // Updates potato token ID
+        console.log('Refetching all data after potato pass:')
+        console.log('  - Updating potato holder status (userHasPotatoToken)')
+        console.log('  - Updating potato timer (getExplosionTime)')
+        console.log('  - Updating active tokens list (getActiveTokenIds)')
+        console.log('  - Updating user active tokens (getActiveTokensOfOwner)')
+        console.log('  - Updating successful passes count (successfulPasses)')
+        console.log('  - Updating potato token ID')
+        
+        refetchAdditionalData() // Refreshes: userHasPotatoToken, explosionTime, activeTokenIds, userTokens, successfulPasses
+        refetchGameState() // Refreshes: potato token ID and game state
       }, 500)
+      
+      // Trigger UI refresh for all components
       debouncedRefresh(() => setShouldRefresh((prev) => !prev), 500)
       
       // Refresh images to show new potato holder
