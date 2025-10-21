@@ -367,31 +367,49 @@ input[type="number"], input[type="text"] {
 @keyframes slide-in-right {
   from {
     opacity: 0;
-    transform: translateX(100%);
+    transform: translateX(100%) scale(0.9);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
   }
 }
 
 @keyframes slide-out-right {
   from {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
   }
   to {
     opacity: 0;
-    transform: translateX(100%);
+    transform: translateX(100%) scale(0.9);
+  }
+}
+
+@keyframes slide-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
 .animate-slide-in-right {
-  animation: slide-in-right 0.4s ease-out;
+  animation: slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .animate-slide-out-right {
-  animation: slide-out-right 0.4s ease-out;
+  animation: slide-out-right 0.3s cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Mobile notification adjustments */
+@media (max-width: 640px) {
+  .animate-slide-in-right {
+    animation: slide-in-down 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
 /* Mobile Safe Area Support */

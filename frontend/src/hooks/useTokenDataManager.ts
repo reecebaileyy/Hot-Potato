@@ -25,24 +25,23 @@ export function useTokenDataManager(activeTokenIds: number[], shouldRefresh?: bo
     refreshTimeoutRef.current = setTimeout(callback, delay)
   }, [])
 
-  // Memoize activeTokenIds to prevent unnecessary re-renders
-  const activeTokenIdsString = activeTokenIds.join(',')
-  const memoizedActiveTokenIds = useMemo(() => activeTokenIds, [activeTokenIds])
+  // Memoize activeTokenIds string to prevent unnecessary re-renders
+  const activeTokenIdsString = useMemo(() => activeTokenIds.join(','), [activeTokenIds])
 
   // Centralized contract reads for all tokens with optimized caching
   const contracts = useMemo(() => 
-    memoizedActiveTokenIds.map(tokenId => ({
+    activeTokenIds.map(tokenId => ({
       address: CONTRACT_ADDRESS,
       abi: ABI as Abi,
       functionName: 'getImageString' as const,
       args: [tokenId] as const,
-    })), [memoizedActiveTokenIds]
+    })), [activeTokenIdsString] // Use string comparison instead of array
   )
 
   const { data: allImageStrings, isLoading, error, refetch } = useReadContracts({
     contracts,
     query: {
-      enabled: memoizedActiveTokenIds.length > 0,
+      enabled: activeTokenIds.length > 0,
       staleTime: 60000, // Increased to 60 seconds
       refetchInterval: false, // Disable automatic refetching
       refetchOnWindowFocus: false, // Disable refetch on window focus
@@ -54,10 +53,10 @@ export function useTokenDataManager(activeTokenIds: number[], shouldRefresh?: bo
 
   // Update cache when data changes
   useEffect(() => {
-    if (allImageStrings && memoizedActiveTokenIds.length > 0) {
+    if (allImageStrings && activeTokenIds.length > 0) {
       const newCache = new Map<number, TokenData>()
       
-      memoizedActiveTokenIds.forEach((tokenId, index) => {
+      activeTokenIds.forEach((tokenId, index) => {
         const imageString = allImageStrings[index]?.result as string
         newCache.set(tokenId, {
           tokenId,
@@ -69,7 +68,7 @@ export function useTokenDataManager(activeTokenIds: number[], shouldRefresh?: bo
       
       setTokenDataCache(newCache)
     }
-  }, [allImageStrings, memoizedActiveTokenIds])
+  }, [allImageStrings, activeTokenIdsString]) // Use string comparison
 
   // Get data for a specific token
   const getTokenData = (tokenId: number): TokenData => {
@@ -117,7 +116,7 @@ export function useTokenDataManager(activeTokenIds: number[], shouldRefresh?: bo
     getTokenData,
     refreshAll,
     refreshImmediate,
-    isLoading: isLoading && memoizedActiveTokenIds.length > 0,
+    isLoading: isLoading && activeTokenIds.length > 0,
     error,
     lastRefresh,
   }

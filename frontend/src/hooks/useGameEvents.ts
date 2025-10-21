@@ -8,7 +8,14 @@ const CONTRACT_ADDRESS = '0x1fB69dDc3C0CA3af33400294893b7e99b8f224dF' as const
 // Temporary flag to disable event watching during RPC transition
 const DISABLE_EVENT_WATCHING = false
 
-export function useGameEvents(address: string, refetchHallOfFame: () => void, refreshImages?: () => void) {
+interface GameEventsCallbacks {
+  refetchGameState: () => void
+  refetchAdditionalData: () => void
+  refreshImages?: () => void
+}
+
+export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
+  const { refetchGameState, refetchAdditionalData, refreshImages } = callbacks
   const [events, setEvents] = useState<string[]>([])
   const [shouldRefresh, setShouldRefresh] = useState<boolean>(false)
   const [explosion, setExplosion] = useState<boolean>(false)
@@ -74,37 +81,64 @@ export function useGameEvents(address: string, refetchHallOfFame: () => void, re
 
   // Optimized event handlers with useCallback
   const handleGameStarted = useCallback(async (logs: any[]) => {
+    console.log('🎮 GameStarted event detected')
     setRoundMints(0)
     setEvents((prev) => [...prev, 'Heating up'])
-    // Trigger immediate refresh for critical game state change
+    // Refresh game state, active tokens, and user data
+    debouncedRefetch(() => {
+      refetchGameState()
+      refetchAdditionalData()
+    }, 500)
     debouncedRefresh(() => setShouldRefresh((prev) => !prev), 500)
-  }, [debouncedRefresh])
+  }, [debouncedRefetch, debouncedRefresh, refetchGameState, refetchAdditionalData])
 
   const handleMintingEnded = useCallback(async () => {
+    console.log('🛑 MintingEnded event detected')
     setRemainingTime(remainingTime)
     setEvents((prev) => [...prev, 'No more mints'])
-    // Trigger refresh for game state change
+    // Refresh game state and active tokens
+    debouncedRefetch(() => {
+      refetchGameState()
+      refetchAdditionalData()
+    }, 500)
     debouncedRefresh(() => setShouldRefresh((prev) => !prev), 500)
-  }, [remainingTime, debouncedRefresh])
+  }, [remainingTime, debouncedRefetch, debouncedRefresh, refetchGameState, refetchAdditionalData])
 
   const handleGameResumed = useCallback(async () => {
+    console.log('▶️ GameResumed event detected')
     setEvents((prev) => [...prev, 'Back to it'])
-    // Trigger refresh for game state change
+    // Refresh game state
+    debouncedRefetch(() => {
+      refetchGameState()
+    }, 500)
     debouncedRefresh(() => setShouldRefresh((prev) => !prev), 500)
-  }, [debouncedRefresh])
+  }, [debouncedRefetch, debouncedRefresh, refetchGameState])
 
   const handleGamePaused = useCallback(async () => {
+    console.log('⏸️ GamePaused event detected')
     setEvents((prev) => [...prev, 'Cooling off'])
-    // Trigger refresh for game state change
+    // Refresh game state
+    debouncedRefetch(() => {
+      refetchGameState()
+    }, 500)
     debouncedRefresh(() => setShouldRefresh((prev) => !prev), 500)
-  }, [debouncedRefresh])
+  }, [debouncedRefetch, debouncedRefresh, refetchGameState])
 
   const handleGameRestarted = useCallback(async () => {
+    console.log('🔄 GameRestarted event detected')
     setRoundMints(0)
     setEvents((prev) => [...prev, 'Game Over'])
-    // Trigger refresh for game state change
+    // Refresh everything for new game
+    debouncedRefetch(() => {
+      refetchGameState()
+      refetchAdditionalData()
+    }, 500)
     debouncedRefresh(() => setShouldRefresh((prev) => !prev), 500)
-  }, [debouncedRefresh])
+    if (refreshImages) {
+      console.log('Refreshing all images for new game')
+      refreshImages()
+    }
+  }, [debouncedRefetch, debouncedRefresh, refetchGameState, refetchAdditionalData, refreshImages])
 
   const handleFinalRoundStarted = useCallback(async () => {
     setEvents((prev) => [...prev, '2 PLAYERS LEFT'])
@@ -116,16 +150,19 @@ export function useGameEvents(address: string, refetchHallOfFame: () => void, re
       const player = decoded[0]?.args?.player
       if (!player) return
 
-      console.log('PlayerWon', player)
-      // Only refetch if it's the current player and debounce the refetch
-      if (player.toLowerCase() === address?.toLowerCase()) {
-        debouncedRefetch(() => refetchHallOfFame(), 2000)
-      }
+      console.log('🏆 PlayerWon event detected', player)
+      
+      // Refresh game data for win state
+      debouncedRefetch(() => {
+        refetchGameState()
+        refetchAdditionalData()
+      }, 1000)
+      
       setEvents((prev) => [...prev, `${player} won! 🎉`])
     } catch (error) {
       console.error('Error updating wins:', error)
     }
-  }, [refetchHallOfFame, address, debouncedRefetch])
+  }, [address, debouncedRefetch, refetchGameState, refetchAdditionalData])
 
   const handleSuccessfulPass = useCallback(async (logs: any[]) => {
     try {
@@ -167,13 +204,26 @@ export function useGameEvents(address: string, refetchHallOfFame: () => void, re
     try {
       const decoded = safeParseEventLogs<{ round: bigint }>(ABI, 'NewRound', logs)
       const round = Number(decoded[0]?.args?.round ?? 0)
-      console.log('NewRound', round)
-      // Debounce refresh to prevent excessive updates
-      debouncedRefresh(() => setShouldRefresh((prev) => !prev), 2000)
+      console.log('🔄 NewRound event detected', round)
+      
+      // Refresh all data for new round
+      debouncedRefetch(() => {
+        refetchGameState()
+        refetchAdditionalData()
+      }, 1000)
+      debouncedRefresh(() => setShouldRefresh((prev) => !prev), 1000)
+      
+      // Refresh images for new round
+      if (refreshImages) {
+        console.log('Refreshing images for new round')
+        refreshImages()
+      }
+      
+      setEvents((prev) => [...prev, `Round ${round} started!`])
     } catch (error) {
       console.error('Error updating new round data', error)
     }
-  }, [debouncedRefresh])
+  }, [debouncedRefetch, debouncedRefresh, refetchGameState, refetchAdditionalData, refreshImages])
 
   const handleUpdatedTimer = useCallback((logs: any[]) => {
     const decoded = safeParseEventLogs<{ time: bigint }>(ABI, 'UpdatedTimer', logs)
@@ -191,30 +241,59 @@ export function useGameEvents(address: string, refetchHallOfFame: () => void, re
       const decoded = safeParseEventLogs<{ player: `0x${string}`; tokenId: bigint }>(ABI, 'PotatoExploded', logs)
       const player = decoded[0]?.args?.player
       const tokenId_ = decoded[0]?.args?.tokenId?.toString()
-      console.log('PotatoExploded', player, tokenId_)
+      console.log('💥 PotatoExploded event detected', player, tokenId_)
       setExplosion(true)
       setTimeout(() => setExplosion(false), 3050)
-      console.log('Refetched all data after explosion.')
+      
+      // Refresh ALL data after explosion - critical event
+      debouncedRefetch(() => {
+        console.log('Refetching all data after explosion')
+        refetchGameState()
+        refetchAdditionalData()
+      }, 1000)
+      debouncedRefresh(() => setShouldRefresh((prev) => !prev), 1000)
+      
+      // Refresh images to show updated tokens
+      if (refreshImages) {
+        console.log('Refreshing images after explosion')
+        setTimeout(() => refreshImages(), 1500) // Delay slightly to let contract update
+      }
+      
       setEvents((prev) => [...prev, `Token #${tokenId_} just exploded`])
     } catch (error) {
       console.error('Error handling PotatoExploded event', error)
     }
-  }, [])
+  }, [debouncedRefetch, debouncedRefresh, refetchGameState, refetchAdditionalData, refreshImages])
 
   const handlePotatoPassed = useCallback(async (logs: any[]) => {
     try {
-      const decoded = safeParseEventLogs<{ tokenIdTo: bigint }>(ABI, 'PotatoPassed', logs)
+      const decoded = safeParseEventLogs<{ tokenIdFrom: bigint; tokenIdTo: bigint; yielder: `0x${string}` }>(ABI, 'PotatoPassed', logs)
+      const tokenIdFrom = decoded[0]?.args?.tokenIdFrom?.toString()
       const tokenIdTo = decoded[0]?.args?.tokenIdTo?.toString()
+      const yielder = decoded[0]?.args?.yielder
       if (!tokenIdTo) return
 
-      console.log('PotatoPassed', tokenIdTo)
+      console.log('🥔 PotatoPassed event detected', { from: tokenIdFrom, to: tokenIdTo, yielder })
+      
+      // Refresh potato holder data and active tokens
+      debouncedRefetch(() => {
+        console.log('Refetching data after potato pass')
+        refetchAdditionalData() // Updates who has the potato and token states
+        refetchGameState() // Updates potato token ID
+      }, 500)
+      debouncedRefresh(() => setShouldRefresh((prev) => !prev), 500)
+      
+      // Refresh images to show new potato holder
+      if (refreshImages) {
+        console.log('Refreshing images after potato pass')
+        setTimeout(() => refreshImages(), 800)
+      }
+      
       setEvents((prev) => [...prev, `Potato Passed to #${tokenIdTo}`])
-      // Debounce refresh to prevent excessive updates
-      debouncedRefresh(() => setShouldRefresh((prev) => !prev), 1000)
     } catch (error) {
       console.error('Error handling PotatoPassed event', error)
     }
-  }, [debouncedRefresh])
+  }, [debouncedRefetch, debouncedRefresh, refetchGameState, refetchAdditionalData, refreshImages])
 
   // Cleanup timeouts on unmount
   useEffect(() => {

@@ -144,21 +144,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     isPrivyWallet,
     walletType
   } = usePrivyContractWrites(mintAmount, parsedResults?._price, tokenId, getGameState || undefined)
-
-  // --- Game Events Hook (needs _address) ---
-  const { 
-    events, 
-    setEvents, 
-    shouldRefresh: eventShouldRefresh, 
-    explosion, 
-    remainingTime, 
-    setRemainingTime, 
-    roundMints, 
-    setRoundMints,
-    triggerRefresh,
-    pollingEnabled,
-    setPollingEnabled
-  } = useGameEvents(actualAddress || '', () => refetchAdditionalResults(), refreshAllImages)
   
   // --- Memoized values ---
   const displayPrice = useMemo(() => ethers.utils.formatEther(BigInt(price || 0)), [price])
@@ -235,6 +220,25 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
       retry: 1, // Reduced retries
       retryDelay: 2000, // Fixed retry delay
     }
+  })
+
+  // --- Game Events Hook (needs _address and refetch functions) ---
+  const { 
+    events, 
+    setEvents, 
+    shouldRefresh: eventShouldRefresh, 
+    explosion, 
+    remainingTime, 
+    setRemainingTime, 
+    roundMints, 
+    setRoundMints,
+    triggerRefresh,
+    pollingEnabled,
+    setPollingEnabled
+  } = useGameEvents(actualAddress || '', {
+    refetchGameState: () => refetchReadResults(),
+    refetchAdditionalData: () => refetchAdditionalResults(),
+    refreshImages: refreshAllImages
   })
 
   // Memoized parsed results for additional data
@@ -386,14 +390,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     toast.error("You Don't Have the Potato")
   }
 
-  function notActiveToast() {
-    toast.error("Token Not Active")
-  }
-
-  function notOwnerToast() {
-    toast.error("You Don't Own This Token")
-  }
-
   // Event handlers - Now handled by useGameEvents hook
 
   // --- Loading states ---
@@ -469,10 +465,11 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     if (eventShouldRefresh) {
       console.log('Event triggered refresh - refetching contract data')
       refetchReadResults()
+      refetchAdditionalResults()
       // Also refresh token images
       refreshAllImages()
     }
-  }, [eventShouldRefresh, refetchReadResults, refreshAllImages]);
+  }, [eventShouldRefresh, refetchReadResults, refetchAdditionalResults, refreshAllImages]);
 
   // --- Optimized timer effect ---
   useEffect(() => {
@@ -564,10 +561,8 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                         noAddressToast();
                       } else if (additionalData?.hasPotatoToken !== "true") {
                         noPotatoToast();
-                      } else if (!parsedResults?.isTokenActive) {
-                        notActiveToast();
-                      } else if (parsedResults?.ownerOf !== actualAddress) {
-                        notOwnerToast();
+                      } else if (!tokenId || tokenId === '0') {
+                        toast.error('Please enter a valid token ID');
                       } else if (passSim?.request) {
                         handleTransaction(() => writePass(passSim.request), 'Pass Potato');
                       }
@@ -860,7 +855,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
             <div className="flex-1 overflow-hidden" style={{ marginBottom: getGameState === "Playing" && actualAddress ? '160px' : '0px' }}>
               <MobileSwipeNavigation
                 darkMode={darkMode}
-                sectionNames={['Active Tokens', 'Player Stats', 'Your Tokens']}
+                sectionNames={['Active Tokens', 'Your Tokens', 'Player Stats']}
               >
                 {/* Active Tokens Section */}
                 <div className="h-full overflow-hidden">
@@ -1115,19 +1110,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                   </div>
                 </div>
 
-                {/* Player Stats Section */}
-                <div className="h-full overflow-hidden">
-                  <div className="h-full overflow-y-auto py-6 flex flex-col items-center justify-start w-full">
-                    <PlayerStats
-                      darkMode={darkMode}
-                      totalWins={parsedResults?.totalWins || 0}
-                      successfulPasses={additionalData?.successfulPasses || 0}
-                      activeTokensCount={additionalData?.activeTokensCount || 0}
-                      rewards={parsedResults?._rewards || '0'}
-                    />
-                  </div>
-                </div>
-
                 {/* Your Tokens Section */}
                 <div className="h-full overflow-hidden">
                   <div className="h-full overflow-y-auto flex flex-col items-center w-full" style={{ paddingBottom: getGameState === "Playing" && actualAddress ? '24px' : '24px' }}>
@@ -1138,6 +1120,19 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                       explodedTokens={explodedTokens}
                       onTokenExploded={handleTokenExploded}
                       onRefreshImages={refreshAllImages}
+                    />
+                  </div>
+                </div>
+
+                {/* Player Stats Section */}
+                <div className="h-full overflow-hidden">
+                  <div className="h-full overflow-y-auto py-6 flex flex-col items-center justify-start w-full">
+                    <PlayerStats
+                      darkMode={darkMode}
+                      totalWins={parsedResults?.totalWins || 0}
+                      successfulPasses={additionalData?.successfulPasses || 0}
+                      activeTokensCount={additionalData?.activeTokensCount || 0}
+                      rewards={parsedResults?._rewards || '0'}
                     />
                   </div>
                 </div>
@@ -1160,10 +1155,8 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                         noAddressToast();
                       } else if (additionalData?.hasPotatoToken !== "true") {
                         noPotatoToast();
-                      } else if (!parsedResults?.isTokenActive) {
-                        notActiveToast();
-                      } else if (parsedResults?.ownerOf !== actualAddress) {
-                        notOwnerToast();
+                      } else if (!tokenId || tokenId === '0') {
+                        toast.error('Please enter a valid token ID');
                       } else if (passSim?.request) {
                         handleTransaction(() => writePass(passSim.request), 'Pass Potato');
                       }

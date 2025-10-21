@@ -43,7 +43,7 @@ const TokenImage: React.FC<TokenImageProps> = ({
   // --- Render ---
   if (isLoading) {
     return (
-      <div className="animate-pulse bg-gray-300 h-32 w-32 rounded-lg flex items-center justify-center">
+      <div className="animate-pulse bg-gray-300 w-full aspect-square rounded-lg flex items-center justify-center">
         <span className="text-sm">Loading...</span>
       </div>
     )
@@ -51,7 +51,7 @@ const TokenImage: React.FC<TokenImageProps> = ({
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center h-32 w-32 border rounded-lg">
+      <div className="flex flex-col items-center justify-center w-full aspect-square border rounded-lg">
         <span className="text-xs text-red-500 mb-2">Error</span>
         <button
           className="px-2 py-1 bg-red-500 text-white rounded text-xs"
@@ -65,43 +65,48 @@ const TokenImage: React.FC<TokenImageProps> = ({
 
   return (
     <div
-      className={`relative ${
+      className={`relative w-full ${
         tokenId === potatoTokenId ? 'animate-pulse' : ''
       } flex flex-col`}
       key={tokenId}
     >
-      <OptimizedImage
-        src={`data:image/svg+xml,${encodeURIComponent(imageString)}`}
-        width={size}
-        height={size}
-        alt={`Token ${tokenId} Image`}
-        className="cursor-pointer"
-        onClick={openModal}
-      />
+      <div className="relative w-full aspect-square">
+        <OptimizedImage
+          src={`data:image/svg+xml,${encodeURIComponent(imageString)}`}
+          fill
+          alt={`Token ${tokenId} Image`}
+          className="cursor-pointer object-contain rounded-lg"
+          onClick={openModal}
+          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 12vw"
+        />
+      </div>
 
       <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel={`Token ${tokenId} Image`}
-        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 flex items-center justify-center bg-transparent"
+        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 max-w-2xl aspect-square flex items-center justify-center bg-transparent z-50"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-75 z-50"
       >
-        <div className="relative flex items-center justify-center">
+        <div className="relative flex items-center justify-center w-full h-full">
           <button
             onClick={closeModal}
-            className="absolute top-0 right-0 text-3xl mt-2 mr-2"
+            className="absolute -top-8 sm:-top-10 right-0 text-white text-3xl sm:text-4xl hover:text-red-500 transition-colors z-10"
           >
             <BsXCircle />
           </button>
-          <OptimizedImage
-            src={`data:image/svg+xml,${encodeURIComponent(imageString)}`}
-            alt={`Token ${tokenId} Image`}
-            width={800}
-            height={800}
-          />
+          <div className="relative w-full h-full">
+            <OptimizedImage
+              src={`data:image/svg+xml,${encodeURIComponent(imageString)}`}
+              alt={`Token ${tokenId} Image`}
+              fill
+              className="object-contain"
+            />
+          </div>
         </div>
       </Modal>
 
-      <span className="text-xs text-center mt-1">#{tokenId}</span>
+      <span className="text-xs sm:text-sm text-center mt-2 font-semibold">#{tokenId}</span>
     </div>
   )
 }

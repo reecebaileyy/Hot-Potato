@@ -51,24 +51,7 @@ export default function AdminControls({
         <h2 className={`text-4xl font-bold gradient-text mb-4`}>🎮 Admin Controls</h2>
         <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
           Manage the game state and settings
-        </p>
-        {/* Debug info */}
-        <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50'} text-left`}>
-          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            <strong>Debug Info:</strong><br/>
-            Address: {address}<br/>
-            Owner: {ownerAddress}<br/>
-            Game State: {gameState}<br/>
-            Match: {address && ownerAddress && address.toLowerCase() === ownerAddress.toLowerCase() ? '✅' : '❌'}<br/>
-            <br/>
-            <strong>Simulation Status:</strong><br/>
-            Start: {startSim?.request ? '✅' : '❌'}<br/>
-            End Mint: {endMintSim?.request ? '✅' : '❌'}<br/>
-            Pause: {pauseSim?.request ? '✅' : '❌'}<br/>
-            Resume: {resumeSim?.request ? '✅' : '❌'}<br/>
-            Restart: {restartSim?.request ? '✅' : '❌'}
-          </p>
-        </div>
+        </p>        
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
