@@ -24,7 +24,7 @@ export default function UserTokens({
       {userTokens.length === 0 ? (
         <div className="text-center py-8">
           <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            You don't have any active tokens in this game
+            You don&apos;t have any active tokens in this game
           </p>
         </div>
       ) : (

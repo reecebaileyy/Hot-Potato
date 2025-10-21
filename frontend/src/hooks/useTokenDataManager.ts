@@ -35,7 +35,7 @@ export function useTokenDataManager(activeTokenIds: number[], shouldRefresh?: bo
       abi: ABI as Abi,
       functionName: 'getImageString' as const,
       args: [tokenId] as const,
-    })), [activeTokenIdsString] // Use string comparison instead of array
+    })), [activeTokenIds, activeTokenIdsString] // Use string comparison instead of array
   )
 
   const { data: allImageStrings, isLoading, error, refetch } = useReadContracts({
@@ -68,7 +68,7 @@ export function useTokenDataManager(activeTokenIds: number[], shouldRefresh?: bo
       
       setTokenDataCache(newCache)
     }
-  }, [allImageStrings, activeTokenIdsString]) // Use string comparison
+  }, [allImageStrings, activeTokenIds, activeTokenIdsString]) // Use string comparison
 
   // Get data for a specific token
   const getTokenData = (tokenId: number): TokenData => {

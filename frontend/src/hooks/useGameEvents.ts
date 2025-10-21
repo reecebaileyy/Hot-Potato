@@ -162,7 +162,7 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
     } catch (error) {
       console.error('Error updating wins:', error)
     }
-  }, [address, debouncedRefetch, refetchGameState, refetchAdditionalData])
+  }, [debouncedRefetch, refetchGameState, refetchAdditionalData])
 
   const handleSuccessfulPass = useCallback(async (logs: any[]) => {
     try {
