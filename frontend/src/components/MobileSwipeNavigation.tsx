@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef } from 'react'
 
 interface MobileSwipeNavigationProps {
   darkMode: boolean
@@ -64,27 +64,8 @@ export default function MobileSwipeNavigation({
     setActiveIndex(index)
   }
 
-  const updateTransform = useCallback(() => {
-    if (containerRef.current && containerRef.current.parentElement) {
-      const parentWidth = containerRef.current.parentElement.clientWidth
-      const transform = `translateX(-${activeIndex * parentWidth}px)`
-      containerRef.current.style.transform = transform
-    }
-  }, [activeIndex])
-
-  useEffect(() => {
-    updateTransform()
-  }, [activeIndex, children.length, updateTransform])
-
-  useEffect(() => {
-    // Handle window resize
-    const handleResize = () => {
-      updateTransform()
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [updateTransform])
+  // Note: Using percentage-based transform in inline style for better reliability
+  // No need for complex updateTransform logic with pixel calculations
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -108,10 +89,11 @@ export default function MobileSwipeNavigation({
       </div>
 
       {/* Swipeable Content */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden w-full">
         <div
           ref={containerRef}
-          className="flex h-full transition-transform duration-300 ease-in-out"
+          className="flex h-full w-full transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(-${activeIndex * 100}%)` }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
@@ -121,7 +103,7 @@ export default function MobileSwipeNavigation({
               key={index}
               className="flex-shrink-0 h-full w-full"
             >
-              <div className="h-full w-full px-4">
+              <div className="h-full w-full">
                 {child}
               </div>
             </div>

@@ -629,7 +629,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
         />
 
         {/* Main Content Container */}
-        <div className="max-w-7xl mx-auto lg:pt-0">
+        <div className="w-full max-w-7xl mx-auto lg:pt-0">
           {/* Hero Section - Hidden on Mobile */}
           <div className="hidden lg:block text-center mb-8 sm:mb-12 animate-fade-in-up px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
             <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 gradient-text glow`}>
@@ -1079,16 +1079,16 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
           </div>
 
           {/* Mobile Layout: Full Screen with Pass Potato at Bottom */}
-          <div className="lg:hidden flex flex-col h-screen pt-24">
+          <div className="lg:hidden flex flex-col h-screen pt-24 w-full">
             {/* Swipeable Content Area */}
-            <div className="flex-1 overflow-hidden" style={{ marginBottom: (getGameState === "Playing" || getGameState === "Final Stage") && actualAddress ? '160px' : '0px' }}>
+            <div className="flex-1 overflow-hidden w-full" style={{ marginBottom: (getGameState === "Playing" || getGameState === "Final Stage") && actualAddress ? '160px' : '0px' }}>
               <MobileSwipeNavigation
                 darkMode={darkMode}
                 sectionNames={['Active Tokens', 'Your Tokens', 'Rewards', 'Player Stats']}
               >
                 {/* Active Tokens Section */}
                 <div className="h-full overflow-hidden">
-                  <div className="h-full overflow-y-auto flex flex-col items-center w-full" style={{ paddingBottom: (getGameState === "Playing" || getGameState === "Final Stage") && actualAddress ? '24px' : '24px' }}>
+                  <div className="h-full overflow-y-auto flex flex-col items-center justify-start w-full px-4 py-6" style={{ paddingBottom: (getGameState === "Playing" || getGameState === "Final Stage") && actualAddress ? '24px' : '24px' }}>
                     <GameStateComponents
                       darkMode={darkMode}
                       gameState={getGameState}
@@ -1444,7 +1444,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
                 {/* Your Tokens Section */}
                 <div className="h-full overflow-hidden">
-                  <div className="h-full overflow-y-auto flex flex-col items-center w-full" style={{ paddingBottom: (getGameState === "Playing" || getGameState === "Final Stage") && actualAddress ? '24px' : '24px' }}>
+                  <div className="h-full overflow-y-auto flex flex-col items-center justify-start w-full px-4 py-6" style={{ paddingBottom: (getGameState === "Playing" || getGameState === "Final Stage") && actualAddress ? '24px' : '24px' }}>
                     <UserTokens
                       darkMode={darkMode}
                       userTokens={additionalData?.userTokens || []}
@@ -1458,7 +1458,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
                 {/* Rewards Section */}
                 <div className="h-full overflow-hidden">
-                  <div className="h-full overflow-y-auto py-6 flex flex-col items-center justify-start w-full px-4">
+                  <div className="h-full overflow-y-auto flex flex-col items-center justify-start w-full px-4 py-6">
                     <Rewards
                       darkMode={darkMode}
                       isWinner={isWinner}
@@ -1480,7 +1480,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
                 {/* Player Stats Section */}
                 <div className="h-full overflow-hidden">
-                  <div className="h-full overflow-y-auto py-6 flex flex-col items-center justify-start w-full">
+                  <div className="h-full overflow-y-auto flex flex-col items-center justify-start w-full px-4 py-6">
                     <PlayerStats
                       darkMode={darkMode}
                       totalWins={parsedResults?.totalWins || 0}

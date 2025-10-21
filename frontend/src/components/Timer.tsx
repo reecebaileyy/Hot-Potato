@@ -29,7 +29,7 @@ export default function Timer({ remainingTime, explosion, darkMode, onCheckExplo
   }
 
   return (
-    <div className={`w-full ${darkMode ? 'bg-red-900/95 border-red-700' : 'bg-red-100 border-red-300'} border-2 shadow-lg rounded-xl p-6 text-center animate-fade-in-up`}>
+    <div className={`w-full max-w-md mx-auto ${darkMode ? 'bg-red-900/95 border-red-700' : 'bg-red-100 border-red-300'} border-2 shadow-lg rounded-xl p-6 text-center animate-fade-in-up`}>
       {showTimer && (
         <>
           <div className="text-5xl mb-3">⏰</div>

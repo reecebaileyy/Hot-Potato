@@ -15,7 +15,7 @@ export default function EventFeed({ darkMode, events }: EventFeedProps) {
   }, [events])
 
   return (
-    <div className={`hide-scrollbar w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
+    <div className={`hide-scrollbar w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 mx-auto ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
       <div className="scrollable-div whitespace-nowrap h-full flex items-center space-x-4 pl-4 overflow-auto">
         {events.map((event, index) => (
           <div key={index} className={darkMode ? 'text-white' : 'text-black'}>

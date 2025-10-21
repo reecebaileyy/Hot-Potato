@@ -87,7 +87,7 @@ export default function TokenGrid({
   }
 
   return (
-    <div className={`w-full max-w-7xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
+    <div className={`w-full max-w-7xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>
       <div className="text-center mb-8">
         <h1 className={`text-5xl font-bold gradient-text mb-4`}>Active Tokens</h1>
         <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>

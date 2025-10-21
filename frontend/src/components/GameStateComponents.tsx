@@ -63,7 +63,7 @@ export default function GameStateComponents({
 
   if (!address) {
     return (
-      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
+      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>
         <div className="text-center">
           <h1 className={`text-5xl font-bold mb-6 gradient-text`}>Connect First</h1>
           <h3 className={`text-xl mb-8 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -83,7 +83,7 @@ export default function GameStateComponents({
 
   if (gameState === "Minting") {
     return (
-      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
+      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>
         <div className="text-center space-y-6">
           <h1 className={`text-5xl font-bold gradient-text mb-2`}>Mint Hands</h1>
           <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -145,7 +145,7 @@ export default function GameStateComponents({
 
   if (gameState === "Paused") {
     return (
-      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
+      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>
         <div className="text-center space-y-6">
           <h1 className={`text-5xl font-bold gradient-text mb-4`}>⏸️ Game Paused</h1>
           <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -161,7 +161,7 @@ export default function GameStateComponents({
 
   if (gameState === "Queued") {
     return (
-      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
+      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>
         <div className="text-center space-y-6">
           <h1 className={`text-5xl font-bold gradient-text mb-4`}>⏳ Game Queued</h1>
           <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -177,7 +177,7 @@ export default function GameStateComponents({
 
   if (gameState === "Ended") {
     return (
-      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
+      <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>
         <div className="text-center space-y-6">
           <div className="text-6xl mb-4 animate-bounce">🏆</div>
           <h1 className={`text-4xl font-bold mb-4 ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>
@@ -211,7 +211,7 @@ export default function GameStateComponents({
 
   // Default case for unknown states
   return (
-    <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-8 mb-8 animate-fade-in-up`}>
+    <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>
       <div className="text-center space-y-6">
         <h1 className={`text-5xl font-bold gradient-text mb-4`}>Game State: {gameState || 'Unknown'}</h1>
         <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
