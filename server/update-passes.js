@@ -43,6 +43,30 @@ contract.on('SuccessfulPass', async (player, event) => {
     }
 });
 
+contract.on('FailedPass', async (player, event) => {
+    try {
+        await prisma.leaderboard.upsert({
+            where: { address: player },
+            update: {
+                fails: {
+                    increment: 1
+                },
+            },
+            create: {
+                address: player,
+                passes: 0,
+                fails: 1,
+                wins: 0,
+            },
+        });
+
+        console.log("Completed upsert for failed pass, player:", player);
+
+    } catch (error) {
+        console.error('Error updating failed passes', error);
+    }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({ 
@@ -53,7 +77,7 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.status(200).send('Server is ready and listening for SuccessfulPass events');
+    res.status(200).send('Server is ready and listening for SuccessfulPass and FailedPass events');
 });
 
 // Graceful shutdown

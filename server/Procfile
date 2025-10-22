@@ -1,1 +1,1 @@
-web: node update-passes.js
+web: npm run dev:all
