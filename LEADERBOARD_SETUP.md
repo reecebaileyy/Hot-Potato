@@ -44,8 +44,6 @@ Create a `.env.local` file in the `frontend/` directory:
 
 ```bash
 # Database
-DATABASE_URL="mongodb://localhost:27017/HotPotato"
-
 # Redis (Optional for local development)
 # REDIS_URL="redis://localhost:6379"
 # USE_REDIS="true"

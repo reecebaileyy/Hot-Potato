@@ -39,6 +39,31 @@ const TokenImage = dynamic(() => import('../components/TokenImage'), {
   ssr: false
 })
 
+// Singleton WebSocket provider (initialized once, reused across renders and remounts)
+let websocketProvider: providers.WebSocketProvider | null = null
+const getWebSocketProvider = () => {
+  if (!websocketProvider && typeof window !== 'undefined') {
+    console.log('Creating new WebSocket provider')
+    websocketProvider = new providers.WebSocketProvider(
+      process.env.NEXT_PUBLIC_ALCHEMY_URL_WEBSOCKET!
+    )
+    
+    // Handle WebSocket connection events
+    websocketProvider._websocket.on('open', () => {
+      console.log('WebSocket connected')
+    })
+    
+    websocketProvider._websocket.on('error', (error) => {
+      console.error('WebSocket error:', error)
+    })
+    
+    websocketProvider._websocket.on('close', () => {
+      console.log('WebSocket closed')
+    })
+  }
+  return websocketProvider
+}
+
 interface PlayProps {
   initalGameState?: string | null
   gen?: number
@@ -47,10 +72,8 @@ interface PlayProps {
 }
 
 export default function Play({ initalGameState, gen, price, maxSupply }: PlayProps): React.JSX.Element {
-  // --- Provider (WebSocket) ---
-  const provider = useMemo(() => new providers.WebSocketProvider(
-    process.env.NEXT_PUBLIC_ALCHEMY_URL_WEBSOCKET!
-  ), [])
+  // --- Provider (WebSocket) - Use singleton ---
+  const provider = getWebSocketProvider()!
 
   // --- Custom Hooks ---
   const { getGameState, prevGameState, updateGameState } = useGameState(initalGameState ?? null)
@@ -124,11 +147,11 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
     return null
   }, [_address, walletsLength, firstWalletAddress])
 
-  // Override isWinner calculation to use actualAddress
+  // Override isWinner calculation to use actualAddress - only for CURRENT round winner
   const isWinner = useMemo(() => {
-    if (!Array.isArray(parsedResults?.allWinners) || !actualAddress) return false
-    return (parsedResults.allWinners as string[]).includes(actualAddress)
-  }, [parsedResults?.allWinners, actualAddress])
+    if (!actualAddress || !parsedResults?.currentRoundWinner) return false
+    return parsedResults.currentRoundWinner.toLowerCase() === actualAddress.toLowerCase()
+  }, [parsedResults?.currentRoundWinner, actualAddress])
 
   // --- Contract Writes Hook (needs mintAmount, price, tokenId) ---
   const {

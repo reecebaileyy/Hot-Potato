@@ -154,11 +154,11 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
 
       console.log('🏆 PlayerWon event detected', player)
       
-      // Refresh game data for win state
+      // Refresh game data for win state - increased delay
       debouncedRefetch(() => {
         refetchGameState()
         refetchAdditionalData()
-      }, 1000)
+      }, 2000)
       
       setEvents((prev) => [...prev, `${formatAddress(player)} won! 🎉`])
     } catch (error) {
@@ -174,15 +174,10 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
 
       console.log('✅ SuccessfulPass event detected for player:', player)
       
-      // Immediately refetch to update successful passes count
-      // Note: PotatoPassed event will also fire and handle the timer update
-      refetchAdditionalData() // Updates successful passes count immediately
-      
-      // Debounced secondary refresh to avoid excessive calls
+      // Single debounced refetch - PotatoPassed event will also fire, so we can consolidate
       debouncedRefetch(() => {
-        console.log('Secondary refetch after successful pass')
         refetchAdditionalData()
-      }, 1000)
+      }, 2000)
       
       setEvents((prev) => [...prev, `${formatAddress(player)} passed successfully!`])
     } catch (error) {
@@ -261,30 +256,27 @@ export function useGameEvents(address: string, callbacks: GameEventsCallbacks) {
       setExplosion(true)
       setTimeout(() => setExplosion(false), 3050)
       
-      // CRITICAL: Immediately refetch ALL data after explosion - timer resets, new potato assigned
-      console.log('⏱️ Immediately refetching all data after explosion (new timer, new potato holder)')
-      refetchGameState() // New potato token ID
-      refetchAdditionalData() // New explosion time, new active tokens, new potato holder
+      // CRITICAL: Single consolidated refetch after explosion
+      console.log('⏱️ Refetching all data after explosion (new timer, new potato holder)')
       
-      // Also trigger debounced refresh for a second update
+      // Consolidated single refetch with longer delay for contract to update
       debouncedRefetch(() => {
-        console.log('Secondary refetch after explosion')
+        console.log('Refetching game state and additional data after explosion')
         refetchGameState()
         refetchAdditionalData()
-      }, 1500)
-      debouncedRefresh(() => setShouldRefresh((prev) => !prev), 1000)
-      
-      // Refresh images to show updated tokens
-      if (refreshImages) {
-        console.log('Refreshing images after explosion')
-        setTimeout(() => refreshImages(), 1500) // Delay slightly to let contract update
-      }
+        
+        // Refresh images as part of the same operation
+        if (refreshImages) {
+          console.log('Refreshing images after explosion')
+          refreshImages()
+        }
+      }, 2000) // Increased delay to ensure contract state is updated
       
       setEvents((prev) => [...prev, `Token #${tokenId_} just exploded`])
     } catch (error) {
       console.error('Error handling PotatoExploded event', error)
     }
-  }, [debouncedRefetch, debouncedRefresh, refetchGameState, refetchAdditionalData, refreshImages])
+  }, [debouncedRefetch, refetchGameState, refetchAdditionalData, refreshImages])
 
   const handlePotatoPassed = useCallback(async (logs: any[]) => {
     try {

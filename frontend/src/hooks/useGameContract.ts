@@ -212,9 +212,9 @@ export function useGameContract(tokenId: string = '') {
   }, [readResults, _address, tokenId, loadingReadResults, readError])
   
   const isWinner = useMemo(() => {
-    if (!Array.isArray(parsedResults?.allWinners) || !_address) return false
-    return (parsedResults.allWinners as string[]).includes(_address)
-  }, [parsedResults?.allWinners, _address])
+    if (!_address || !parsedResults?.currentRoundWinner) return false
+    return parsedResults.currentRoundWinner.toLowerCase() === _address.toLowerCase()
+  }, [parsedResults?.currentRoundWinner, _address])
 
   return {
     gameContract,

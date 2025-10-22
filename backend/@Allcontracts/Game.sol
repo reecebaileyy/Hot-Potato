@@ -676,11 +676,47 @@ contract Game is ERC721A, ERC721AQueryable, Ownable  {
     ) external {
         require(msg.sender == address(vrfHandler), "only VRFHandler");
         currentRandomWord = _randomWords[0];
-        //  👇 reuse all your previous logic from fulfillRandomWords here
+        
+        // Reactivate ALL existing tokens for the new round (not just newly minted)
+        // This ensures tokens from previous rounds are included
+        for (uint256 i = 1; i <= totalSupply(); i++) {
+            uint256 tokenId = i;
+            address owner = ownerOf(tokenId);
+            
+            // Check if token is already in activeTokens to avoid duplicates
+            bool isAlreadyActive = false;
+            for (uint256 j = 0; j < activeTokens.length; j++) {
+                if (activeTokens[j] == tokenId) {
+                    isAlreadyActive = true;
+                    break;
+                }
+            }
+            
+            // Only add if not already active
+            if (!isAlreadyActive) {
+                activeTokens.push(tokenId);
+            }
+            
+            // Update hand data for new generation
+            hands[tokenId].generation = currentGeneration;
+            hands[tokenId].isActive = true;
+            hands[tokenId].hasPotato = false;
+            
+            // Track active addresses and rebuild players array
+            if (addressActiveTokenCount[owner] == 0) {
+                activeAddresses += 1;
+                players.push(owner);
+                isPlayer[owner] = true;
+            }
+            addressActiveTokenCount[owner] += 1;
+        }
+        
+        // Assign potato to random token from ALL active tokens
         uint256 num = currentRandomWord % activeTokens.length;
         if (num == 0) num = 1;
         uint256 newPotatoTokenId = activeTokens[num];
         assignPotato(newPotatoTokenId);
+        
         emit RequestFulfilled(_requestId, _randomWords);
         gameState = GameState.Playing;
         updateExplosionTimer();

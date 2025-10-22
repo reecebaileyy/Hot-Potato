@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo, memo } from 'react'
 import Image from 'next/image'
 import Modal from 'react-modal'
 import { BsXCircle } from 'react-icons/bs'
@@ -24,7 +24,15 @@ const OptimizedImage: React.FC<React.ComponentProps<typeof Image>> = (props) => 
   <Image {...props} unoptimized={true} alt={props.alt || 'Token Image'} />
 )
 
-const TokenImage: React.FC<TokenImageProps> = ({
+// Memoize the SVG data URI generation
+const useSvgDataUri = (imageString: string) => {
+  return useMemo(() => {
+    if (!imageString) return ''
+    return `data:image/svg+xml,${encodeURIComponent(imageString)}`
+  }, [imageString])
+}
+
+const TokenImage: React.FC<TokenImageProps> = memo(({
   tokenId,
   imageString,
   isLoading,
@@ -36,9 +44,16 @@ const TokenImage: React.FC<TokenImageProps> = ({
   onRefresh,
 }) => {
   const [isModalOpen, setModalOpen] = useState(false)
-
-  const openModal = () => setModalOpen(true)
-  const closeModal = () => setModalOpen(false)
+  
+  // Memoize SVG data URI to avoid recalculating on every render
+  const svgDataUri = useSvgDataUri(imageString)
+  
+  // Memoize modal handlers
+  const openModal = useMemo(() => () => setModalOpen(true), [])
+  const closeModal = useMemo(() => () => setModalOpen(false), [])
+  
+  // Memoize isPotato check
+  const isPotato = useMemo(() => tokenId === potatoTokenId, [tokenId, potatoTokenId])
 
   // --- Render ---
   if (isLoading) {
@@ -66,18 +81,19 @@ const TokenImage: React.FC<TokenImageProps> = ({
   return (
     <div
       className={`relative w-full ${
-        tokenId === potatoTokenId ? 'animate-pulse' : ''
+        isPotato ? 'animate-pulse' : ''
       } flex flex-col`}
       key={tokenId}
     >
       <div className="relative w-full aspect-square">
         <OptimizedImage
-          src={`data:image/svg+xml,${encodeURIComponent(imageString)}`}
+          src={svgDataUri}
           fill
           alt={`Token ${tokenId} Image`}
           className="cursor-pointer object-contain rounded-lg"
           onClick={openModal}
           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 12vw"
+          priority={isPotato} // Prioritize loading the potato token
         />
       </div>
 
@@ -97,7 +113,7 @@ const TokenImage: React.FC<TokenImageProps> = ({
           </button>
           <div className="relative w-full h-full">
             <OptimizedImage
-              src={`data:image/svg+xml,${encodeURIComponent(imageString)}`}
+              src={svgDataUri}
               alt={`Token ${tokenId} Image`}
               fill
               className="object-contain"
@@ -109,6 +125,18 @@ const TokenImage: React.FC<TokenImageProps> = ({
       <span className="text-xs sm:text-sm text-center mt-2 font-semibold">#{tokenId}</span>
     </div>
   )
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison function for memo
+  // Only re-render if these specific props change
+  return (
+    prevProps.tokenId === nextProps.tokenId &&
+    prevProps.imageString === nextProps.imageString &&
+    prevProps.isLoading === nextProps.isLoading &&
+    prevProps.isError === nextProps.isError &&
+    prevProps.potatoTokenId === nextProps.potatoTokenId
+  )
+})
+
+TokenImage.displayName = 'TokenImage'
 
 export default TokenImage
