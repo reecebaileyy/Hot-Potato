@@ -53,7 +53,7 @@ const getWebSocketProvider = () => {
       console.log('WebSocket connected')
     })
     
-    websocketProvider._websocket.on('error', (error) => {
+    websocketProvider._websocket.on('error', (error: Error) => {
       console.error('WebSocket error:', error)
     })
     

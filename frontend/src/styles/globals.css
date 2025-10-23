@@ -75,8 +75,6 @@
   
   .gradient-text {
     @apply bg-gradient-to-r from-amber-400 via-red-400 to-pink-400 bg-clip-text text-transparent;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
   }
   
   .gradient-text.glow {

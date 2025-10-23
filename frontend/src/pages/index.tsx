@@ -64,7 +64,7 @@ export default function Home() {
         />
 
         {/* Hero Section */}
-        <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32">
           {/* Background Overlay for Better Text Readability */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-5"></div>
           
@@ -89,25 +89,21 @@ export default function Home() {
             <div className="space-y-8">
               {/* Main Title */}
               <div className="space-y-4">
-                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold gradient-text animate-glow drop-shadow-lg">
-                  HOT POTATO
-                </h1>
-                <div className="w-32 sm:w-48 h-2 sm:h-3 bg-gradient-to-r from-amber-400 via-red-400 to-pink-400 mx-auto rounded-full shadow-lg"></div>
                 <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium text-white drop-shadow-md font-bold">
-                  Hold, Pass, Survive...
+                  Hodl, Pass, Survive...
                 </p>
                 <p className="text-lg sm:text-xl md:text-2xl text-white max-w-4xl mx-auto leading-relaxed drop-shadow-sm font-semibold">
-                  The ultimate blockchain-based Hot Potato game featuring NFT minting, Chainlink VRF randomness, and ETH rewards
+                  The ultimate original blockchain-based Hot Potato game featuring NFT minting, Chainlink VRF randomness, and fun for all!
                 </p>
               </div>
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-8">
                 <Link href="/play" className="btn-primary text-xl sm:text-2xl px-12 sm:px-16 py-6 sm:py-8 transform hover:scale-105 transition-all duration-300 w-full sm:w-auto shadow-2xl">
-                  🎮 Start Playing Now
+                  Start Playing Now
                 </Link>
-                <Link href="/leaderboard" className="btn-outline text-xl sm:text-2xl px-12 sm:px-16 py-6 sm:py-8 transform hover:scale-105 transition-all duration-300 w-full sm:w-auto border-2">
-                  🏆 View Leaderboard
+                <Link href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" target="_blank" className="btn-outline text-xl sm:text-2xl px-12 sm:px-16 py-6 sm:py-8 transform hover:scale-105 transition-all duration-300 w-full sm:w-auto border-2">
+                  View Doccumentation
                 </Link>
               </div>
 
@@ -115,7 +111,7 @@ export default function Home() {
               <div className="pt-8">
                 <div className={`${darkMode ? 'card-dark' : 'card'} inline-flex items-center space-x-4 px-8 py-4 shadow-xl`}>
                   <Image src={CHAINLINK} width={40} height={40} alt="Chainlink" />
-                  <span className="text-lg font-semibold">Powered by Chainlink VRF</span>
+                  <Link href="https://docs.chain.link/vrf" target="_blank" className="text-lg font-semibold">Powered by Chainlink VRF</Link>
                 </div>
               </div>
             </div>
