@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react'
 import Head from 'next/head'
-import dynamic from 'next/dynamic'
 import { Abi, formatUnits, parseEther, parseEventLogs } from 'viem'
 import { useAccount, useWatchContractEvent, useReadContract, UseReadContractsReturnType, useReadContracts, useBalance, useSimulateContract, useWriteContract, useEnsName, useChainId, useWaitForTransactionReceipt } from 'wagmi'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
@@ -20,7 +19,6 @@ import { useTokenManagement } from '../hooks/useTokenManagement'
 import { useTokenDataManager } from '../hooks/useTokenDataManager'
 import { usePrivyContractWrites } from '../hooks/usePrivyContractWrites'
 import ErrorDisplay, { SuccessDisplay, LoadingDisplay } from '../components/TransactionNotifications'
-import { createDeferredPromise, type DeferredPromise } from '../utils/deferredPromise'
 import Navigation from '../components/Navigation'
 import GameStateComponents from '../components/GameStateComponents'
 import TokenGrid from '../components/TokenGrid'
@@ -32,12 +30,6 @@ import EventFeed from '../components/EventFeed'
 import UserTokens from '../components/UserTokens'
 import MobileSwipeNavigation from '../components/MobileSwipeNavigation'
 import Rewards, { ClaimHistoryItem } from '../components/Rewards'
-
-// Lazy load heavy components
-const TokenImage = dynamic(() => import('../components/TokenImage'), {
-  loading: () => <div className="animate-pulse bg-gray-300 h-32 w-32 rounded"></div>,
-  ssr: false
-})
 
 // Singleton WebSocket provider (initialized once, reused across renders and remounts)
 let websocketProvider: providers.WebSocketProvider | null = null
@@ -102,7 +94,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [tokenId, setTokenId] = useState<string>('')
   const [totalCost, setTotalCost] = useState<number>(0)
-  const [passPromise, setPassPromise] = useState<DeferredPromise<void> | null>(null)
   const [isLoadingActiveTokens, setIsLoadingActiveTokens] = useState<boolean>(true)
   const [_potatoTokenId, setPotatoTokenId] = useState<number>(0)
   const [passArgs, setPassArgs] = useState<unknown[] | null>(null)
