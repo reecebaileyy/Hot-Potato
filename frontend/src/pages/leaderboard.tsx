@@ -1,97 +1,70 @@
-import Head from 'next/head'
-import Link from 'next/link'
-import { useMemo, useState } from 'react'
-import { isAddressEqual } from 'viem'
-import Navigation from '../components/Navigation'
-import { formatAddress } from '../utils/formatAddress'
-import { useDarkMode } from '../hooks/useDarkMode'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { isAddressEqual, type Address } from 'viem'
+import AppShell from '../components/AppShell'
+import { Button, ButtonLink, Card, SectionHeader, Segmented, Skeleton, Stat, StatRow } from '../components/ui'
+import PlayersTable, {
+  playerRowAttr,
+  type RankedEntry,
+  type SortDirection,
+  type SortField,
+} from '../components/leaderboard/PlayersTable'
+import HallOfFameList from '../components/leaderboard/HallOfFameList'
 import { useWalletAddress } from '../hooks/useWalletAddress'
-import {
-  compareEntries,
-  useHallOfFame,
-  useLeaderboard,
-  type HallOfFameEntry,
-  type LeaderboardEntry,
-} from '../hooks/useLeaderboard'
-import { chain, explorerAddressUrl, isGameConfigured } from '../config/chain'
-import { formatEth } from '../lib/game'
+import { compareEntries, useHallOfFame, useLeaderboard } from '../hooks/useLeaderboard'
+import { chain, isGameConfigured } from '../config/chain'
 
-type SortField = 'wins' | 'passes' | 'fails'
-type SortDirection = 'asc' | 'desc'
+type View = 'players' | 'rounds'
 
-interface RankedEntry extends LeaderboardEntry {
-  rank: number
-}
+const VIEWS: { value: View; label: string }[] = [
+  { value: 'players', label: 'Players' },
+  { value: 'rounds', label: 'Hall of fame' },
+]
 
-function AddressLink({ address, short = false }: { address: string; short?: boolean }) {
-  const href = explorerAddressUrl(address)
-  const label = short ? formatAddress(address) : address
-  if (!href) return <span title={address}>{label}</span>
+const SORT_OPTIONS: { value: SortField; label: string }[] = [
+  { value: 'wins', label: 'Wins' },
+  { value: 'passes', label: 'Passes' },
+  { value: 'fails', label: 'Fails' },
+]
+
+/** Rows shown before "Show more". */
+const PAGE_SIZE = 50
+
+/** Inset notice for errors (danger) and quiet states (neutral). */
+function Notice({
+  tone = 'neutral',
+  action,
+  children,
+}: {
+  tone?: 'neutral' | 'danger'
+  action?: ReactNode
+  children: ReactNode
+}) {
+  const colors = tone === 'danger' ? 'bg-danger-soft text-danger' : 'bg-surface-muted text-fg-secondary'
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" title={address} className="hover:underline">
-      {label}
-    </a>
-  )
-}
-
-function rankBadge(rank: number) {
-  if (rank === 1) return '🥇'
-  if (rank === 2) return '🥈'
-  if (rank === 3) return '🥉'
-  return `#${rank}`
-}
-
-function HallOfFame({ darkMode, entries }: { darkMode: boolean; entries: HallOfFameEntry[] }) {
-  const muted = darkMode ? 'text-gray-400' : 'text-gray-600'
-  return (
-    <div className={`${darkMode ? 'card-dark' : 'card'} p-6 sm:p-8 shadow-2xl`}>
-      <h2 className="text-3xl sm:text-4xl font-bold gradient-text text-center mb-6">👑 Hall of Fame</h2>
-      <ul className="space-y-3">
-        {entries.map((entry) => (
-          <li
-            key={entry.round}
-            className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl px-4 py-3 ${
-              darkMode ? 'bg-gray-800' : 'bg-gray-50'
-            }`}
-          >
-            <span className="font-bold text-lg">Round {entry.round}</span>
-            {entry.outcome === 'won' && entry.winner ? (
-              <>
-                <span className="font-mono text-sm sm:text-base">
-                  <span className="hidden md:inline">
-                    <AddressLink address={entry.winner} />
-                  </span>
-                  <span className="md:hidden">
-                    <AddressLink address={entry.winner} short />
-                  </span>
-                </span>
-                <span className="text-sm sm:text-base font-semibold text-green-600 dark:text-green-400">
-                  {formatEth(entry.prize)} ETH <span className={`font-normal ${muted}`}>of {formatEth(entry.pot)}</span>
-                </span>
-              </>
-            ) : entry.outcome === 'live' ? (
-              <span className="text-amber-500 font-semibold">In progress · pot {formatEth(entry.pot)} ETH</span>
-            ) : (
-              <span className={muted}>Cancelled, pot rolled over</span>
-            )}
-          </li>
-        ))}
-      </ul>
+    <div className={`flex flex-col gap-3 rounded-2xl p-4 text-[15px] leading-6 sm:flex-row sm:items-center sm:justify-between ${colors}`}>
+      <p>{children}</p>
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   )
 }
 
+function scrollToPlayer(address: Address) {
+  const nodes = document.querySelectorAll<HTMLElement>(`[data-player="${playerRowAttr(address)}"]`)
+  nodes.forEach((node) => node.scrollIntoView({ block: 'center', behavior: 'smooth' }))
+}
+
 export default function Leaderboard() {
-  const [darkMode, setDarkMode] = useDarkMode()
-  const [isOpen, setIsOpen] = useState(false)
+  const [view, setView] = useState<View>('players')
   const [sortField, setSortField] = useState<SortField>('wins')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
-  const address = useWalletAddress()
+  const [visible, setVisible] = useState(PAGE_SIZE)
+  const pendingScroll = useRef<Address | null>(null)
 
+  const address = useWalletAddress()
   const leaderboard = useLeaderboard()
   const hallOfFame = useHallOfFame()
 
-  // Rank by wins, then passes (the hook's order); the column sort only changes the display order.
+  // Rank by wins, then passes (the hook's order); the sort controls only change the display order.
   const ranked = useMemo<RankedEntry[]>(
     () => leaderboard.entries.map((entry, i) => ({ ...entry, rank: i + 1 })),
     [leaderboard.entries],
@@ -105,9 +78,15 @@ export default function Leaderboard() {
   const totals = useMemo(
     () => ({
       passes: ranked.reduce((sum, entry) => sum + entry.passes, 0),
+      fails: ranked.reduce((sum, entry) => sum + entry.fails, 0),
       rounds: hallOfFame.entries.filter((entry) => entry.outcome === 'won').length,
     }),
     [ranked, hallOfFame.entries],
+  )
+
+  const myIndex = useMemo(
+    () => (address ? rows.findIndex((entry) => isAddressEqual(entry.address, address)) : -1),
+    [rows, address],
   )
 
   const handleSort = (field: SortField) => {
@@ -119,181 +98,212 @@ export default function Leaderboard() {
     }
   }
 
-  const sortIcon = (field: SortField) => {
-    if (sortField !== field) return <span className="text-gray-400">↕</span>
-    return sortDirection === 'desc' ? <span>↓</span> : <span>↑</span>
+  const findMe = () => {
+    if (!address || myIndex < 0) return
+    const needsMoreRows = myIndex >= visible
+    if (view === 'players' && !needsMoreRows) {
+      scrollToPlayer(address)
+      return
+    }
+    // Reveal the row first; the effect below scrolls once it has rendered.
+    pendingScroll.current = address
+    if (view !== 'players') setView('players')
+    if (needsMoreRows) setVisible(Math.ceil((myIndex + 1) / PAGE_SIZE) * PAGE_SIZE)
   }
 
-  const isLoading = leaderboard.isLoading
-  const error = !isGameConfigured
-    ? 'NEXT_PUBLIC_GAME_ADDRESS is not set, so there is no game to read.'
-    : leaderboard.error
-      ? `Couldn't read the leaderboard from ${chain.name}.`
-      : null
+  useEffect(() => {
+    const target = pendingScroll.current
+    if (!target) return
+    pendingScroll.current = null
+    scrollToPlayer(target)
+  }, [view, visible])
 
-  const sortableHeader = (field: SortField, label: string) => (
-    <th
-      className="px-4 py-4 text-center text-xs sm:text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-      onClick={() => handleSort(field)}
-      aria-sort={sortField === field ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-    >
-      <div className="flex items-center justify-center space-x-2">
-        <span>{label}</span>
-        {sortIcon(field)}
-      </div>
-    </th>
-  )
+  const isLoading = leaderboard.isLoading
+  const error = isGameConfigured && leaderboard.error ? `Couldn't read the leaderboard from ${chain.name}.` : null
+  const shown = rows.slice(0, visible)
+  const hasMore = rows.length > shown.length
+
+  const findMeTitle = !address
+    ? 'Connect a wallet to find your row'
+    : myIndex < 0
+      ? 'You are not on the board yet'
+      : undefined
 
   return (
-    <>
-      <Head>
-        <title>Leaderboard - Onchain Hot Potato</title>
-        <meta name="description" content="Hot Potato leaderboard and hall of fame, read live from the chain" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <AppShell
+      title="Leaderboard: Hot Potato"
+      description={`Hot Potato leaderboard and hall of fame, read live from the ${chain.name} contract.`}
+      width="wide"
+    >
+      <div className="space-y-6 py-10 sm:py-14">
+        {/* Title + view switch */}
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeader
+            size="lg"
+            title="Leaderboard"
+            description={`Lifetime stats for every address that has held a hand, read live from the ${chain.name} contract.`}
+          />
+          <Segmented options={VIEWS} value={view} onChange={setView} aria-label="Leaderboard view" className="shrink-0" />
+        </div>
 
-      <div className={`${darkMode ? 'darkmode text-white' : 'normal'} bg-fixed min-h-screen font-darumadropone`}>
-        <Navigation darkMode={darkMode} setDarkMode={setDarkMode} isOpen={isOpen} setIsOpen={setIsOpen} />
+        {!isGameConfigured && (
+          <Notice>
+            No game to read on {chain.name}: NEXT_PUBLIC_GAME_ADDRESS is not set.
+          </Notice>
+        )}
 
-        <div className="relative min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto space-y-8">
-            <div className="text-center">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold gradient-text mb-4">🏆 LEADERBOARD 🏆</h1>
-              <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-300">
-                Lifetime stats from the {chain.name} contract. Click a column to sort.
-              </p>
+        {/* Totals */}
+        {isGameConfigured && (
+          <Card>
+            {isLoading ? (
+              <StatRow>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i}>
+                    <Skeleton className="h-3 w-14" />
+                    <Skeleton className="mt-2 h-7 w-16" />
+                  </div>
+                ))}
+              </StatRow>
+            ) : (
+              <StatRow>
+                <Stat label="Players" value={leaderboard.playerCount} />
+                <Stat label="Passes" value={totals.passes} />
+                <Stat label="Explosions" value={totals.fails} />
+                <Stat label="Rounds won" value={totals.rounds} />
+              </StatRow>
+            )}
+          </Card>
+        )}
+
+        {view === 'players' ? (
+          <>
+            {/* Toolbar */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2">
+                <Segmented
+                  size="sm"
+                  options={SORT_OPTIONS}
+                  value={sortField}
+                  onChange={(field) => {
+                    setSortField(field)
+                    setSortDirection('desc')
+                  }}
+                  aria-label="Sort by"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc')}
+                  aria-label={sortDirection === 'desc' ? 'Sorted high to low' : 'Sorted low to high'}
+                  leading={<span aria-hidden="true">{sortDirection === 'desc' ? '↓' : '↑'}</span>}
+                >
+                  {sortDirection === 'desc' ? 'High to low' : 'Low to high'}
+                </Button>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="sm:ml-auto"
+                onClick={findMe}
+                disabled={!address || myIndex < 0 || isLoading}
+                title={findMeTitle}
+              >
+                Find me
+              </Button>
             </div>
 
-            {isLoading && (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-amber-500" />
-                <p className="mt-4 text-xl">Loading leaderboard...</p>
-              </div>
-            )}
-
-            {error && !isLoading && (
-              <div className={`${darkMode ? 'card-dark' : 'card'} p-8 text-center`}>
-                <p className="text-red-500 text-xl mb-4">⚠️ {error}</p>
-                {isGameConfigured && (
-                  <button onClick={leaderboard.refetch} className="btn-primary px-6 py-3">
+            {error && (
+              <Notice
+                tone="danger"
+                action={
+                  <Button variant="secondary" size="sm" onClick={leaderboard.refetch}>
                     Retry
-                  </button>
-                )}
-              </div>
+                  </Button>
+                }
+              >
+                {error}
+              </Notice>
             )}
 
-            {!isLoading && !error && rows.length > 0 && (
+            {!error && isGameConfigured && (isLoading || rows.length > 0) && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className={`${darkMode ? 'card-dark' : 'card'} p-6 text-center`}>
-                    <p className="text-3xl font-bold gradient-text">{leaderboard.playerCount}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Players</p>
+                <PlayersTable
+                  rows={shown}
+                  isLoading={isLoading}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                  connected={address}
+                />
+                {!isLoading && (
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-[13px] text-fg-secondary tnum">
+                      Showing {shown.length} of {rows.length} {rows.length === 1 ? 'player' : 'players'}
+                      {leaderboard.playerCount !== rows.length && ` · ${leaderboard.playerCount} on the contract`}
+                    </p>
+                    {hasMore && (
+                      <div className="flex gap-2">
+                        <Button variant="secondary" size="sm" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
+                          Show more
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => setVisible(rows.length)}>
+                          Show all
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  <div className={`${darkMode ? 'card-dark' : 'card'} p-6 text-center`}>
-                    <p className="text-3xl font-bold gradient-text">{totals.passes}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Successful Passes</p>
-                  </div>
-                  <div className={`${darkMode ? 'card-dark' : 'card'} p-6 text-center`}>
-                    <p className="text-3xl font-bold gradient-text">{totals.rounds}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Rounds Won</p>
-                  </div>
-                </div>
-
-                <div className={`${darkMode ? 'card-dark' : 'card'} overflow-hidden shadow-2xl`}>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                      <thead className={darkMode ? 'bg-gray-800' : 'bg-gray-100'}>
-                        <tr>
-                          <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold uppercase tracking-wider">
-                            Rank
-                          </th>
-                          <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold uppercase tracking-wider">
-                            Player
-                          </th>
-                          {sortableHeader('wins', 'Wins')}
-                          {sortableHeader('passes', 'Passes')}
-                          {sortableHeader('fails', 'Fails')}
-                        </tr>
-                      </thead>
-                      <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                        {rows.map((entry, index) => {
-                          const isYou = !!address && isAddressEqual(entry.address, address)
-                          const stripe =
-                            index % 2 === 0
-                              ? darkMode
-                                ? 'bg-gray-900'
-                                : 'bg-white'
-                              : darkMode
-                                ? 'bg-gray-800'
-                                : 'bg-gray-50'
-                          return (
-                            <tr
-                              key={entry.address}
-                              className={`${stripe} ${isYou ? 'ring-2 ring-inset ring-amber-500' : ''} hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors`}
-                            >
-                              <td className="px-4 py-4 whitespace-nowrap text-sm sm:text-base font-bold">
-                                {rankBadge(entry.rank)}
-                              </td>
-                              <td className="px-4 py-4 whitespace-nowrap text-sm sm:text-base font-mono">
-                                <span className="hidden sm:inline">
-                                  <AddressLink address={entry.address} />
-                                </span>
-                                <span className="sm:hidden">
-                                  <AddressLink address={entry.address} short />
-                                </span>
-                                {isYou && <span className="ml-2 text-amber-500 font-sans font-bold">(you)</span>}
-                              </td>
-                              <td className="px-4 py-4 whitespace-nowrap text-center text-sm sm:text-base font-bold text-green-600 dark:text-green-400">
-                                {entry.wins}
-                              </td>
-                              <td className="px-4 py-4 whitespace-nowrap text-center text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400">
-                                {entry.passes}
-                              </td>
-                              <td className="px-4 py-4 whitespace-nowrap text-center text-sm sm:text-base font-bold text-red-600 dark:text-red-400">
-                                {entry.fails}
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                )}
               </>
             )}
 
-            {!isLoading && !error && rows.length === 0 && (
-              <div className={`${darkMode ? 'card-dark' : 'card'} p-12 text-center`}>
-                <p className="text-2xl mb-4">🎮 No players yet!</p>
-                <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
-                  Be the first to play and claim your spot on the leaderboard!
-                </p>
-                <Link href="/play" className="btn-primary text-xl px-8 py-4 inline-block">
-                  Start Playing
-                </Link>
-              </div>
+            {!error && isGameConfigured && !isLoading && rows.length === 0 && (
+              <Card className="flex flex-col items-center py-12 text-center">
+                <SectionHeader
+                  size="md"
+                  align="center"
+                  title="No players yet"
+                  description="Be the first to mint a hand and claim a spot on the board."
+                />
+                <ButtonLink href="/play" className="mt-6">
+                  Play now
+                </ButtonLink>
+              </Card>
+            )}
+          </>
+        ) : (
+          <>
+            {isGameConfigured && hallOfFame.error && (
+              <Notice tone="danger">Couldn&apos;t read past rounds from {chain.name}.</Notice>
             )}
 
-            {hallOfFame.entries.length > 0 && <HallOfFame darkMode={darkMode} entries={hallOfFame.entries} />}
+            {isGameConfigured && !hallOfFame.error && (hallOfFame.isLoading || hallOfFame.entries.length > 0) && (
+              <>
+                <HallOfFameList entries={hallOfFame.entries} isLoading={hallOfFame.isLoading} />
+                {!hallOfFame.isLoading && (
+                  <p className="text-[13px] text-fg-secondary tnum">
+                    {hallOfFame.entries.length} {hallOfFame.entries.length === 1 ? 'round' : 'rounds'} so far · winners take
+                    40% of the pot
+                  </p>
+                )}
+              </>
+            )}
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                href="/play"
-                className="btn-primary text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 transform hover:scale-105 transition-all duration-300 w-full sm:w-auto shadow-xl"
-              >
-                🎮 Play Game
-              </Link>
-              <Link
-                href="/"
-                className="btn-outline text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 transform hover:scale-105 transition-all duration-300 w-full sm:w-auto border-2"
-              >
-                🏠 Back to Home
-              </Link>
-            </div>
-          </div>
-        </div>
+            {isGameConfigured && !hallOfFame.error && !hallOfFame.isLoading && hallOfFame.entries.length === 0 && (
+              <Card className="flex flex-col items-center py-12 text-center">
+                <SectionHeader
+                  size="md"
+                  align="center"
+                  title="No rounds yet"
+                  description="The first round's winner will show up here the moment it ends."
+                />
+                <ButtonLink href="/play" className="mt-6">
+                  Play now
+                </ButtonLink>
+              </Card>
+            )}
+          </>
+        )}
       </div>
-    </>
+    </AppShell>
   )
 }
