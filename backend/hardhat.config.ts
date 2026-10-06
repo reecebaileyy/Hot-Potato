@@ -1,94 +1,67 @@
-import type { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox-viem";
-import "hardhat-contract-sizer";
-import * as dotenv from 'dotenv';
-dotenv.config();
+import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
+import { configVariable, defineConfig } from "hardhat/config";
 
-if (!process.env.RPC_URL) {
-  throw new Error("❌ Missing RPC_URL in .env");
-}
-if (!process.env.PRIVATE_KEY) {
-  throw new Error("❌ Missing PRIVATE_KEY in .env");
-}
-if (!process.env.BASESCAN_API_KEY) {
-  throw new Error("❌ Missing BASESCAN_API_KEY in .env");
-}
+const SOLC_VERSION = "0.8.28";
 
-const config: HardhatUserConfig = {
+export default defineConfig({
+  plugins: [hardhatToolboxViemPlugin],
   solidity: {
-    compilers: [
-    {
-      version: "0.8.20",
-      settings: {
-        optimizer: {
-          enabled: true,
-          runs: 25, // 👈 optimize for smaller bytecode
-        },
-        metadata: {
-          bytecodeHash: "none", // removes metadata hash to save bytes
+    profiles: {
+      default: {
+        version: SOLC_VERSION,
+        // Optional: point at a local solc binary when binaries.soliditylang.org is unreachable.
+        ...(process.env.SOLC_PATH ? { path: process.env.SOLC_PATH } : {}),
+        settings: {
+          optimizer: { enabled: true, runs: 200 },
+          evmVersion: "cancun",
         },
       },
     },
-    {
-      version: "0.8.28",
-      settings: {
-        optimizer: {
-          enabled: true,
-          runs: 25,
-        },
-        metadata: {
-          bytecodeHash: "none",
-        },
-      },
-    },
-    {
-      version: "0.8.7",
-      settings: {
-        optimizer: {
-          enabled: true,
-          runs: 25,
-        },
-        metadata: {
-          bytecodeHash: "none",
-        },
-      },
-    },
-  ],
   },
-  contractSizer: {
-    alphaSort: true,
-    runOnCompile: true,
-    disambiguatePaths: false,
-  },
-  paths: {
-    sources: "./@Allcontracts",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts"
+  chainDescriptors: {
+    4663: {
+      name: "Robinhood Chain",
+      chainType: "generic",
+      blockExplorers: {
+        blockscout: {
+          name: "Robinhood Chain Explorer",
+          url: "https://robinhoodchain.blockscout.com",
+          apiUrl: "https://robinhoodchain.blockscout.com/api",
+        },
+      },
+    },
+    46630: {
+      name: "Robinhood Chain Testnet",
+      chainType: "generic",
+      blockExplorers: {
+        blockscout: {
+          name: "Robinhood Chain Testnet Explorer",
+          url: "https://explorer.testnet.chain.robinhood.com",
+          apiUrl: "https://explorer.testnet.chain.robinhood.com/api",
+        },
+      },
+    },
   },
   networks: {
-    baseSepolia: {
-      url: process.env.RPC_URL,
-      accounts: [process.env.PRIVATE_KEY!],
-      chainId: 84532,
+    // In-process simulated chain used by `hardhat test`; the scale test needs 50 accounts.
+    default: {
+      type: "edr-simulated",
+      chainType: "generic",
+      accounts: { count: 50 },
+    },
+    robinhoodTestnet: {
+      type: "http",
+      chainType: "generic",
+      chainId: 46630,
+      url: configVariable("ROBINHOOD_TESTNET_RPC_URL"),
+      accounts: [configVariable("DEPLOYER_PRIVATE_KEY")],
+    },
+    robinhood: {
+      type: "http",
+      chainType: "generic",
+      chainId: 4663,
+      url: configVariable("ROBINHOOD_RPC_URL"),
+      accounts: [configVariable("DEPLOYER_PRIVATE_KEY")],
     },
   },
-  etherscan: {
-    apiKey: process.env.BASESCAN_API_KEY!,
-    customChains: [
-      {
-        network: "baseSepolia",
-        chainId: 84532,
-        urls: {
-          apiURL: "https://api-sepolia.basescan.org/api",
-          browserURL: "https://sepolia.basescan.org",
-        },
-      },
-    ],
-  },
-  sourcify: {
-    enabled: false,
-  },
-};
-
-export default config;
+});
