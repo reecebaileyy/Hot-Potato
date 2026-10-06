@@ -1,7 +1,7 @@
 import flowbite from 'flowbite/plugin'
 
 /** @type {import('tailwindcss').Config} */
-export default {
+const config = {
   darkMode: 'class',
   content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
@@ -138,7 +138,6 @@ export default {
       },
       fontFamily: {
         darumadrop: ['"DarumadropOne"', 'sans-serif'],
-        modern: ['"Modern"', 'display'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       zIndex: {
@@ -175,3 +174,5 @@ export default {
     }
   ]
 }
+
+export default config

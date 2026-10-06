@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  // Don't write AGENTS.md / CLAUDE.md into the project when `next dev` runs under a coding agent.
+  agentRules: false,
+
   images: {
     formats: ['image/webp'],
   },
