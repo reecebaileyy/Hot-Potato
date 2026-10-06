@@ -3,41 +3,48 @@ import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useConnect, useConnection, useDisconnect } from 'wagmi'
 import { hasPrivy } from '@/config/wallet'
 import { formatAddress } from '../utils/formatAddress'
+import { Button } from './ui'
 
 interface ConnectWalletButtonProps {
   className?: string
+  /** Full width (used in the mobile sheet and empty states). */
+  block?: boolean
+  size?: 'sm' | 'md' | 'lg'
 }
 
-const connectClasses = 'px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold'
-const disconnectClasses = 'px-4 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm'
+const pillHeight = { sm: 'h-8', md: 'h-10', lg: 'h-12' }
 
 function ConnectedView({
   address,
   onDisconnect,
-  className,
-}: {
-  address: string | null
-  onDisconnect: () => void
-  className?: string
-}) {
+  className = '',
+  block = false,
+  size = 'sm',
+}: ConnectWalletButtonProps & { address: string | null; onDisconnect: () => void }) {
   return (
-    <div className={`flex items-center gap-2 ${className ?? ''}`}>
-      <span className="text-sm text-gray-300 truncate max-w-[150px]" title={address || undefined}>
+    <div className={`flex items-center gap-2 ${block ? 'w-full' : ''} ${className}`}>
+      <span
+        className={`inline-flex items-center gap-2 ${pillHeight[size]} px-3 rounded-full bg-surface-muted text-[13px] font-medium tnum text-fg ${
+          block ? 'flex-1 justify-center' : ''
+        }`}
+        title={address || undefined}
+      >
+        <span aria-hidden="true" className="h-2 w-2 rounded-full bg-success" />
         {address ? formatAddress(address) : 'Connected'}
       </span>
-      <button onClick={onDisconnect} className={disconnectClasses}>
+      <Button variant="ghost" size="sm" onClick={onDisconnect}>
         Disconnect
-      </button>
+      </Button>
     </div>
   )
 }
 
-function PrivyConnectButton({ className }: ConnectWalletButtonProps): React.ReactElement {
+function PrivyConnectButton({ className = '', block = false, size = 'sm' }: ConnectWalletButtonProps): React.ReactElement {
   const { ready, authenticated, login, logout } = usePrivy()
   const { wallets } = useWallets()
   const { address } = useConnection()
 
-  // Get actual address (from wagmi or Privy)
+  // Prefer the wagmi-synced address, fall back to Privy's first wallet.
   const actualAddress = useMemo(() => {
     if (address) return address
     if (wallets.length > 0 && wallets[0].address) return wallets[0].address
@@ -46,25 +53,25 @@ function PrivyConnectButton({ className }: ConnectWalletButtonProps): React.Reac
 
   if (!ready) {
     return (
-      <button className={`px-4 py-2 bg-gray-500 rounded text-white ${className ?? ''}`} disabled>
-        Loading...
-      </button>
+      <Button size={size} block={block} className={className} loading>
+        Connect
+      </Button>
     )
   }
 
   if (!authenticated) {
     return (
-      <button onClick={login} className={`${connectClasses} ${className ?? ''}`}>
-        Connect Wallet
-      </button>
+      <Button size={size} block={block} className={className} onClick={login}>
+        Connect wallet
+      </Button>
     )
   }
 
-  return <ConnectedView address={actualAddress} onDisconnect={logout} className={className} />
+  return <ConnectedView address={actualAddress} onDisconnect={logout} className={className} block={block} size={size} />
 }
 
 /** Plain wagmi flow for injected wallets, used when no Privy app id is configured. */
-function InjectedConnectButton({ className }: ConnectWalletButtonProps): React.ReactElement {
+function InjectedConnectButton({ className = '', block = false, size = 'sm' }: ConnectWalletButtonProps): React.ReactElement {
   const { address, isConnected } = useConnection()
   const { connect, connectors, isPending } = useConnect()
   const { disconnect } = useDisconnect()
@@ -72,18 +79,23 @@ function InjectedConnectButton({ className }: ConnectWalletButtonProps): React.R
   if (!isConnected) {
     const connector = connectors[0]
     return (
-      <button
+      <Button
+        size={size}
+        block={block}
+        className={className}
         onClick={() => connector && connect({ connector })}
-        disabled={!connector || isPending}
-        className={`${connectClasses} disabled:opacity-60 ${className ?? ''}`}
+        disabled={!connector}
+        loading={isPending}
         title={connector ? undefined : 'No browser wallet found'}
       >
-        {isPending ? 'Connecting...' : 'Connect Wallet'}
-      </button>
+        Connect wallet
+      </Button>
     )
   }
 
-  return <ConnectedView address={address ?? null} onDisconnect={() => disconnect()} className={className} />
+  return (
+    <ConnectedView address={address ?? null} onDisconnect={() => disconnect()} className={className} block={block} size={size} />
+  )
 }
 
 const ConnectWalletButton: (props: ConnectWalletButtonProps) => React.ReactElement = hasPrivy

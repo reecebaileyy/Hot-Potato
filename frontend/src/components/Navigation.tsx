@@ -1,181 +1,179 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { BsMoonStarsFill, BsSunFill } from 'react-icons/bs'
+import { useRouter } from 'next/router'
 import ConnectWalletButton from './ConnectWalletButton'
-import blacklogo from '../../public/assets/images/Logo.png'
+import { useTheme } from '../hooks/useTheme'
 
-interface NavigationProps {
-  darkMode: boolean
-  setDarkMode: (darkMode: boolean) => void
-  isOpen: boolean
-  setIsOpen: (isOpen: boolean) => void
+const LINKS = [
+  { href: '/play', label: 'Play' },
+  { href: '/leaderboard', label: 'Leaderboard' },
+  { href: 'https://0xhotpotato.gitbook.io/onchain-hot-potato/', label: 'Docs', external: true },
+] as const
+
+function SunIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4" />
+    </svg>
+  )
 }
 
-function ThemeToggle({ darkMode, onToggle }: { darkMode: boolean; onToggle: () => void }) {
+function MoonIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+    </svg>
+  )
+}
+
+export function ThemeToggle({ className = '' }: { className?: string }) {
+  const { darkMode, toggle } = useTheme()
   return (
     <button
       type="button"
-      onClick={onToggle}
+      onClick={toggle}
       aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="text-3xl transition-transform duration-300 hover:scale-110"
+      className={`h-9 w-9 inline-flex items-center justify-center rounded-full text-fg-secondary hover:text-fg hover:bg-surface-muted transition-colors ${className}`}
     >
-      {darkMode ? <BsSunFill className="text-amber-300" /> : <BsMoonStarsFill className="text-gray-700" />}
+      {darkMode ? <SunIcon /> : <MoonIcon />}
     </button>
   )
 }
 
-export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }: NavigationProps) {
-  const menuRef = useRef<HTMLUListElement | null>(null)
+/** Wordmark: a small potato mark and the name. */
+export function Wordmark({ className = '' }: { className?: string }) {
+  return (
+    <Link href="/" className={`inline-flex items-center gap-2 font-semibold tracking-tight text-fg ${className}`}>
+      <span aria-hidden="true" className="h-6 w-6 rounded-full bg-accent inline-flex items-center justify-center">
+        <span className="h-2.5 w-2.5 rounded-full bg-white/90" />
+      </span>
+      <span className="text-[17px]">Hot Potato</span>
+    </Link>
+  )
+}
 
-  // Close menu on ESC key press
+/**
+ * Translucent top bar, 56px tall. Links collapse into a sheet below `md`.
+ * Pages reserve space for it with `pt-14` (AppShell does this).
+ */
+export default function Navigation() {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        setIsOpen(false)
-      }
-    }
+    const close = () => setOpen(false)
+    router.events.on('routeChangeStart', close)
+    return () => router.events.off('routeChangeStart', close)
+  }, [router.events])
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      // Prevent body scroll when menu is open
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
     }
-  }, [isOpen, setIsOpen])
+  }, [open])
 
-  // Close menu when clicking outside
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-      setIsOpen(false)
-    }
-  }
+  const isActive = (href: string) => router.pathname === href
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 pt-3 pb-2 sm:pt-6 sm:pb-3 px-4 sm:px-6 md:px-12 flex justify-between items-center z-50 ${darkMode ? 'glass-effect-dark' : 'glass-effect'} backdrop-blur-md`}>
-      <Link href='/' className="transform transition-all duration-300 hover:scale-105 relative z-50">
-        <Image src={blacklogo} width={150} alt="Logo" className="w-[50px] sm:w-[100px] md:w-[150px] h-auto drop-shadow-lg" />
-      </Link>
-      
-      {/* Mobile Menu Button */}
-      <div className="xl:hidden 2xl:hidden 3xl:hidden z-50">
-        <button 
-          onClick={() => setIsOpen(!isOpen)} 
-          className={`flex items-center px-4 py-3 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
-            darkMode 
-              ? 'border-white/30 text-white hover:border-white hover:bg-white/10' 
-              : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
-          }`}
-        >
-          <svg className="fill-current h-4 w-4" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-            <title>Menu</title>
-            <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v15z" />
-          </svg>
-        </button>
-        
-        {/* Mobile Menu Overlay */}
-        <div className={`fixed inset-0 flex justify-center items-start pt-20 bg-black/60 backdrop-blur-sm transition-all duration-300 z-[60] ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
-          onClick={handleOverlayClick}>
-          <ul ref={menuRef} className={`${darkMode ? 'card-dark' : 'card'} p-6 flex flex-col space-y-4 text-lg animate-fade-in-up w-11/12 max-w-sm`}>
-            <li>
-              <Link 
-                className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-colors duration-300 font-semibold`} 
-                href="/play"
-                onClick={() => setIsOpen(false)}
-              >
-                Play
-              </Link>
-            </li>
-            <li>
-              <Link 
-                className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-colors duration-300 font-semibold`} 
-                href="/leaderboard"
-                onClick={() => setIsOpen(false)}
-              >
-                Leaderboard
-              </Link>
-            </li>
-            <li>
-              <Link 
-                className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-colors duration-300 font-semibold`} 
-                href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" 
-                target="_blank"
-                onClick={() => setIsOpen(false)}
-              >
-                Docs
-              </Link>
-            </li>
-            <li>
-              <Link 
-                className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-colors duration-300 font-semibold`} 
-                href="https://opensea.io" 
-                target="_blank"
-                onClick={() => setIsOpen(false)}
-              >
-                Opensea
-              </Link>
-            </li>
-            <div className="flex items-center justify-between pt-4 border-t border-gray-300/20">
-              <ThemeToggle darkMode={darkMode} onToggle={() => setDarkMode(!darkMode)} />
-              <ConnectWalletButton className='btn-primary text-sm px-4 py-2' />
-            </div>
+    <>
+      <header className="fixed inset-x-0 top-0 z-50 bg-nav backdrop-blur-xl backdrop-saturate-150 border-b border-line">
+        <nav className="mx-auto max-w-page h-14 px-4 sm:px-6 flex items-center justify-between gap-4">
+          <Wordmark />
+
+          <ul className="hidden md:flex items-center gap-1">
+            {LINKS.map((link) => (
+              <li key={link.href}>
+                {'external' in link && link.external ? (
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg text-[14px] font-medium text-fg-secondary hover:text-fg hover:bg-surface-muted transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className={`px-3 py-1.5 rounded-lg text-[14px] font-medium transition-colors ${
+                      isActive(link.href) ? 'text-fg bg-surface-muted' : 'text-fg-secondary hover:text-fg hover:bg-surface-muted'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                )}
+              </li>
+            ))}
           </ul>
+
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle />
+            <div className="hidden md:block">
+              <ConnectWalletButton />
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-label={open ? 'Close menu' : 'Open menu'}
+              aria-expanded={open}
+              className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-full text-fg hover:bg-surface-muted transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                {open ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+              </svg>
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* Mobile sheet */}
+      <div
+        className={`md:hidden fixed inset-0 z-40 transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setOpen(false)}
+      >
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+        <div
+          className={`absolute inset-x-3 top-16 rounded-3xl bg-elevated shadow-lg border border-line p-2 transition-transform duration-200 ease-apple ${
+            open ? 'translate-y-0' : '-translate-y-2'
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ul className="flex flex-col">
+            {LINKS.map((link) => (
+              <li key={link.href}>
+                {'external' in link && link.external ? (
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-3 rounded-2xl text-[17px] font-medium text-fg hover:bg-surface-muted"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className={`block px-4 py-3 rounded-2xl text-[17px] font-medium ${
+                      isActive(link.href) ? 'bg-surface-muted text-fg' : 'text-fg hover:bg-surface-muted'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+          <div className="p-2 pt-3 border-t border-line mt-1">
+            <ConnectWalletButton block size="md" />
+          </div>
         </div>
       </div>
-      
-      {/* Desktop Navigation */}
-      <ul className='hidden xl:flex space-x-8 text-lg font-semibold relative z-50'>
-        <li>
-          <Link 
-            className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-all duration-300 hover:scale-105 relative group`} 
-            href="/play"
-          >
-            Play
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-        </li>
-        <li>
-          <Link 
-            className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-all duration-300 hover:scale-105 relative group`} 
-            href="/leaderboard"
-          >
-            Leaderboard
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-        </li>
-        <li>
-          <Link 
-            className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-all duration-300 hover:scale-105 relative group`} 
-            href="https://0xhotpotato.gitbook.io/onchain-hot-potato/" 
-            target="_blank"
-          >
-            Docs
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-        </li>
-        <li>
-          <Link 
-            className={`${darkMode ? 'text-white hover:text-amber-400' : 'text-gray-700 hover:text-amber-600'} transition-all duration-300 hover:scale-105 relative group`} 
-            href="https://opensea.io" 
-            target="_blank"
-          >
-            Opensea
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-        </li>
-      </ul>
-      
-      {/* Desktop Controls */}
-      <div className='hidden xl:flex gap-4 items-center relative z-50'>
-        <ThemeToggle darkMode={darkMode} onToggle={() => setDarkMode(!darkMode)} />
-        <ConnectWalletButton className='btn-primary text-sm px-6 py-3' />
-      </div>
-    </nav>
+    </>
   )
 }

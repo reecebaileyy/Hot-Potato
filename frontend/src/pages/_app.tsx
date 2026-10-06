@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { chain } from '@/config/chain'
 import { wagmiConfig } from '@/config/wagmi'
 import { hasPrivy, privyAppId } from '@/config/wallet'
+import { ThemeProvider } from '@/hooks/useTheme'
 
 const queryClient = new QueryClient()
 
@@ -68,8 +69,10 @@ export default function App({ Component, pageProps }: AppProps) {
   if (!isClient) return null
 
   return (
-    <Providers>
-      <Component {...pageProps} />
-    </Providers>
+    <ThemeProvider>
+      <Providers>
+        <Component {...pageProps} />
+      </Providers>
+    </ThemeProvider>
   )
 }
