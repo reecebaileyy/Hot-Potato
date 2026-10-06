@@ -1,28 +1,30 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
+import type { FeedItem } from '../hooks/useGameEvents'
 
 interface EventFeedProps {
   darkMode: boolean
-  events: string[]
+  feed: FeedItem[]
 }
 
-export default function EventFeed({ darkMode, events }: EventFeedProps) {
-  const endOfDiv = useRef<HTMLDivElement | null>(null)
+/** Horizontal ticker of the latest contract events. */
+export default function EventFeed({ darkMode, feed }: EventFeedProps) {
+  const endOfFeed = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (endOfDiv.current) {
-      endOfDiv.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' })
-    }
-  }, [events])
+    endOfFeed.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' })
+  }, [feed])
+
+  if (feed.length === 0) return null
 
   return (
-    <div className={`hide-scrollbar w-full col-start-1 col-end-9 md:w-2/3 lg:w-1/2 mx-auto ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
-      <div className="scrollable-div whitespace-nowrap h-full flex items-center space-x-4 pl-4 overflow-auto">
-        {events.map((event, index) => (
-          <div key={index} className={darkMode ? 'text-white' : 'text-black'}>
-            {event}
+    <div className={`hide-scrollbar w-full md:w-2/3 lg:w-1/2 mx-auto mb-6 ${darkMode ? 'bg-black' : 'bg-white'} shadow rounded-md overflow-x-auto`}>
+      <div className="scrollable-div whitespace-nowrap h-full flex items-center space-x-6 px-4 py-2 overflow-auto">
+        {feed.map((item) => (
+          <div key={item.id} className={darkMode ? 'text-white' : 'text-black'}>
+            {item.text}
           </div>
         ))}
-        <div ref={endOfDiv}></div>
+        <div ref={endOfFeed} />
       </div>
     </div>
   )

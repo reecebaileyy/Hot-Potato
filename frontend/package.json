@@ -6,7 +6,10 @@
     "node": ">=22.0.0"
   },
   "scripts": {
+    "abi": "node scripts/generate-abi.mjs",
+    "predev": "npm run abi",
     "dev": "next dev",
+    "prebuild": "npm run abi",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -21,7 +24,6 @@
     "react-dom": "^19.3.0",
     "react-icons": "^5.7.0",
     "react-modal": "^3.16.3",
-    "react-toastify": "^11.1.0",
     "viem": "2.56.5",
     "wagmi": "^3.7.7"
   },
