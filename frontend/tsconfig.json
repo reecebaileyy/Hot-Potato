@@ -31,9 +31,7 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx",
-    "src/pages/api/get-previous-game-state.js",
-    "src/pages/api/get-player-data.js"
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules"

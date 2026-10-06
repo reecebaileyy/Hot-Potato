@@ -18,10 +18,12 @@ type SortDirection = 'asc' | 'desc'
 export default function Leaderboard() {
   const [darkMode, setDarkMode] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([])
+  // The leaderboard is read from the Game contract's on-chain stats views.
+  // Until those views are wired up there is nothing to show.
+  const [leaderboardData] = useState<LeaderboardEntry[]>([])
   const [sortedData, setSortedData] = useState<LeaderboardEntry[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const isLoading = false
+  const error: string | null = null
   const [sortField, setSortField] = useState<SortField>('wins')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
@@ -35,31 +37,6 @@ export default function Leaderboard() {
     else document.documentElement.classList.remove('dark')
     window.localStorage.setItem('darkMode', JSON.stringify(darkMode))
   }, [darkMode])
-
-  // Fetch leaderboard data
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const response = await fetch('/api/get-leaderboard')
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch leaderboard data')
-        }
-        
-        const data = await response.json()
-        setLeaderboardData(data.Leaderboard || [])
-      } catch (err) {
-        console.error('Error fetching leaderboard:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load leaderboard')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchLeaderboard()
-  }, [])
 
   // Sort data whenever sortField, sortDirection, or leaderboardData changes
   useEffect(() => {

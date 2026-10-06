@@ -8,7 +8,6 @@ import GameArtifact from '../abi/Game.json'
 
 const ABI = GameArtifact.abi
 import { toast, ToastContainer } from 'react-toastify'
-import { ethers, providers } from 'ethers'
 import { useGameContract } from '../hooks/useGameContract'
 import { useGameEvents } from '../hooks/useGameEvents'
 
@@ -31,31 +30,6 @@ import UserTokens from '../components/UserTokens'
 import MobileSwipeNavigation from '../components/MobileSwipeNavigation'
 import Rewards, { ClaimHistoryItem } from '../components/Rewards'
 
-// Singleton WebSocket provider (initialized once, reused across renders and remounts)
-let websocketProvider: providers.WebSocketProvider | null = null
-const getWebSocketProvider = () => {
-  if (!websocketProvider && typeof window !== 'undefined') {
-    console.log('Creating new WebSocket provider')
-    websocketProvider = new providers.WebSocketProvider(
-      process.env.NEXT_PUBLIC_ALCHEMY_URL_WEBSOCKET!
-    )
-    
-    // Handle WebSocket connection events
-    websocketProvider._websocket.on('open', () => {
-      console.log('WebSocket connected')
-    })
-    
-    websocketProvider._websocket.on('error', (error: Error) => {
-      console.error('WebSocket error:', error)
-    })
-    
-    websocketProvider._websocket.on('close', () => {
-      console.log('WebSocket closed')
-    })
-  }
-  return websocketProvider
-}
-
 interface PlayProps {
   initalGameState?: string | null
   gen?: number
@@ -64,9 +38,6 @@ interface PlayProps {
 }
 
 export default function Play({ initalGameState, gen, price, maxSupply }: PlayProps): React.JSX.Element {
-  // --- Provider (WebSocket) - Use singleton ---
-  const provider = getWebSocketProvider()!
-
   // --- Custom Hooks ---
   const { getGameState, prevGameState, updateGameState } = useGameState(initalGameState ?? null)
   const { 
@@ -207,9 +178,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
       setCurrentTxHash(latestHash)
     }
   }, [mintTxHash, passTxHash, claimTxHash, startTxHash, startNoMintTxHash, endMintTxHash, closeMintTxHash, pauseTxHash, resumeTxHash, restartTxHash, checkExplosionTxHash, currentTxHash])
-  
-  // --- Memoized values ---
-  const displayPrice = useMemo(() => ethers.utils.formatEther(BigInt(price || 0)), [price])
   
   // --- Constants ---
   const CONTRACT = '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`
