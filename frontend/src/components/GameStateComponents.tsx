@@ -1,6 +1,5 @@
 import React from 'react'
 import Image from 'next/image'
-import { useEnsName } from 'wagmi'
 import hot from '../../public/assets/images/hot.png'
 import { formatAddress } from '../utils/formatAddress'
 
@@ -51,17 +50,6 @@ export default function GameStateComponents({
 }: GameStateProps) {
   // Round down price to 2 decimal places
   const formattedPrice = (Math.floor(parseFloat(price) * 100) / 100).toFixed(2)
-  
-  // Fetch ENS name for the winner if available
-  const { data: winnerEnsName } = useEnsName({
-    address: currentRoundWinner as `0x${string}` | undefined,
-    chainId: 1, // Mainnet for ENS
-    query: {
-      enabled: !!currentRoundWinner,
-      staleTime: 300000, // Cache for 5 minutes
-      retry: 1,
-    }
-  })
   
   const LoadingSpinner = () => (
     <div className="flex justify-center items-center p-8">
@@ -192,8 +180,7 @@ export default function GameStateComponents({
   }
 
   if (gameState === "Ended") {
-    // Display priority: ENS name > formatted address
-    const displayWinner = winnerEnsName || (currentRoundWinner ? formatAddress(currentRoundWinner) : null)
+    const displayWinner = currentRoundWinner ? formatAddress(currentRoundWinner) : null
     
     return (
       <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>

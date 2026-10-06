@@ -1,9 +1,10 @@
 import { useSimulateContract, useWriteContract } from 'wagmi'
 import { parseEther } from 'viem'
 import GameArtifact from '../abi/Game.json'
+import { GAME_ADDRESS } from '../config/chain'
 
 const ABI = GameArtifact.abi
-const CONTRACT_ADDRESS = '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as const
+const CONTRACT_ADDRESS = GAME_ADDRESS
 
 export function usePrivyContractWrites(mintAmount?: string, price?: string, tokenId?: string, gameState?: string) {
   console.log('=== USE PRIVY CONTRACT WRITES ===')

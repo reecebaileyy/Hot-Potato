@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react'
 import Head from 'next/head'
 import { Abi, formatUnits, parseEther, parseEventLogs } from 'viem'
-import { useAccount, useWatchContractEvent, useReadContract, UseReadContractsReturnType, useReadContracts, useBalance, useSimulateContract, useWriteContract, useEnsName, useChainId, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useWatchContractEvent, useReadContract, UseReadContractsReturnType, useReadContracts, useBalance, useSimulateContract, useWriteContract, useChainId, useWaitForTransactionReceipt } from 'wagmi'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import GameArtifact from '../abi/Game.json'
+import { GAME_ADDRESS, chain } from '../config/chain'
 
 const ABI = GameArtifact.abi
 import { toast, ToastContainer } from 'react-toastify'
@@ -180,8 +181,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   }, [mintTxHash, passTxHash, claimTxHash, startTxHash, startNoMintTxHash, endMintTxHash, closeMintTxHash, pauseTxHash, resumeTxHash, restartTxHash, checkExplosionTxHash, currentTxHash])
   
   // --- Constants ---
-  const CONTRACT = '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`
-  const CONTRACT_ADDRESS = '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as const
+  const CONTRACT_ADDRESS = GAME_ADDRESS
   const ADMIN_ADDRESS = "0x41b1e204e9c15fF5894bd47C6Dc3a7Fa98C775C7"
 
   // -----------------------------Single Reads End---------------------------------
@@ -310,7 +310,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
 
   const { data: bal, isLoading: balanceLoading, isError } = useBalance({
     address: actualAddress ? actualAddress as `0x${string}` : undefined,
-    chainId: 84532,
+    chainId: chain.id,
     query: {
       enabled: !!actualAddress, // Only fetch balance when address is available
       staleTime: 60000, // Increased to 60 seconds
@@ -326,19 +326,6 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
   // Round down ETH balance to 2 decimal places
   const rawBalance = formatUnits(value, bal?.decimals ?? 18)
   const balance = (Math.floor(parseFloat(rawBalance) * 100) / 100).toFixed(2)
-
-  const { data: winnerEnsName, isError: errorWinnerEnsName, isLoading: loadingWinnerEnsName } = useEnsName({
-    address: additionalData?.roundWinner ? additionalData.roundWinner as `0x${string}` : undefined,
-    query: {
-      enabled: !!additionalData?.roundWinner, // Only fetch ENS when round winner exists
-      staleTime: 60000, // Increased to 60 seconds
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: true, // Enable refetch on mount for initial data
-      refetchOnReconnect: false, // Disable refetch on reconnect
-      retry: 1, // Reduced retries
-    }
-  })
 
   // Write Hooks - Now handled by useContractWrites hook
 
@@ -646,7 +633,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                       // Fallback: call without simulation
                       console.log('No simulation available, calling directly')
                       handleTransaction(() => writeCheckExplosion({
-                        address: '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`,
+                        address: GAME_ADDRESS,
                         abi: ABI,
                         functionName: 'checkExplosion',
                       }), 'Check Explosion');
@@ -749,7 +736,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
               // Fallback: call without simulation
               console.log('No simulation available, calling directly')
               handleTransaction(() => writeCheckExplosion({
-                address: '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`,
+                address: GAME_ADDRESS,
                 abi: ABI,
                 functionName: 'checkExplosion',
               }), 'Check Explosion');
@@ -1120,7 +1107,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
                           // Fallback: call without simulation
                           console.log('No simulation available, calling directly')
                           handleTransaction(() => writeCheckExplosion({
-                            address: '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`,
+                            address: GAME_ADDRESS,
                             abi: ABI,
                             functionName: 'checkExplosion',
                           }), 'Check Explosion');
@@ -1415,7 +1402,7 @@ export default function Play({ initalGameState, gen, price, maxSupply }: PlayPro
               // Fallback: call without simulation
               console.log('No simulation available, calling directly')
               handleTransaction(() => writeCheckExplosion({
-                address: '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as `0x${string}`,
+                address: GAME_ADDRESS,
                 abi: ABI,
                 functionName: 'checkExplosion',
               }), 'Check Explosion');

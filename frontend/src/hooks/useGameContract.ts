@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { useAccount, useReadContracts } from 'wagmi'
 import { formatUnits } from 'viem'
 import GameArtifact from '../abi/Game.json'
+import { GAME_ADDRESS } from '../config/chain'
 
 const ABI = GameArtifact.abi
-const CONTRACT_ADDRESS = '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as const
+const CONTRACT_ADDRESS = GAME_ADDRESS
 
 // Debug logging for contract configuration
 console.log('=== CONTRACT CONFIG DEBUG ===')

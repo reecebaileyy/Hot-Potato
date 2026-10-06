@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { explorerTxUrl } from '../config/chain'
 
 export interface ClaimHistoryItem {
   amount: string
@@ -143,16 +144,20 @@ export default function Rewards({
                     <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} space-y-1`}>
                       <div className="flex items-center gap-2">
                         <span className="font-semibold">TX:</span>
-                        <a
-                          href={`https://sepolia.basescan.org/tx/${claim.txHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${
-                            darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
-                          } underline`}
-                        >
-                          {formatTxHash(claim.txHash)}
-                        </a>
+                        {explorerTxUrl(claim.txHash) ? (
+                          <a
+                            href={explorerTxUrl(claim.txHash)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`${
+                              darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
+                            } underline`}
+                          >
+                            {formatTxHash(claim.txHash)}
+                          </a>
+                        ) : (
+                          <span className="font-mono">{formatTxHash(claim.txHash)}</span>
+                        )}
                       </div>
                       <div>
                         <span className="font-semibold">Date:</span> {formatDate(claim.timestamp)}

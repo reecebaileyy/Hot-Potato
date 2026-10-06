@@ -1,18 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { createPublicClient, http, type Abi } from 'viem'
-import { baseSepolia } from 'viem/chains'
 import GameArtifact from '../../abi/Game.json'
+import { GAME_ADDRESS, chain, isGameConfigured, rpcUrl } from '../../config/chain'
 
-const GAME_ADDRESS = '0x050Bd2067828D5e94a3E90Be05949C6798b2c176' as const
-
-const client = createPublicClient({
-  chain: baseSepolia,
-  transport: http(),
-})
+const client = createPublicClient({ chain, transport: http(rpcUrl) })
 
 type Data = { tokenId: number; imageString: string } | { error: string }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
+  if (!isGameConfigured) {
+    return res.status(503).json({ error: 'NEXT_PUBLIC_GAME_ADDRESS is not configured' })
+  }
+
   const tokenId = Number(req.query.tokenId)
   if (!Number.isSafeInteger(tokenId) || tokenId < 0) {
     return res.status(400).json({ error: 'Invalid tokenId' })
