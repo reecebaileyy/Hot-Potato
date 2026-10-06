@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useAccount, useWatchContractEvent, useReadContract, useReadContracts, useBalance, useSimulateContract, useWriteContract, useEnsName } from 'wagmi'
-import { formatUnits, parseEther } from 'viem'
-import { createDeferredPromise, type DeferredPromise } from '../utils/deferredPromise'
-import { safeParseEventLogs } from '../utils/viemUtils'
+import { useAccount, useReadContracts } from 'wagmi'
+import { formatUnits } from 'viem'
 import GameArtifact from '../abi/Game.json'
 
 const ABI = GameArtifact.abi

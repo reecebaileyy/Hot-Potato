@@ -1,10 +1,9 @@
+import flowbite from 'flowbite/plugin'
+
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   darkMode: 'class',
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/flowbite-react/**/*.js"
-  ],
+  content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -152,7 +151,7 @@ module.exports = {
     },
   },
   plugins: [
-    require('flowbite/plugin'),
+    flowbite,
     function({ addUtilities }) {
       const newUtilities = {
         '.text-gradient': {

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { DarkModeSwitch } from 'react-toggle-dark-mode'
+import { BsMoonStarsFill, BsSunFill } from 'react-icons/bs'
 import ConnectWalletButton from './ConnectWalletButton'
 import blacklogo from '../../public/assets/images/Logo.png'
 
@@ -10,6 +10,19 @@ interface NavigationProps {
   setDarkMode: (darkMode: boolean) => void
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
+}
+
+function ThemeToggle({ darkMode, onToggle }: { darkMode: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="text-3xl transition-transform duration-300 hover:scale-110"
+    >
+      {darkMode ? <BsSunFill className="text-amber-300" /> : <BsMoonStarsFill className="text-gray-700" />}
+    </button>
+  )
 }
 
 export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }: NavigationProps) {
@@ -109,11 +122,7 @@ export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }:
               </Link>
             </li>
             <div className="flex items-center justify-between pt-4 border-t border-gray-300/20">
-              <DarkModeSwitch
-                checked={darkMode}
-                onChange={() => setDarkMode(!darkMode)}
-                size={30}
-              />
+              <ThemeToggle darkMode={darkMode} onToggle={() => setDarkMode(!darkMode)} />
               <ConnectWalletButton className='btn-primary text-sm px-4 py-2' />
             </div>
           </ul>
@@ -164,11 +173,7 @@ export default function Navigation({ darkMode, setDarkMode, isOpen, setIsOpen }:
       
       {/* Desktop Controls */}
       <div className='hidden xl:flex gap-4 items-center relative z-50'>
-        <DarkModeSwitch
-          checked={darkMode}
-          onChange={() => setDarkMode(!darkMode)}
-          size={30}
-        />
+        <ThemeToggle darkMode={darkMode} onToggle={() => setDarkMode(!darkMode)} />
         <ConnectWalletButton className='btn-primary text-sm px-6 py-3' />
       </div>
     </nav>

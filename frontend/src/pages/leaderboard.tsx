@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import Navigation from '../components/Navigation'
 import { formatAddress } from '../utils/formatAddress'
+import { useDarkMode } from '../hooks/useDarkMode'
 
 interface LeaderboardEntry {
   id: string
@@ -16,7 +17,7 @@ type SortField = 'wins' | 'passes' | 'fails'
 type SortDirection = 'asc' | 'desc'
 
 export default function Leaderboard() {
-  const [darkMode, setDarkMode] = useState(false)
+  const [darkMode, setDarkMode] = useDarkMode()
   const [isOpen, setIsOpen] = useState(false)
   // The leaderboard is read from the Game contract's on-chain stats views.
   // Until those views are wired up there is nothing to show.
@@ -26,17 +27,6 @@ export default function Leaderboard() {
   const error: string | null = null
   const [sortField, setSortField] = useState<SortField>('wins')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
-
-  useEffect(() => {
-    const localDarkMode = window.localStorage.getItem('darkMode')
-    if (localDarkMode) setDarkMode(JSON.parse(localDarkMode))
-  }, [])
-
-  useEffect(() => {
-    if (darkMode) document.documentElement.classList.add('dark')
-    else document.documentElement.classList.remove('dark')
-    window.localStorage.setItem('darkMode', JSON.stringify(darkMode))
-  }, [darkMode])
 
   // Sort data whenever sortField, sortDirection, or leaderboardData changes
   useEffect(() => {

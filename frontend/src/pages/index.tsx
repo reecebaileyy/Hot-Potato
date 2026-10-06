@@ -1,43 +1,20 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Navigation from '../components/Navigation'
 import ConnectWalletButton from '../components/ConnectWalletButton'
 import potatoBlink from '../../public/assets/images/potatoBlink.gif'
-import landscape from '../../public/assets/images/landscape.jpg'
-import potato from '../../public/assets/images/potato.png'
 import blacklogo from '../../public/assets/images/Logo.png'
 import potatoFire from '../../public/assets/images/Burning.gif'
 import CHAINLINK from '../../public/assets/images/CHAINLINK.png'
 import explosion from '../../public/assets/images/Explosion.gif'
 import hot from '../../public/assets/images/hot.png'
-import localforage from 'localforage'
+import { useDarkMode } from '../hooks/useDarkMode'
 
 export default function Home() {
-  const [darkMode, setDarkMode] = useState<boolean>(false)
+  const [darkMode, setDarkMode] = useDarkMode()
   const [isOpen, setIsOpen] = useState<boolean>(false)
-
-  useEffect(() => {
-    console.log('An UNKNOWN X BEDTIME PRODUCTION')
-  }, [])
-
-  useEffect(() => {
-    const localDarkMode = window.localStorage.getItem('darkMode')
-    if (localDarkMode) {
-      setDarkMode(JSON.parse(localDarkMode))
-    }
-  }, [])
-
-  useEffect(() => {
-    if (darkMode) document.documentElement.classList.add('dark')
-    else document.documentElement.classList.remove('dark')
-
-    localforage
-      .setItem('darkMode', darkMode)
-      .then(() => console.log('Item saved to local storage'))
-      .catch((error) => console.error('Error saving item:', error))
-  }, [darkMode])
 
   return (
     <>
