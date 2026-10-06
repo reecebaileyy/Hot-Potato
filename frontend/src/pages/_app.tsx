@@ -1,62 +1,38 @@
 import '@/styles/globals.css'
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore, type ReactNode } from 'react'
 import type { AppProps } from 'next/app'
-import { WagmiProvider, createConfig } from '@privy-io/wagmi'
-import { http } from 'viem'
-import { baseSepolia } from 'viem/chains'
+import { WagmiProvider as PrivyWagmiProvider } from '@privy-io/wagmi'
 import { PrivyProvider } from '@privy-io/react-auth'
+import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { chain } from '@/config/chain'
+import { wagmiConfig } from '@/config/wagmi'
+import { hasPrivy, privyAppId } from '@/config/wallet'
+import { ThemeProvider } from '@/hooks/useTheme'
 
-// --- Wagmi configuration ---
-const config = createConfig({
-  chains: [baseSepolia],
-  transports: {
-    [baseSepolia.id]: http('https://sepolia.base.org'),
-  },
-})
-
-// Debug wagmi configuration
-console.log('=== WAGMI CONFIG DEBUG ===')
-console.log('Chains:', config.chains.map((c: any) => ({ name: c.name, id: c.id })))
-console.log('Base Sepolia ID:', baseSepolia.id)
-console.log('==========================')
-
-// Debug Privy configuration
-console.log('=== PRIVY CONFIG DEBUG ===')
-console.log('Base Sepolia chain:', baseSepolia)
-console.log('Base Sepolia name:', baseSepolia.name)
-console.log('Base Sepolia id:', baseSepolia.id)
-console.log('==========================')
-
-// --- React Query client ---
 const queryClient = new QueryClient()
 
-// --- App Component ---
-export default function App({ Component, pageProps }: AppProps) {
-  const [mounted, setMounted] = useState(false)
+const subscribeNoop = () => () => {}
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+/** True only after hydration on the client. Wallet providers need `window`. */
+function useIsClient() {
+  return useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false,
+  )
+}
 
-  if (!mounted) return null
-
+/** Privy login (email, social, embedded wallets) with @privy-io/wagmi syncing the active wallet. */
+function PrivyProviders({ children }: { children: ReactNode }) {
   return (
     <PrivyProvider
-      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID as string}
+      appId={privyAppId as string}
       config={{
-        // Note: 'apple' login requires configuration in Privy Dashboard
-        // To enable Apple login:
-        // 1. Go to dashboard.privy.io
-        // 2. Select your app
-        // 3. Go to Settings > Login methods
-        // 4. Enable "Sign in with Apple"
-        // 5. Configure Apple OAuth (Service ID, Team ID, Key ID, Private Key)
-        // Then add 'apple' back to this array
+        // 'apple' also works once Sign in with Apple is configured in the Privy dashboard.
         loginMethods: ['wallet', 'email', 'google', 'sms'],
-        defaultChain: baseSepolia,
-        supportedChains: [baseSepolia],
-        // Additional configuration to ensure proper network recognition
+        defaultChain: chain,
+        supportedChains: [chain],
         appearance: {
           theme: 'dark',
           accentColor: '#ff8a00',
@@ -71,10 +47,32 @@ export default function App({ Component, pageProps }: AppProps) {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={config}>
-          <Component {...pageProps} />
-        </WagmiProvider>
+        <PrivyWagmiProvider config={wagmiConfig}>{children}</PrivyWagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>
+  )
+}
+
+/** Injected wallets only (no NEXT_PUBLIC_PRIVY_APP_ID), e.g. local development. */
+function InjectedProviders({ children }: { children: ReactNode }) {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </WagmiProvider>
+  )
+}
+
+const Providers = hasPrivy ? PrivyProviders : InjectedProviders
+
+export default function App({ Component, pageProps }: AppProps) {
+  const isClient = useIsClient()
+  if (!isClient) return null
+
+  return (
+    <ThemeProvider>
+      <Providers>
+        <Component {...pageProps} />
+      </Providers>
+    </ThemeProvider>
   )
 }

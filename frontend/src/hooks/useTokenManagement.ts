@@ -1,86 +1,61 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
-export function useTokenManagement() {
-  const [activeTokens, setActiveTokens] = useState<number[]>([])
-  const [explodedTokens, setExplodedTokens] = useState<number[]>([])
-  const [sortedTokens, setSortedTokens] = useState<number[]>([])
-  const [currentPage, setCurrentPage] = useState<number>(1)
-  const [itemsPerPage, setItemsPerPage] = useState<number>(64)
-  const [searchId, setSearchId] = useState<string>('')
-  const [shouldRefresh, setShouldRefresh] = useState<boolean>(false)
+const ITEMS_PER_PAGE = 64
+const MAX_PAGE_BUTTONS = 3
 
-  // Memoized pagination logic
+type SortOrder = 'none' | 'asc' | 'desc'
+
+/** Sorting, search and pagination over a list of token ids. */
+export function useTokenManagement(tokenIds: number[]) {
+  const [sortOrder, setSortOrder] = useState<SortOrder>('none')
+  const [searchId, setSearchId] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+  const [requestedPage, setCurrentPage] = useState(1)
+
+  const visibleTokens = useMemo(() => {
+    const filtered = appliedSearch
+      ? tokenIds.filter((id) => id.toString().includes(appliedSearch))
+      : tokenIds
+    if (sortOrder === 'none') return filtered
+    return [...filtered].sort((a, b) => (sortOrder === 'asc' ? a - b : b - a))
+  }, [tokenIds, appliedSearch, sortOrder])
+
+  const pageCount = Math.max(1, Math.ceil(visibleTokens.length / ITEMS_PER_PAGE))
+  // Clamp instead of resetting state when the list shrinks (e.g. hands exploding).
+  const currentPage = Math.min(requestedPage, pageCount)
+
   const paginationData = useMemo(() => {
-    const indexOfLastToken = currentPage * itemsPerPage
-    const indexOfFirstToken = indexOfLastToken - itemsPerPage
-    const currentTokens = sortedTokens?.slice(indexOfFirstToken, indexOfLastToken)
-    const pageCount = Math.ceil(sortedTokens.length / itemsPerPage)
-    const maxPageNumbersToShow = 3
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    const currentTokens = visibleTokens.slice(start, start + ITEMS_PER_PAGE)
+    let startPage = Math.max(currentPage - Math.floor(MAX_PAGE_BUTTONS / 2), 1)
+    const endPage = Math.min(startPage + MAX_PAGE_BUTTONS - 1, pageCount)
+    startPage = Math.max(1, Math.min(startPage, endPage - MAX_PAGE_BUTTONS + 1))
+    const pages = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i)
+    return { currentTokens, pageCount, pages }
+  }, [currentPage, pageCount, visibleTokens])
 
-    let startPage = Math.max(currentPage - Math.floor(maxPageNumbersToShow / 2), 1)
-    let endPage = Math.min(startPage + maxPageNumbersToShow - 1, pageCount)
+  const sortTokensAsc = useCallback(() => setSortOrder('asc'), [])
+  const sortTokensDesc = useCallback(() => setSortOrder('desc'), [])
 
-    if (endPage - startPage < maxPageNumbersToShow && startPage > 1) {
-      startPage = endPage - maxPageNumbersToShow + 1
-    }
-
-    const pages = [...Array(endPage + 1 - startPage).keys()].map((i) => startPage + i)
-    
-    return {
-      currentTokens,
-      pageCount,
-      pages,
-      startPage,
-      endPage
-    }
-  }, [currentPage, itemsPerPage, sortedTokens])
-
-  const sortTokensAsc = useCallback(() => {
-    const sorted = [...activeTokens].sort((a, b) => a - b)
-    setSortedTokens(sorted)
-  }, [activeTokens])
-
-  const sortTokensDesc = useCallback(() => {
-    const sorted = [...activeTokens].sort((a, b) => b - a)
-    setSortedTokens(sorted)
-  }, [activeTokens])
-
-  const handleTokenExploded = useCallback((tokenId: number) => {
-    setExplodedTokens((prev) => [...prev, tokenId])
-  }, [])
-
-  const refreshAllImages = useCallback(() => {
-    setShouldRefresh((prev) => !prev)
-  }, [])
-
-  const handleSearch = useCallback((e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchId) {
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
       setCurrentPage(1)
-      const filtered = activeTokens.filter(token => token.toString().includes(searchId))
-      setSortedTokens(filtered)
-    }
-  }, [searchId, activeTokens])
+      setAppliedSearch(searchId.trim())
+    },
+    [searchId],
+  )
 
   return {
-    activeTokens,
-    setActiveTokens,
-    explodedTokens,
-    sortedTokens,
-    setSortedTokens,
     currentPage,
     setCurrentPage,
-    itemsPerPage,
-    setItemsPerPage,
     searchId,
     setSearchId,
-    shouldRefresh,
-    setShouldRefresh,
     paginationData,
     sortTokensAsc,
     sortTokensDesc,
-    handleTokenExploded,
-    refreshAllImages,
-    handleSearch
+    handleSearch,
   }
 }
+
+export type TokenManagement = ReturnType<typeof useTokenManagement>

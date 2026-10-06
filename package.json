@@ -6,9 +6,10 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "cd frontend && npm run build",
-    "start": "cd frontend && npm run start",
-    "dev": "cd frontend && npm run dev",
-    "install": "cd frontend && npm install"
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "install": "npm --prefix frontend install",
+    "test": "npm --prefix backend test"
   }
 }

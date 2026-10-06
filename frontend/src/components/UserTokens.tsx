@@ -1,121 +1,69 @@
-import React, { Suspense } from 'react'
-import OptimizedTokenImage from './OptimizedTokenImage'
-import { useTokenDataManager } from '../hooks/useTokenDataManager'
+import React from 'react'
+import type { Address } from 'viem'
+import HandImage from './HandImage'
+import { Badge, Card, CardHeader } from './ui'
+import { useHandImages } from '../hooks/useHandImages'
+import type { GameInfo } from '../hooks/useGame'
 
 interface UserTokensProps {
-  darkMode: boolean
-  userTokens: number[]
-  potatoTokenId: number
-  explodedTokens: number[]
-  onTokenExploded: (tokenId: number) => void
-  onRefreshImages: () => void
+  ownedTokenIds: number[]
+  activeTokenIds: number[]
+  /** Whether play has started, i.e. hands can be eliminated. */
+  inPlay: boolean
+  info: GameInfo | undefined
+  metadataHandler: Address | undefined
 }
 
-export default function UserTokens({
-  darkMode,
-  userTokens,
-  potatoTokenId,
-  explodedTokens,
-  onTokenExploded,
-  onRefreshImages
-}: UserTokensProps) {
-  // Debug logging
-  console.log('=== UserTokens Component ===')
-  console.log('userTokens:', userTokens)
-  console.log('userTokens length:', userTokens?.length)
-  console.log('userTokens type:', typeof userTokens)
-  
-  // Use token data manager for proper data fetching
-  const { getTokenData, refreshImmediate, isLoading } = useTokenDataManager(userTokens || [])
+/** The connected player's hands, marking the potato and eliminated hands. */
+export default function UserTokens({ ownedTokenIds, activeTokenIds, inPlay, info, metadataHandler }: UserTokensProps) {
+  const images = useHandImages(ownedTokenIds, info, metadataHandler)
+  const potatoTokenId = Number(info?.potatoTokenId ?? 0n)
+  const active = new Set(activeTokenIds)
 
-  const handleRefresh = () => {
-    console.log('Refreshing user token images...')
-    // Trigger token data manager refresh
-    refreshImmediate()
-    // Also trigger parent refresh
-    onRefreshImages()
-  }
+  const subtitle =
+    ownedTokenIds.length === 0
+      ? undefined
+      : inPlay
+        ? `${ownedTokenIds.length} owned, ${activeTokenIds.length} still in play`
+        : `${ownedTokenIds.length} owned, all in the next round`
 
-  const SkeletonCard = () => (
-    <div className="animate-pulse bg-gray-300 w-full aspect-square rounded-lg"></div>
-  )
-  
   return (
-    <div className={`w-full max-w-6xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-6 lg:p-8 animate-fade-in-up`}>
-      <h2 className={`text-2xl lg:text-3xl font-bold text-center mb-6 gradient-text glow`}>Your Active Tokens</h2>
-      
-      {userTokens.length === 0 ? (
-        <div className="text-center py-8">
-          <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            You don&apos;t have any active tokens in this game
-          </p>
-        </div>
-      ) : isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6 sm:gap-8 md:gap-10 lg:gap-12">
-          {userTokens.map((tokenId) => (
-            <SkeletonCard key={tokenId} />
-          ))}
-        </div>
+    <Card>
+      <CardHeader title="Your hands" subtitle={subtitle} />
+
+      {ownedTokenIds.length === 0 ? (
+        <p className="text-[15px] leading-6 text-fg-secondary">
+          You don&apos;t have any hands yet. Mint some when minting opens.
+        </p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6 sm:gap-8 md:gap-10 lg:gap-12">
-          {userTokens.map((tokenId, index) => {
-            const tokenData = getTokenData(tokenId)
-            const isExploded = explodedTokens.includes(tokenId)
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-3">
+          {ownedTokenIds.map((tokenId) => {
+            const eliminated = inPlay && !active.has(tokenId)
             const hasPotato = tokenId === potatoTokenId
-            
             return (
               <div
                 key={tokenId}
-                className={`relative rounded-lg overflow-hidden transition-all duration-300 ${
-                  isExploded 
-                    ? 'opacity-50' 
-                    : hasPotato 
-                      ? 'ring-4 ring-red-500 animate-pulse shadow-lg shadow-red-500/50' 
-                      : 'ring-2 ring-gray-300 dark:ring-gray-600 hover:ring-amber-500/50 hover:scale-105'
-                } ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50'}`}
+                className={`rounded-2xl bg-surface-muted p-1.5 transition-opacity duration-200 ease-apple ${
+                  hasPotato ? 'ring-2 ring-accent' : ''
+                } ${eliminated ? 'opacity-50' : ''}`}
               >
-                <Suspense fallback={<SkeletonCard />}>
-                  <OptimizedTokenImage
-                    tokenId={tokenId}
-                    imageString={tokenData.imageString}
-                    isLoading={tokenData.isLoading}
-                    isError={tokenData.isError}
-                    potatoTokenId={potatoTokenId}
-                    onTokenExploded={onTokenExploded}
-                    onRefresh={refreshImmediate}
-                    delay={index * 50}
-                  />
-                </Suspense>
-                
-                {hasPotato && (
-                  <div className="absolute top-2 right-2 text-3xl drop-shadow-lg animate-bounce">
-                    🥔
-                  </div>
-                )}
-                
-                {isExploded && (
-                  <div className="absolute inset-0 bg-red-500/50 backdrop-blur-sm flex items-center justify-center">
-                    <span className="text-white text-4xl animate-pulse">💥</span>
-                  </div>
-                )}
+                <HandImage tokenId={tokenId} image={images.get(tokenId)} isPotato={hasPotato} />
+                <div className="mt-1 flex justify-center">
+                  {hasPotato ? (
+                    <Badge tone="accent" dot pulse>
+                      #{tokenId}
+                    </Badge>
+                  ) : eliminated ? (
+                    <Badge tone="neutral">#{tokenId} out</Badge>
+                  ) : (
+                    <span className="text-[12px] leading-6 font-medium text-fg-secondary tnum">#{tokenId}</span>
+                  )}
+                </div>
               </div>
             )
           })}
         </div>
       )}
-      
-      <div className="mt-4 text-center">
-        <button
-          onClick={handleRefresh}
-          className={`px-4 py-2 rounded-lg text-sm font-medium ${
-            darkMode 
-              ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-              : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-          } transition-colors`}
-        >
-          Refresh Token Images
-        </button>
-      </div>
-    </div>
+    </Card>
   )
 }

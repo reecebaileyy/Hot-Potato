@@ -1,172 +1,96 @@
-import React, { useState } from 'react'
-
-export interface ClaimHistoryItem {
-  amount: string
-  txHash: string
-  timestamp: number
-  round?: number
-}
+import React from 'react'
+import { Badge, Button, Card, CardHeader, Stat } from './ui'
+import { explorerTxUrl } from '../config/chain'
+import { formatEth } from '../lib/game'
+import type { ClaimHistoryItem } from '../hooks/useClaimHistory'
 
 interface RewardsProps {
-  darkMode: boolean
+  /** Claimable wei (`rewards(address)`). */
+  rewards: bigint
+  /** Whether the connected wallet won the round that just ended. */
   isWinner: boolean
-  rewards: string
   onClaimRewards: () => void
-  gameState: string | null
+  busy: boolean
   claimHistory: ClaimHistoryItem[]
 }
 
-export default function Rewards({
-  darkMode,
-  isWinner,
-  rewards,
-  onClaimRewards,
-  gameState,
-  claimHistory
-}: RewardsProps) {
-  const [showHistory, setShowHistory] = useState(false)
-  
-  // Round down rewards to 2 decimal places
-  const formattedRewards = (Math.floor(parseFloat(rewards) * 100) / 100).toFixed(2)
+const formatTxHash = (hash: string) => (hash.length < 10 ? hash : `${hash.slice(0, 6)}…${hash.slice(-4)}`)
 
-  const formatTxHash = (hash: string) => {
-    if (hash.length < 10) return hash
-    return `${hash.slice(0, 6)}...${hash.slice(-4)}`
-  }
+const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString()
-  }
+/** Claimable balance, the claim button and the claims made from this browser. */
+export default function Rewards({ rewards, isWinner, onClaimRewards, busy, claimHistory }: RewardsProps) {
+  const hasRewards = rewards > 0n
 
   return (
-    <div className={`${darkMode ? 'card-dark' : 'card'} p-6 animate-fade-in-up`}>
-      <h2 className={`text-3xl font-bold text-center mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-        💰 Rewards
-      </h2>
-      <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} p-6 rounded-xl`}>
-        <div className="text-center space-y-4">
-          {isWinner && Number(rewards) > 0 ? (
-            <>
-              <div className="text-4xl mb-2">🎉</div>
-              <h3 className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                You Won!
-              </h3>
-              <div className={`text-3xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                {formattedRewards} ETH
-              </div>
-              <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Available to claim
-              </p>
-              <button 
-                className={`btn-primary text-lg px-8 py-4 w-full animate-glow`}
-                onClick={onClaimRewards}
-              >
-                Claim Rewards
-              </button>
-            </>
-          ) : (
-            <>
-              <div className={`text-4xl font-bold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {formattedRewards} ETH
-              </div>
-              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {Number(rewards) > 0 ? 'Available to claim' : 'No rewards yet'}
-              </p>
-              {Number(rewards) > 0 && (
-                <button 
-                  className={`btn-primary text-lg px-8 py-4 w-full`}
-                  onClick={onClaimRewards}
-                >
-                  Claim Rewards
-                </button>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-      
-      {gameState === "Ended" && isWinner && (
-        <div className={`mt-4 text-center ${darkMode ? 'text-amber-200' : 'text-amber-700'}`}>
-          <p className="text-sm">🎉 Congratulations on your win! 🎉</p>
-        </div>
+    <Card>
+      <CardHeader
+        title="Rewards"
+        action={
+          isWinner ? (
+            <Badge tone="success" dot>
+              You won
+            </Badge>
+          ) : undefined
+        }
+      />
+
+      <Stat
+        label="Claimable"
+        value={`${formatEth(rewards)} ETH`}
+        size="lg"
+        tone={hasRewards ? 'success' : 'default'}
+        hint={hasRewards ? 'Available to claim' : 'No rewards yet'}
+      />
+
+      {hasRewards && (
+        <Button size="lg" block className="mt-4" onClick={onClaimRewards} disabled={busy}>
+          Claim rewards
+        </Button>
       )}
 
-      {/* Claim History Section */}
-      <div className={`mt-6 ${darkMode ? 'bg-gray-800' : 'bg-gray-50'} rounded-xl overflow-hidden`}>
-        <button
-          onClick={() => setShowHistory(!showHistory)}
-          className={`w-full px-4 py-3 flex items-center justify-between ${
-            darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-          } transition-colors`}
-        >
-          <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            📜 Claim History {claimHistory.length > 0 && `(${claimHistory.length})`}
-          </span>
-          <span className={`transform transition-transform ${showHistory ? 'rotate-180' : ''}`}>
-            ▼
-          </span>
-        </button>
-        
-        {showHistory && (
-          <div className="px-4 pb-4">
-            {claimHistory.length === 0 ? (
-              <p className={`text-center py-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                No claims yet
-              </p>
-            ) : (
-              <div className="space-y-3 mt-3 max-h-64 overflow-y-auto">
-                {claimHistory.map((claim, index) => {
-                  // Round down claim amount to 2 decimal places
-                  const formattedClaimAmount = (Math.floor(parseFloat(claim.amount) * 100) / 100).toFixed(2)
-                  
-                  return (
-                    <div
-                      key={`${claim.txHash}-${index}`}
-                      className={`${
-                        darkMode ? 'bg-gray-700' : 'bg-white'
-                      } p-3 rounded-lg border ${
-                        darkMode ? 'border-gray-600' : 'border-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`font-bold text-lg ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                          {formattedClaimAmount} ETH
-                        </span>
-                      {claim.round && (
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          darkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-200 text-gray-700'
-                        }`}>
-                          Round {claim.round}
-                        </span>
-                      )}
-                    </div>
-                    <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} space-y-1`}>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">TX:</span>
-                        <a
-                          href={`https://sepolia.basescan.org/tx/${claim.txHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${
-                            darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
-                          } underline`}
-                        >
-                          {formatTxHash(claim.txHash)}
-                        </a>
-                      </div>
-                      <div>
-                        <span className="font-semibold">Date:</span> {formatDate(claim.timestamp)}
-                      </div>
+      <div className="mt-6">
+        <div className="flex items-baseline justify-between gap-4">
+          <h4 className="text-[13px] leading-5 font-medium text-fg-secondary">Claim history</h4>
+          <span className="text-[13px] leading-5 text-fg-tertiary tnum">{claimHistory.length}</span>
+        </div>
+
+        {claimHistory.length === 0 ? (
+          <p className="mt-2 text-[13px] leading-5 text-fg-tertiary">No claims yet.</p>
+        ) : (
+          <ul className="mt-1 max-h-64 divide-y divide-line overflow-y-auto">
+            {claimHistory.map((claim) => {
+              const txUrl = explorerTxUrl(claim.txHash)
+              return (
+                <li key={claim.txHash} className="flex items-start justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <div className="text-[15px] leading-6 font-semibold tnum">{claim.amount} ETH</div>
+                    <div className="text-[13px] leading-5 text-fg-secondary">
+                      {dateFormat.format(claim.timestamp)}
+                      {claim.round !== undefined && ` · Round ${claim.round}`}
                     </div>
                   </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+                  {txUrl ? (
+                    <a
+                      href={txUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 py-0.5 text-[13px] leading-5 font-medium text-accent tnum hover:underline"
+                      title={claim.txHash}
+                    >
+                      {formatTxHash(claim.txHash)}
+                    </a>
+                  ) : (
+                    <span className="shrink-0 py-0.5 font-mono text-[13px] leading-5 text-fg-tertiary" title={claim.txHash}>
+                      {formatTxHash(claim.txHash)}
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
         )}
       </div>
-    </div>
+    </Card>
   )
 }
-

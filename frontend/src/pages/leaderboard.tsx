@@ -1,283 +1,309 @@
-import Head from 'next/head'
-import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import Navigation from '../components/Navigation'
-import { formatAddress } from '../utils/formatAddress'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { isAddressEqual, type Address } from 'viem'
+import AppShell from '../components/AppShell'
+import { Button, ButtonLink, Card, SectionHeader, Segmented, Skeleton, Stat, StatRow } from '../components/ui'
+import PlayersTable, {
+  playerRowAttr,
+  type RankedEntry,
+  type SortDirection,
+  type SortField,
+} from '../components/leaderboard/PlayersTable'
+import HallOfFameList from '../components/leaderboard/HallOfFameList'
+import { useWalletAddress } from '../hooks/useWalletAddress'
+import { compareEntries, useHallOfFame, useLeaderboard } from '../hooks/useLeaderboard'
+import { chain, isGameConfigured } from '../config/chain'
 
-interface LeaderboardEntry {
-  id: string
-  address: string
-  wins: number
-  passes: number
-  fails: number
+type View = 'players' | 'rounds'
+
+const VIEWS: { value: View; label: string }[] = [
+  { value: 'players', label: 'Players' },
+  { value: 'rounds', label: 'Hall of fame' },
+]
+
+const SORT_OPTIONS: { value: SortField; label: string }[] = [
+  { value: 'wins', label: 'Wins' },
+  { value: 'passes', label: 'Passes' },
+  { value: 'fails', label: 'Fails' },
+]
+
+/** Rows shown before "Show more". */
+const PAGE_SIZE = 50
+
+/** Inset notice for errors (danger) and quiet states (neutral). */
+function Notice({
+  tone = 'neutral',
+  action,
+  children,
+}: {
+  tone?: 'neutral' | 'danger'
+  action?: ReactNode
+  children: ReactNode
+}) {
+  const colors = tone === 'danger' ? 'bg-danger-soft text-danger' : 'bg-surface-muted text-fg-secondary'
+  return (
+    <div className={`flex flex-col gap-3 rounded-2xl p-4 text-[15px] leading-6 sm:flex-row sm:items-center sm:justify-between ${colors}`}>
+      <p>{children}</p>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
+  )
 }
 
-type SortField = 'wins' | 'passes' | 'fails'
-type SortDirection = 'asc' | 'desc'
+function scrollToPlayer(address: Address) {
+  const nodes = document.querySelectorAll<HTMLElement>(`[data-player="${playerRowAttr(address)}"]`)
+  nodes.forEach((node) => node.scrollIntoView({ block: 'center', behavior: 'smooth' }))
+}
 
 export default function Leaderboard() {
-  const [darkMode, setDarkMode] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([])
-  const [sortedData, setSortedData] = useState<LeaderboardEntry[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [view, setView] = useState<View>('players')
   const [sortField, setSortField] = useState<SortField>('wins')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [visible, setVisible] = useState(PAGE_SIZE)
+  const pendingScroll = useRef<Address | null>(null)
 
-  useEffect(() => {
-    const localDarkMode = window.localStorage.getItem('darkMode')
-    if (localDarkMode) setDarkMode(JSON.parse(localDarkMode))
-  }, [])
+  const address = useWalletAddress()
+  const leaderboard = useLeaderboard()
+  const hallOfFame = useHallOfFame()
 
-  useEffect(() => {
-    if (darkMode) document.documentElement.classList.add('dark')
-    else document.documentElement.classList.remove('dark')
-    window.localStorage.setItem('darkMode', JSON.stringify(darkMode))
-  }, [darkMode])
+  // Rank by wins, then passes (the hook's order); the sort controls only change the display order.
+  const ranked = useMemo<RankedEntry[]>(
+    () => leaderboard.entries.map((entry, i) => ({ ...entry, rank: i + 1 })),
+    [leaderboard.entries],
+  )
 
-  // Fetch leaderboard data
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const response = await fetch('/api/get-leaderboard')
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch leaderboard data')
-        }
-        
-        const data = await response.json()
-        setLeaderboardData(data.Leaderboard || [])
-      } catch (err) {
-        console.error('Error fetching leaderboard:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load leaderboard')
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  const rows = useMemo(() => {
+    const sign = sortDirection === 'desc' ? -1 : 1
+    return [...ranked].sort((a, b) => sign * (a[sortField] - b[sortField]) || compareEntries(a, b))
+  }, [ranked, sortField, sortDirection])
 
-    fetchLeaderboard()
-  }, [])
+  const totals = useMemo(
+    () => ({
+      passes: ranked.reduce((sum, entry) => sum + entry.passes, 0),
+      fails: ranked.reduce((sum, entry) => sum + entry.fails, 0),
+      rounds: hallOfFame.entries.filter((entry) => entry.outcome === 'won').length,
+    }),
+    [ranked, hallOfFame.entries],
+  )
 
-  // Sort data whenever sortField, sortDirection, or leaderboardData changes
-  useEffect(() => {
-    const sorted = [...leaderboardData].sort((a, b) => {
-      const aValue = a[sortField]
-      const bValue = b[sortField]
-      
-      if (sortDirection === 'desc') {
-        return bValue - aValue
-      } else {
-        return aValue - bValue
-      }
-    })
-    
-    setSortedData(sorted)
-  }, [leaderboardData, sortField, sortDirection])
+  const myIndex = useMemo(
+    () => (address ? rows.findIndex((entry) => isAddressEqual(entry.address, address)) : -1),
+    [rows, address],
+  )
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      // Toggle direction if same field
       setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc')
     } else {
-      // New field, default to descending
       setSortField(field)
       setSortDirection('desc')
     }
   }
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return <span className="text-gray-400">↕</span>
+  const findMe = () => {
+    if (!address || myIndex < 0) return
+    const needsMoreRows = myIndex >= visible
+    if (view === 'players' && !needsMoreRows) {
+      scrollToPlayer(address)
+      return
     }
-    return sortDirection === 'desc' ? <span>↓</span> : <span>↑</span>
+    // Reveal the row first; the effect below scrolls once it has rendered.
+    pendingScroll.current = address
+    if (view !== 'players') setView('players')
+    if (needsMoreRows) setVisible(Math.ceil((myIndex + 1) / PAGE_SIZE) * PAGE_SIZE)
   }
 
+  useEffect(() => {
+    const target = pendingScroll.current
+    if (!target) return
+    pendingScroll.current = null
+    scrollToPlayer(target)
+  }, [view, visible])
+
+  const isLoading = leaderboard.isLoading
+  const error = isGameConfigured && leaderboard.error ? `Couldn't read the leaderboard from ${chain.name}.` : null
+  const shown = rows.slice(0, visible)
+  const hasMore = rows.length > shown.length
+
+  const findMeTitle = !address
+    ? 'Connect a wallet to find your row'
+    : myIndex < 0
+      ? 'You are not on the board yet'
+      : undefined
+
   return (
-    <>
-      <Head>
-        <title>Leaderboard - Onchain Hot Potato</title>
-        <meta name="description" content="Hot Potato Game Leaderboard - See the top players" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <div
-        className={`${
-          darkMode
-            ? 'darkmode bg-fixed to-black text-white min-h-screen font-darumadropone'
-            : 'normal bg-fixed min-h-screen font-darumadropone'
-        }`}
-      >
-        <Navigation 
-          darkMode={darkMode} 
-          setDarkMode={setDarkMode} 
-          isOpen={isOpen} 
-          setIsOpen={setIsOpen} 
-        />
-
-        {/* Main Content */}
-        <div className="relative min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="text-center mb-12">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold gradient-text mb-4">
-                🏆 LEADERBOARD 🏆
-              </h1>
-              <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-300">
-                Top Hot Potato Players - Click column headers to sort
-              </p>
-            </div>
-
-            {/* Loading State */}
-            {isLoading && (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-amber-500"></div>
-                <p className="mt-4 text-xl">Loading leaderboard...</p>
-              </div>
-            )}
-
-            {/* Error State */}
-            {error && !isLoading && (
-              <div className={`${darkMode ? 'card-dark' : 'card'} p-8 text-center`}>
-                <p className="text-red-500 text-xl mb-4">⚠️ {error}</p>
-                <button 
-                  onClick={() => window.location.reload()}
-                  className="btn-primary px-6 py-3"
-                >
-                  Retry
-                </button>
-              </div>
-            )}
-
-            {/* Leaderboard Table */}
-            {!isLoading && !error && sortedData.length > 0 && (
-              <div className={`${darkMode ? 'card-dark' : 'card'} overflow-hidden shadow-2xl`}>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className={darkMode ? 'bg-gray-800' : 'bg-gray-100'}>
-                      <tr>
-                        <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold uppercase tracking-wider">
-                          Rank
-                        </th>
-                        <th className="px-4 py-4 text-left text-xs sm:text-sm font-bold uppercase tracking-wider">
-                          Address
-                        </th>
-                        <th 
-                          className="px-4 py-4 text-center text-xs sm:text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          onClick={() => handleSort('wins')}
-                        >
-                          <div className="flex items-center justify-center space-x-2">
-                            <span>Wins</span>
-                            {getSortIcon('wins')}
-                          </div>
-                        </th>
-                        <th 
-                          className="px-4 py-4 text-center text-xs sm:text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          onClick={() => handleSort('passes')}
-                        >
-                          <div className="flex items-center justify-center space-x-2">
-                            <span>Passes</span>
-                            {getSortIcon('passes')}
-                          </div>
-                        </th>
-                        <th 
-                          className="px-4 py-4 text-center text-xs sm:text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          onClick={() => handleSort('fails')}
-                        >
-                          <div className="flex items-center justify-center space-x-2">
-                            <span>Fails</span>
-                            {getSortIcon('fails')}
-                          </div>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                      {sortedData.map((entry, index) => (
-                        <tr 
-                          key={entry.id}
-                          className={`${
-                            index % 2 === 0 
-                              ? darkMode ? 'bg-gray-900' : 'bg-white'
-                              : darkMode ? 'bg-gray-800' : 'bg-gray-50'
-                          } hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors`}
-                        >
-                          <td className="px-4 py-4 whitespace-nowrap text-sm sm:text-base font-bold">
-                            {index === 0 && '🥇'}
-                            {index === 1 && '🥈'}
-                            {index === 2 && '🥉'}
-                            {index > 2 && `#${index + 1}`}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm sm:text-base font-mono">
-                            <span className="hidden sm:inline">{entry.address}</span>
-                            <span className="sm:hidden">{formatAddress(entry.address)}</span>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-center text-sm sm:text-base font-bold text-green-600 dark:text-green-400">
-                            {entry.wins}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-center text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400">
-                            {entry.passes}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-center text-sm sm:text-base font-bold text-red-600 dark:text-red-400">
-                            {entry.fails}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {!isLoading && !error && sortedData.length === 0 && (
-              <div className={`${darkMode ? 'card-dark' : 'card'} p-12 text-center`}>
-                <p className="text-2xl mb-4">🎮 No players yet!</p>
-                <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
-                  Be the first to play and claim your spot on the leaderboard!
-                </p>
-                <Link href="/play" className="btn-primary text-xl px-8 py-4 inline-block">
-                  Start Playing
-                </Link>
-              </div>
-            )}
-
-            {/* Navigation Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-              <Link href="/play" className="btn-primary text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 transform hover:scale-105 transition-all duration-300 w-full sm:w-auto shadow-xl">
-                🎮 Play Game
-              </Link>
-              <Link href="/" className="btn-outline text-lg sm:text-xl px-8 sm:px-12 py-4 sm:py-6 transform hover:scale-105 transition-all duration-300 w-full sm:w-auto border-2">
-                🏠 Back to Home
-              </Link>
-            </div>
-
-            {/* Stats Summary */}
-            {!isLoading && !error && sortedData.length > 0 && (
-              <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className={`${darkMode ? 'card-dark' : 'card'} p-6 text-center`}>
-                  <p className="text-3xl font-bold gradient-text">{sortedData.length}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Total Players</p>
-                </div>
-                <div className={`${darkMode ? 'card-dark' : 'card'} p-6 text-center`}>
-                  <p className="text-3xl font-bold gradient-text">
-                    {sortedData.reduce((sum, entry) => sum + entry.passes, 0)}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Total Passes</p>
-                </div>
-                <div className={`${darkMode ? 'card-dark' : 'card'} p-6 text-center`}>
-                  <p className="text-3xl font-bold gradient-text">
-                    {sortedData.reduce((sum, entry) => sum + entry.wins, 0)}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Total Wins</p>
-                </div>
-              </div>
-            )}
-          </div>
+    <AppShell
+      title="Leaderboard: Hot Potato"
+      description={`Hot Potato leaderboard and hall of fame, read live from the ${chain.name} contract.`}
+      width="wide"
+    >
+      <div className="space-y-6 py-10 sm:py-14">
+        {/* Title + view switch */}
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeader
+            size="lg"
+            title="Leaderboard"
+            description={`Lifetime stats for every address that has held a hand, read live from the ${chain.name} contract.`}
+          />
+          <Segmented options={VIEWS} value={view} onChange={setView} aria-label="Leaderboard view" className="shrink-0" />
         </div>
+
+        {!isGameConfigured && (
+          <Notice>
+            No game to read on {chain.name}: NEXT_PUBLIC_GAME_ADDRESS is not set.
+          </Notice>
+        )}
+
+        {/* Totals */}
+        {isGameConfigured && (
+          <Card>
+            {isLoading ? (
+              <StatRow>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i}>
+                    <Skeleton className="h-3 w-14" />
+                    <Skeleton className="mt-2 h-7 w-16" />
+                  </div>
+                ))}
+              </StatRow>
+            ) : (
+              <StatRow>
+                <Stat label="Players" value={leaderboard.playerCount} />
+                <Stat label="Passes" value={totals.passes} />
+                <Stat label="Explosions" value={totals.fails} />
+                <Stat label="Rounds won" value={totals.rounds} />
+              </StatRow>
+            )}
+          </Card>
+        )}
+
+        {view === 'players' ? (
+          <>
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Segmented
+                  size="sm"
+                  options={SORT_OPTIONS}
+                  value={sortField}
+                  onChange={(field) => {
+                    setSortField(field)
+                    setSortDirection('desc')
+                  }}
+                  aria-label="Sort by"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc')}
+                  aria-label={sortDirection === 'desc' ? 'Sorted high to low' : 'Sorted low to high'}
+                  leading={<span aria-hidden="true">{sortDirection === 'desc' ? '↓' : '↑'}</span>}
+                >
+                  {sortDirection === 'desc' ? 'High to low' : 'Low to high'}
+                </Button>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="ml-auto"
+                onClick={findMe}
+                disabled={!address || myIndex < 0 || isLoading}
+                title={findMeTitle}
+              >
+                Find me
+              </Button>
+            </div>
+
+            {error && (
+              <Notice
+                tone="danger"
+                action={
+                  <Button variant="secondary" size="sm" onClick={leaderboard.refetch}>
+                    Retry
+                  </Button>
+                }
+              >
+                {error}
+              </Notice>
+            )}
+
+            {!error && isGameConfigured && (isLoading || rows.length > 0) && (
+              <>
+                <PlayersTable
+                  rows={shown}
+                  isLoading={isLoading}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                  connected={address}
+                />
+                {!isLoading && (
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-[13px] text-fg-secondary tnum">
+                      Showing {shown.length} of {rows.length} {rows.length === 1 ? 'player' : 'players'}
+                      {leaderboard.playerCount !== rows.length && ` · ${leaderboard.playerCount} on the contract`}
+                    </p>
+                    {hasMore && (
+                      <div className="flex gap-2">
+                        <Button variant="secondary" size="sm" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
+                          Show more
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => setVisible(rows.length)}>
+                          Show all
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {!error && isGameConfigured && !isLoading && rows.length === 0 && (
+              <Card className="flex flex-col items-center py-12 text-center">
+                <SectionHeader
+                  size="md"
+                  align="center"
+                  title="No players yet"
+                  description="Be the first to mint a hand and claim a spot on the board."
+                />
+                <ButtonLink href="/play" className="mt-6">
+                  Play now
+                </ButtonLink>
+              </Card>
+            )}
+          </>
+        ) : (
+          <>
+            {isGameConfigured && hallOfFame.error && (
+              <Notice tone="danger">Couldn&apos;t read past rounds from {chain.name}.</Notice>
+            )}
+
+            {isGameConfigured && !hallOfFame.error && (hallOfFame.isLoading || hallOfFame.entries.length > 0) && (
+              <>
+                <HallOfFameList entries={hallOfFame.entries} isLoading={hallOfFame.isLoading} />
+                {!hallOfFame.isLoading && (
+                  <p className="text-[13px] text-fg-secondary tnum">
+                    {hallOfFame.entries.length} {hallOfFame.entries.length === 1 ? 'round' : 'rounds'} so far · winners take
+                    40% of the pot
+                  </p>
+                )}
+              </>
+            )}
+
+            {isGameConfigured && !hallOfFame.error && !hallOfFame.isLoading && hallOfFame.entries.length === 0 && (
+              <Card className="flex flex-col items-center py-12 text-center">
+                <SectionHeader
+                  size="md"
+                  align="center"
+                  title="No rounds yet"
+                  description="The first round's winner will show up here the moment it ends."
+                />
+                <ButtonLink href="/play" className="mt-6">
+                  Play now
+                </ButtonLink>
+              </Card>
+            )}
+          </>
+        )}
       </div>
-    </>
+    </AppShell>
   )
 }

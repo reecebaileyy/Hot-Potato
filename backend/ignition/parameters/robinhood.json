@@ -1,0 +1,11 @@
+{
+  "HotPotato": {
+    "mintPrice": "10000000000000000",
+    "maxPerWallet": 3,
+    "maxPerRound": 10000,
+    "fuseInitial": 60,
+    "fuseDecreaseEvery": 10,
+    "fuseDecreaseBy": 5,
+    "fuseMinimum": 15
+  }
+}

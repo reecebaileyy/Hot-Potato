@@ -1,222 +1,146 @@
-import React, { Suspense } from 'react'
-import { HiArrowCircleUp, HiArrowCircleDown } from 'react-icons/hi'
-import OptimizedTokenImage from './OptimizedTokenImage'
-import { useTokenDataManager } from '../hooks/useTokenDataManager'
-import GameArtifact from '../abi/Game.json'
-
-const ABI = GameArtifact.abi
+import React, { useState } from 'react'
+import type { Address } from 'viem'
+import HandImage from './HandImage'
+import { Badge, Button, Card, CardHeader, Input, Segmented, Skeleton } from './ui'
+import { useHandImages } from '../hooks/useHandImages'
+import { useTokenManagement } from '../hooks/useTokenManagement'
+import type { GameInfo } from '../hooks/useGame'
 
 interface TokenGridProps {
-  darkMode: boolean
-  gameState: string
-  loadingActiveTokenIds: boolean
-  paginationData: {
-    currentTokens: number[]
-    pageCount: number
-    pages: number[]
-    startPage: number
-    endPage: number
-  }
-  currentPage: number
-  setCurrentPage: (page: number) => void
-  explodedTokens: number[]
-  potatoTokenId: number
-  shouldRefresh: boolean
-  onTokenExploded: (tokenId: number) => void
-  onRefreshImages: () => void
-  onSortTokensAsc: () => void
-  onSortTokensDesc: () => void
-  onSearch: (e: React.FormEvent) => void
-  searchId: string
-  setSearchId: (id: string) => void
+  title: string
+  subtitle: string
+  tokenIds: number[]
+  isLoading: boolean
+  info: GameInfo | undefined
+  metadataHandler: Address | undefined
 }
 
-export default function TokenGrid({
-  darkMode,
-  gameState,
-  loadingActiveTokenIds,
-  paginationData,
-  currentPage,
-  setCurrentPage,
-  explodedTokens,
-  potatoTokenId,
-  shouldRefresh,
-  onTokenExploded,
-  onRefreshImages,
-  onSortTokensAsc,
-  onSortTokensDesc,
-  onSearch,
-  searchId,
-  setSearchId
-}: TokenGridProps) {
-  // Use centralized token data management
-  const { getTokenData, refreshAll, refreshImmediate, isLoading: tokenDataLoading } = useTokenDataManager(
-    paginationData.currentTokens.filter(tokenId => !explodedTokens.includes(tokenId)),
-    shouldRefresh
-  )
-  const SkeletonCard = () => (
-    <div className="animate-pulse bg-gray-300 h-32 w-32 rounded-lg"></div>
-  )
+type Sort = 'none' | 'asc' | 'desc'
 
-  const LoadingSpinner = () => (
-    <div className="flex justify-center items-center p-4">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-    </div>
-  )
+const SORT_OPTIONS = [
+  { value: 'asc' as const, label: 'Low to high' },
+  { value: 'desc' as const, label: 'High to low' },
+]
 
-  const SkeletonText = ({ width = "w-32" }: { width?: string }) => (
-    <div className={`animate-pulse bg-gray-300 h-4 ${width} rounded`}></div>
-  )
+function Tiles({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 sm:gap-3 lg:grid-cols-8">{children}</div>
+}
 
-  if (gameState !== 'Playing' && gameState !== 'Minting' && gameState !== 'Final Stage' && gameState !== 'Paused') {
-    return null
+/** Paginated, sortable, searchable grid of the hands in the round. */
+export default function TokenGrid({ title, subtitle, tokenIds, isLoading, info, metadataHandler }: TokenGridProps) {
+  const {
+    currentPage,
+    setCurrentPage,
+    searchId,
+    setSearchId,
+    paginationData,
+    sortTokensAsc,
+    sortTokensDesc,
+    handleSearch,
+  } = useTokenManagement(tokenIds)
+  const [sort, setSort] = useState<Sort>('none')
+  const images = useHandImages(paginationData.currentTokens, info, metadataHandler)
+  const potatoTokenId = Number(info?.potatoTokenId ?? 0n)
+
+  const onSort = (value: Sort) => {
+    setSort(value)
+    if (value === 'asc') sortTokensAsc()
+    if (value === 'desc') sortTokensDesc()
   }
 
-  if (loadingActiveTokenIds || tokenDataLoading) {
-    return (
-      <div className="text-center">
-        <LoadingSpinner />
-        <SkeletonText width="w-48" />
-        <div className="grid grid-cols-4 gap-4 mt-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  const { currentTokens, pageCount, pages } = paginationData
 
   return (
-    <div className={`w-full max-w-7xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>
-      <div className="text-center mb-8">
-        <h1 className={`text-5xl font-bold gradient-text mb-4`}>Active Tokens</h1>
-        <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
-          Current active tokens in the game
-        </p>
-        
-        <button
-          onClick={() => {
-            refreshImmediate()
-            onRefreshImages()
-          }}
-          className={`btn-secondary mb-6`}
-        >
-          🔄 Refresh Images
-        </button>
-      </div>
+    <Card>
+      <CardHeader
+        title={
+          <>
+            {title}
+            {!isLoading && <span className="ml-2 font-medium text-fg-tertiary tnum">{tokenIds.length}</span>}
+          </>
+        }
+        subtitle={subtitle}
+      />
 
-      {/* Controls Section */}
-      <div className="space-y-6 mb-8">
-        {/* Sort Controls */}
-        <div className="text-center">
-          <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Sort By:</h3>
-          <div className="flex justify-center space-x-4">
-            <button 
-              className={`btn-outline flex items-center space-x-2`}
-              onClick={onSortTokensAsc}
-            >
-              <HiArrowCircleUp className="text-xl" />
-              <span>Ascending</span>
-            </button>
-            <button 
-              className={`btn-outline flex items-center space-x-2`}
-              onClick={onSortTokensDesc}
-            >
-              <HiArrowCircleDown className="text-xl" />
-              <span>Descending</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="max-w-md mx-auto">
-          <form onSubmit={onSearch} className="flex space-x-2">
-            <input
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <form onSubmit={handleSearch} className="flex flex-1 gap-2">
+          <div className="min-w-0 flex-1">
+            <Input
               type="number"
-              placeholder="Search Token ID"
+              inputMode="numeric"
+              min={1}
+              placeholder="Search by hand #"
               value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
-              className={`flex-1 px-4 py-3 rounded-xl border-2 focus-ring ${
-                darkMode 
-                  ? 'bg-gray-800 text-white border-gray-600 focus:border-amber-500' 
-                  : 'bg-white text-gray-900 border-gray-300 focus:border-amber-500'
-              }`}
+              aria-label="Search by hand id"
             />
-            <button
-              type="submit"
-              className={`btn-primary px-6 py-3`}
-            >
-              Search
-            </button>
-          </form>
-        </div>
+          </div>
+          <Button type="submit" variant="secondary">
+            Search
+          </Button>
+        </form>
+        <Segmented size="sm" options={SORT_OPTIONS} value={sort} onChange={onSort} aria-label="Sort hands" className="h-10 self-start sm:self-auto" />
       </div>
 
-      {/* Token Grid */}
-      <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-8 mb-8`}>
-        {paginationData.currentTokens.filter(tokenId => !explodedTokens.includes(tokenId)).map((tokenId, index) => {
-          const tokenData = getTokenData(tokenId)
-          return (
-            <div 
-              key={index} 
-              className={`${darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50'} rounded-xl p-3 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg border-2 border-transparent hover:border-amber-500/30`}
-            >
-              <Suspense fallback={<SkeletonCard />}>
-                <OptimizedTokenImage
-                  tokenId={tokenId}
-                  imageString={tokenData.imageString}
-                  isLoading={tokenData.isLoading}
-                  isError={tokenData.isError}
-                  potatoTokenId={potatoTokenId}
-                  onTokenExploded={onTokenExploded}
-                  onRefresh={refreshImmediate}
-                  delay={index * 100}
-                  className="z-20"
-                />
-              </Suspense>
-            </div>
-          )
-        })}
-      </div>
+      {isLoading ? (
+        <Tiles>
+          {Array.from({ length: 16 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-square rounded-2xl" />
+          ))}
+        </Tiles>
+      ) : tokenIds.length === 0 ? (
+        <p className="py-6 text-center text-[15px] leading-6 text-fg-secondary">No hands yet. They appear here once minted.</p>
+      ) : currentTokens.length === 0 ? (
+        <p className="py-6 text-center text-[15px] leading-6 text-fg-secondary">No hand matches that id. Clear the search to see them all.</p>
+      ) : (
+        <Tiles>
+          {currentTokens.map((tokenId) => {
+            const potato = tokenId === potatoTokenId
+            return (
+              <div
+                key={tokenId}
+                className={`rounded-2xl bg-surface-muted p-1.5 sm:p-2 ${potato ? 'ring-2 ring-accent' : ''}`}
+              >
+                <HandImage tokenId={tokenId} image={images.get(tokenId)} isPotato={potato} />
+                <div className="mt-1 flex justify-center">
+                  {potato ? (
+                    <Badge tone="accent" dot pulse>
+                      #{tokenId}
+                    </Badge>
+                  ) : (
+                    <span className="text-[12px] leading-6 font-medium text-fg-secondary tnum">#{tokenId}</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </Tiles>
+      )}
 
-      {/* Pagination */}
-      <div className="flex justify-center items-center space-x-2 text-lg">
-        {currentPage !== 1 && (
-          <button 
-            className={`btn-outline px-4 py-2`}
-            onClick={() => setCurrentPage(currentPage - 1)}
-          >
-            ← Previous
-          </button>
-        )}
-        
-        <div className="flex space-x-2">
-          {paginationData.pages.map((page, index) => (
-            <button
-              className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
-                page === currentPage 
-                  ? 'bg-gradient-to-r from-amber-500 to-red-500 text-white shadow-lg' 
-                  : darkMode 
-                    ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-              key={index}
+      {!isLoading && pageCount > 1 && (
+        <nav className="mt-5 flex flex-wrap items-center justify-center gap-1" aria-label="Pages">
+          <Button variant="ghost" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
+            Previous
+          </Button>
+          {pages.map((page) => (
+            <Button
+              key={page}
+              variant={page === currentPage ? 'secondary' : 'ghost'}
               onClick={() => setCurrentPage(page)}
+              aria-current={page === currentPage ? 'page' : undefined}
+              className="min-w-10 tnum"
             >
               {page}
-            </button>
+            </Button>
           ))}
-        </div>
-        
-        {currentPage !== paginationData.pageCount && (
-          <button 
-            className={`btn-outline px-4 py-2`}
-            onClick={() => setCurrentPage(currentPage + 1)}
-          >
-            Next →
-          </button>
-        )}
-      </div>
-    </div>
+          <Button variant="ghost" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === pageCount}>
+            Next
+          </Button>
+          <span className="ml-2 text-[13px] leading-5 text-fg-secondary tnum">
+            Page {currentPage} of {pageCount}
+          </span>
+        </nav>
+      )}
+    </Card>
   )
 }
