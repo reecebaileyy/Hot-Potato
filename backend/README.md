@@ -65,6 +65,10 @@ Payees, mint price and fuse timing are Ignition parameters; edit
 `teamWallet1`, `teamWallet2`, `charityWallet` there for mainnet). Mint price and fuse timing can
 also be changed later with `setMintConfig` / `setFuseConfig` between rounds.
 
+The current testnet deployment (verified on Blockscout) is recorded in
+`ignition/deployments/chain-46630/deployed_addresses.json`; its Game is
+[`0xf7438D9C835fB10443f54A01e2e947DcF950B808`](https://explorer.testnet.chain.robinhood.com/address/0xf7438D9C835fB10443f54A01e2e947DcF950B808).
+
 ## Running a game
 
 All scripts take `-- --network <name>` and read the Game address from the Ignition deployment for
