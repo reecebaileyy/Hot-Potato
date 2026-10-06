@@ -1,129 +1,254 @@
 import React from 'react'
-import Image from 'next/image'
 import type { Address } from 'viem'
-import hot from '../../public/assets/images/hot.png'
 import ConnectWalletButton from './ConnectWalletButton'
 import MintPanel from './MintPanel'
-import { GameState, formatEth, gameStateLabel, winnerPrize } from '../lib/game'
+import PassPotatoForm from './PassPotatoForm'
+import Timer from './Timer'
+import { Badge, Button, Card, SectionHeader, Skeleton } from './ui'
+import { GameState, formatEth, gameStateLabel, isLiveState, winnerPrize } from '../lib/game'
 import { formatAddress } from '../utils/formatAddress'
 import type { GameInfo } from '../hooks/useGame'
 import type { PlayerData } from '../hooks/usePlayer'
 
 interface GameStatusCardProps {
-  darkMode: boolean
   info: GameInfo | undefined
   address: Address | undefined
   player: PlayerData
   winner: Address | undefined
   isWinner: boolean
   busy: boolean
+  countdown: number | null
+  explosion: boolean
+  passTarget: string
+  onPassTargetChange: (value: string) => void
   onMint: (quantity: number) => void
+  onPass: (toTokenId: number) => void
+  onCheckExplosion: () => void
 }
 
-function Card({ darkMode, children }: { darkMode: boolean; children: React.ReactNode }) {
+/** The hero surface: a plain card with slightly larger padding than the rest. */
+function Hero({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`w-full max-w-2xl mx-auto ${darkMode ? 'card-dark' : 'card'} p-4 sm:p-6 lg:p-8 mb-8 animate-fade-in-up`}>
-      <div className="text-center space-y-6">{children}</div>
+    <Card variant="plain" className="p-6 sm:p-8 animate-fade-up">
+      <div className="space-y-6">{children}</div>
+    </Card>
+  )
+}
+
+function Heading({ eyebrow, title, description }: { eyebrow?: string; title: string; description?: React.ReactNode }) {
+  return (
+    <div>
+      {eyebrow && (
+        <p className="mb-1 text-[12px] leading-4 font-medium uppercase tracking-wide text-fg-secondary">{eyebrow}</p>
+      )}
+      <h2 className="text-[28px] leading-8 font-semibold tracking-tight sm:text-[34px] sm:leading-10">{title}</h2>
+      {description && <p className="mt-2 text-[15px] leading-6 text-fg-secondary">{description}</p>}
     </div>
   )
 }
 
-/** What's happening in the round right now, with the mint form while minting is open. */
+/** Empty state for visitors without a wallet. */
+function ConnectPrompt({ sentence }: { sentence: string }) {
+  return (
+    <div className="flex flex-col items-center gap-5 py-4 text-center">
+      <SectionHeader size="md" align="center" title="Connect your wallet" description={sentence} />
+      <ConnectWalletButton size="lg" />
+    </div>
+  )
+}
+
+/** Who holds the potato right now. */
+function Holder({ info, holdsPotato }: { info: GameInfo; holdsPotato: boolean }) {
+  if (info.potatoTokenId === 0n) return null
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px] leading-6">
+      <span className="text-fg-secondary">Potato on</span>
+      <span className="font-semibold tnum">#{info.potatoTokenId.toString()}</span>
+      {holdsPotato ? (
+        <Badge tone="accent" dot pulse>
+          You hold the potato
+        </Badge>
+      ) : (
+        <span className="text-fg-secondary" title={info.potatoHolder}>
+          held by <span className="font-medium text-fg tnum">{formatAddress(info.potatoHolder)}</span>
+        </span>
+      )}
+    </div>
+  )
+}
+
+function HeroSkeleton() {
+  return (
+    <Hero>
+      <Skeleton className="h-4 w-24" />
+      <Skeleton className="h-16 w-48" />
+      <Skeleton className="h-1 w-full" />
+      <Skeleton className="h-12 w-full rounded-2xl" />
+    </Hero>
+  )
+}
+
+/**
+ * State-aware game card: the countdown plus the one action that matters right now
+ * (mint, pass, check explosion, claim) or the winner once the round is over.
+ */
 export default function GameStatusCard({
-  darkMode,
   info,
   address,
   player,
   winner,
   isWinner,
   busy,
+  countdown,
+  explosion,
+  passTarget,
+  onPassTargetChange,
   onMint,
+  onPass,
+  onCheckExplosion,
 }: GameStatusCardProps) {
-  const muted = darkMode ? 'text-gray-300' : 'text-gray-600'
+  if (!info) return <HeroSkeleton />
 
-  if (!info) {
-    return (
-      <Card darkMode={darkMode}>
-        <div className="flex justify-center items-center p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-transparent border-t-amber-500" />
-        </div>
-      </Card>
-    )
-  }
+  const round = info.round.toString()
+  const timer = <Timer state={info.state} countdown={countdown} explosionTime={info.explosionTime} explosion={explosion} />
 
   switch (info.state) {
     case GameState.Minting:
-      if (!address) {
-        return (
-          <Card darkMode={darkMode}>
-            <h1 className="text-5xl font-bold gradient-text">Minting Is Open</h1>
-            <p className={`text-xl ${muted}`}>Connect your wallet to mint hands for round {info.round.toString()}.</p>
-            <div className="animate-float">
-              <Image alt="Hot Potato" src={hot} width={160} height={160} className="mx-auto drop-shadow-lg" />
+      return (
+        <Hero>
+          <Heading
+            eyebrow={`Round ${round}`}
+            title="Mint your hands"
+            description={
+              <>
+                Pot <span className="font-medium text-fg tnum">{formatEth(info.pot)} ETH</span>. Every hand you own
+                plays in every round, and the last player standing takes 40%.
+              </>
+            }
+          />
+          {timer}
+          {address ? (
+            <MintPanel info={info} player={player} busy={busy} onMint={onMint} />
+          ) : (
+            <ConnectPrompt sentence={`Connect your wallet to mint hands for round ${round}.`} />
+          )}
+        </Hero>
+      )
+
+    case GameState.Playing:
+    case GameState.FinalRound: {
+      const fuseOut = countdown === 0
+      return (
+        <Hero>
+          {info.state === GameState.FinalRound && (
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge tone="danger" dot pulse>
+                Final round
+              </Badge>
+              <span className="text-[13px] leading-5 text-fg-secondary">Two players left. The next explosion decides the winner.</span>
             </div>
-            <ConnectWalletButton className="justify-center" />
-          </Card>
-        )
-      }
-      return <MintPanel darkMode={darkMode} info={info} player={player} busy={busy} onMint={onMint} />
+          )}
+          {countdown === null && !explosion ? <Heading eyebrow={`Round ${round}`} title="Potato in play" /> : timer}
+          <Holder info={info} holdsPotato={player.holdsPotato} />
+
+          {!address ? (
+            <ConnectPrompt sentence="Connect your wallet to pass the potato when it lands on one of your hands." />
+          ) : player.holdsPotato ? (
+            <PassPotatoForm
+              hasPotato={player.holdsPotato}
+              countdown={countdown}
+              busy={busy}
+              onPassPotato={onPass}
+              value={passTarget}
+              onChange={onPassTargetChange}
+            />
+          ) : (
+            <p className="text-[15px] leading-6 text-fg-secondary">
+              You don&apos;t hold the potato right now. When it lands on one of your hands, pass it on before the fuse
+              runs out.
+            </p>
+          )}
+
+          {fuseOut && (
+            <Card variant="inset" className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <p className="flex-1 text-[15px] leading-6 text-fg-secondary">
+                The fuse has run out. Anyone can set off the explosion.
+              </p>
+              <Button variant="secondary" onClick={onCheckExplosion} disabled={busy} className="shrink-0">
+                Check explosion
+              </Button>
+            </Card>
+          )}
+        </Hero>
+      )
+    }
 
     case GameState.Paused:
       return (
-        <Card darkMode={darkMode}>
-          <h1 className="text-5xl font-bold gradient-text">⏸️ Game Paused</h1>
-          <p className={`text-xl ${muted}`}>The game is paused. Hang tight until it resumes.</p>
-        </Card>
+        <Hero>
+          <Heading eyebrow={`Round ${round}`} title="Game paused" description="The game is paused. Hang tight until it resumes." />
+          {timer}
+          <Holder info={info} holdsPotato={player.holdsPotato} />
+        </Hero>
       )
 
     case GameState.Queued:
       return (
-        <Card darkMode={darkMode}>
-          <h1 className="text-5xl font-bold gradient-text">⏳ Next Round Soon</h1>
-          <p className={`text-xl ${muted}`}>
-            Waiting for round {(info.round + 1n).toString()} to open for minting. Every hand you own plays in every round.
-          </p>
-          <div className="animate-bounce-slow">
-            <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-r from-amber-500 to-red-500" />
-          </div>
-        </Card>
+        <Hero>
+          <Heading
+            eyebrow={info.round > 0n ? `After round ${round}` : 'Hot Potato'}
+            title="Next round soon"
+            description={`Waiting for round ${(info.round + 1n).toString()} to open for minting. Every hand you own plays in every round.`}
+          />
+          {timer}
+          {!address && <ConnectPrompt sentence="Connect your wallet so you are ready when minting opens." />}
+        </Hero>
       )
 
     case GameState.Ended:
       return (
-        <Card darkMode={darkMode}>
-          <div className="text-6xl mb-4 animate-bounce">🏆</div>
-          <h1 className={`text-4xl font-bold ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>
-            Round {info.round.toString()} Is Over!
-          </h1>
-          <div className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`} title={winner}>
-            {winner ? `Winner: ${formatAddress(winner)}` : 'No winner this round'}
+        <Hero>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <Heading
+              eyebrow={`Round ${round} is over`}
+              title={winner ? (isWinner ? 'You won' : 'We have a winner') : 'No winner this round'}
+            />
+            {isWinner && (
+              <Badge tone="success" dot>
+                Winner
+              </Badge>
+            )}
           </div>
+          {timer}
           {winner && (
-            <p className={`text-lg ${muted}`}>
-              Prize: {formatEth(winnerPrize(info.pot))} ETH of a {formatEth(info.pot)} ETH pot
-            </p>
-          )}
-          {isWinner && (
-            <div className={`inline-block px-6 py-3 rounded-lg ${darkMode ? 'bg-green-700' : 'bg-green-500'} text-white font-bold text-xl shadow-lg`}>
-              🎉 Congratulations! You Won! 🎉
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Card variant="inset">
+                <div className="text-[12px] leading-4 font-medium uppercase tracking-wide text-fg-secondary">Winner</div>
+                <div className="mt-1 text-[22px] leading-7 font-semibold tracking-tight tnum">{formatAddress(winner)}</div>
+                <div className="mt-1 break-all text-[13px] leading-5 text-fg-secondary">{winner}</div>
+              </Card>
+              <Card variant="inset">
+                <div className="text-[12px] leading-4 font-medium uppercase tracking-wide text-fg-secondary">Prize</div>
+                <div className={`mt-1 text-[22px] leading-7 font-semibold tracking-tight tnum ${isWinner ? 'text-success' : ''}`}>
+                  {formatEth(winnerPrize(info.pot))} ETH
+                </div>
+                <div className="mt-1 text-[13px] leading-5 text-fg-secondary">of a {formatEth(info.pot)} ETH pot</div>
+              </Card>
             </div>
           )}
-          <p className={`text-lg ${darkMode ? 'text-amber-200' : 'text-amber-700'}`}>
+          <p className="text-[15px] leading-6 text-fg-secondary">
             {isWinner ? 'Claim your prize from the Rewards panel.' : 'Your hands are back in for the next round.'}
           </p>
-        </Card>
+        </Hero>
       )
-
-    case GameState.Playing:
-    case GameState.FinalRound:
-      // The pass form and timer cover live play.
-      return null
 
     default:
       return (
-        <Card darkMode={darkMode}>
-          <h1 className="text-5xl font-bold gradient-text">{gameStateLabel(info.state)}</h1>
-        </Card>
+        <Hero>
+          <Heading eyebrow={`Round ${round}`} title={gameStateLabel(info.state)} />
+          {timer}
+          {isLiveState(info.state) && <Holder info={info} holdsPotato={player.holdsPotato} />}
+        </Hero>
       )
   }
 }

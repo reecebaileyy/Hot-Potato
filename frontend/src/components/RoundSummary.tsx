@@ -1,58 +1,95 @@
 import React from 'react'
-import { formatEth, gameStateLabel, isLiveState } from '../lib/game'
+import { Badge, SectionHeader, Skeleton, Stat, StatRow } from './ui'
+import { GameState, formatEth, gameStateLabel, isLiveState } from '../lib/game'
 import type { GameInfo } from '../hooks/useGame'
 
 interface RoundSummaryProps {
-  darkMode: boolean
   info: GameInfo | undefined
-  compact?: boolean
 }
 
-/** "Round N" headline with the round's key numbers. */
-export default function RoundSummary({ darkMode, info, compact = false }: RoundSummaryProps) {
-  const round = info && info.round > 0n ? info.round.toString() : null
-  const title = round ? `Round ${round}` : 'Hot Potato'
-
-  if (compact) {
-    return (
-      <h1 className="text-xl sm:text-2xl font-bold gradient-text glow">
-        {title}
-        {info && <span className="ml-2 text-sm align-middle">· {gameStateLabel(info.state)}</span>}
-      </h1>
-    )
+/** Headline copy and the status badge for each game state. */
+function describeState(state: number | undefined): { title: string; badge: React.ReactNode } {
+  switch (state) {
+    case GameState.Minting:
+      return {
+        title: 'Minting is open',
+        badge: (
+          <Badge tone="success" dot>
+            Minting
+          </Badge>
+        ),
+      }
+    case GameState.Playing:
+      return {
+        title: 'Potato in play',
+        badge: (
+          <Badge tone="accent" dot pulse>
+            Live
+          </Badge>
+        ),
+      }
+    case GameState.FinalRound:
+      return {
+        title: 'Final round',
+        badge: (
+          <Badge tone="danger" dot pulse>
+            Live
+          </Badge>
+        ),
+      }
+    case GameState.Paused:
+      return { title: 'Paused', badge: <Badge tone="warning">Paused</Badge> }
+    case GameState.Ended:
+      return { title: 'Round ended', badge: <Badge tone="neutral">Ended</Badge> }
+    case GameState.Queued:
+      return { title: 'Waiting for the next round', badge: <Badge tone="neutral">Queued</Badge> }
+    default:
+      return { title: gameStateLabel(state), badge: null }
   }
+}
+
+/** "Round N" header row: eyebrow, state headline with a badge, and the round's key numbers. */
+export default function RoundSummary({ info }: RoundSummaryProps) {
+  const round = info && info.round > 0n ? info.round.toString() : null
+  const { title, badge } = describeState(info?.state)
+  const live = isLiveState(info?.state)
 
   const stats = info
     ? [
-        { label: 'State', value: gameStateLabel(info.state) },
         { label: 'Pot', value: `${formatEth(info.pot)} ETH` },
-        isLiveState(info.state) || info.activeHands > 0n
+        live || info.activeHands > 0n
           ? { label: 'Hands in play', value: info.activeHands.toString() }
           : { label: 'Minted this round', value: info.mintedThisRound.toString() },
-        isLiveState(info.state)
-          ? { label: 'Players left', value: info.activeWallets.toString() }
+        live
+          ? { label: 'Wallets', value: info.activeWallets.toString() }
           : { label: 'Total hands', value: info.totalMinted.toString() },
         { label: 'Passes', value: info.roundPasses.toString() },
       ]
-    : []
+    : null
 
   return (
-    <div className="text-center mb-8 sm:mb-12 animate-fade-in-up px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
-      <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 gradient-text glow">{title}</h1>
-      <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-amber-500 to-red-500 mx-auto rounded-full" />
-      {stats.length > 0 && (
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className={`px-4 py-2 rounded-xl ${darkMode ? 'bg-gray-900/70 text-white' : 'bg-white/80 text-gray-900'} shadow`}
-            >
-              <div className="text-xs uppercase tracking-wide opacity-70">{stat.label}</div>
-              <div className="text-lg font-bold">{stat.value}</div>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="flex flex-col gap-6 animate-fade-up lg:flex-row lg:items-end lg:justify-between">
+      <SectionHeader
+        size="md"
+        eyebrow={round ? `Round ${round}` : 'Hot Potato'}
+        title={
+          info ? (
+            <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-2">
+              {title}
+              {badge}
+            </span>
+          ) : (
+            <Skeleton className="h-8 w-56" />
+          )
+        }
+      />
+      <StatRow className="lg:shrink-0">
+        {stats
+          ? stats.map((stat) => <Stat key={stat.label} label={stat.label} value={stat.value} />)
+          : ['Pot', 'Hands', 'Wallets', 'Passes'].map((label) => (
+              <Stat key={label} label={label} value={<Skeleton className="h-6 w-16" />} />
+            ))}
+      </StatRow>
     </div>
   )
 }

@@ -39,7 +39,7 @@ export function Stat({ label, value, hint, tone = 'default', align = 'left', siz
 export function StatRow({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`grid grid-cols-2 sm:grid-cols-4 gap-y-4 [&>*]:px-4 [&>*:first-child]:pl-0 [&>*]:border-l [&>*]:border-line [&>*:first-child]:border-l-0 sm:[&>*:nth-child(3)]:border-l [&>*:nth-child(3)]:border-l-0 ${className}`}
+      className={`grid grid-cols-2 sm:grid-cols-4 gap-y-4 [&>*]:px-4 [&>*:first-child]:pl-0 [&>*]:border-l [&>*]:border-line [&>*:first-child]:border-l-0 [&>*:nth-child(3)]:border-l-0 [&>*:nth-child(3)]:pl-0 sm:[&>*:nth-child(3)]:border-l sm:[&>*:nth-child(3)]:pl-4 ${className}`}
     >
       {children}
     </div>

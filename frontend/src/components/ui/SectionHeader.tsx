@@ -26,7 +26,7 @@ export function SectionHeader({
 }: SectionHeaderProps) {
   const centered = align === 'center'
   return (
-    <div className={`${centered ? 'text-center mx-auto' : ''} max-w-2xl ${className}`}>
+    <div className={`${centered ? 'text-center mx-auto' : ''} ${size === 'xl' ? 'max-w-3xl' : 'max-w-2xl'} ${className}`}>
       {eyebrow && (
         <p className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-accent">{eyebrow}</p>
       )}

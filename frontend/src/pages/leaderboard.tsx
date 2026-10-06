@@ -178,8 +178,8 @@ export default function Leaderboard() {
         {view === 'players' ? (
           <>
             {/* Toolbar */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <Segmented
                   size="sm"
                   options={SORT_OPTIONS}
@@ -203,7 +203,7 @@ export default function Leaderboard() {
               <Button
                 variant="secondary"
                 size="sm"
-                className="sm:ml-auto"
+                className="ml-auto"
                 onClick={findMe}
                 disabled={!address || myIndex < 0 || isLoading}
                 title={findMeTitle}
