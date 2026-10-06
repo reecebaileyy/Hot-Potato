@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { useAccount, useEnsName } from 'wagmi'
+import { useConnection } from 'wagmi'
 import { formatAddress } from '../utils/formatAddress'
 
 interface ConnectWalletButtonProps {
@@ -10,7 +10,7 @@ interface ConnectWalletButtonProps {
 export default function ConnectWalletButton({ className }: ConnectWalletButtonProps): React.ReactElement {
   const { ready, authenticated, login, logout } = usePrivy()
   const { wallets } = useWallets()
-  const { address } = useAccount()
+  const { address } = useConnection()
 
   // Get actual address (from wagmi or Privy)
   const actualAddress = useMemo(() => {
@@ -18,17 +18,6 @@ export default function ConnectWalletButton({ className }: ConnectWalletButtonPr
     if (wallets.length > 0 && wallets[0].address) return wallets[0].address
     return null
   }, [address, wallets])
-
-  // Fetch ENS name for the address
-  const { data: ensName, isLoading: ensLoading } = useEnsName({
-    address: actualAddress as `0x${string}` | undefined,
-    chainId: 1, // Mainnet for ENS
-    query: {
-      enabled: !!actualAddress,
-      staleTime: 300000, // Cache for 5 minutes
-      retry: 1,
-    }
-  })
 
   if (!ready) {
     return (
@@ -49,8 +38,7 @@ export default function ConnectWalletButton({ className }: ConnectWalletButtonPr
     )
   }
 
-  // Display priority: ENS name > formatted address > 'Connected'
-  const displayAddress = ensName || (actualAddress ? formatAddress(actualAddress) : 'Connected')
+  const displayAddress = actualAddress ? formatAddress(actualAddress) : 'Connected'
 
   return (
     <div className={`flex items-center gap-2 ${className ?? ''}`}>
